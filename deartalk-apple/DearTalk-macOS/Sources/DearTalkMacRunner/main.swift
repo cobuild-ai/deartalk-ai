@@ -60,6 +60,17 @@ let reconstructed = diff.operations.compactMap { op -> String? in
 }.joined()
 assert(reconstructed == suggested, "Diff 복원문은 AI 제안문과 완벽히 일치해야 합니다.")
 
+// 3-1. DiffEngine 경계 조건 검증 (빈 문자열, 특수기호, 단일 문자)
+let emptyDiff1 = DiffEngine.computeWordDiff(original: "", suggested: "")
+assert(!emptyDiff1.hasChanges && emptyDiff1.operations.isEmpty, "빈 문자열 Diff는 변경사항이 없어야 합니다.")
+
+let emptyDiff2 = DiffEngine.computeWordDiff(original: "", suggested: "테스트")
+assert(emptyDiff2.hasChanges, "원문이 비어있고 제안문이 있으면 변경사항이 감지되어야 합니다.")
+
+let symbolDiff = DiffEngine.computeWordDiff(original: "@smilelife", suggested: "@smilelife!")
+assert(symbolDiff.hasChanges, "특수문자 Diff가 크래시 없이 정상 계산되어야 합니다.")
+print("• DiffEngine 경계값 및 특수문자 안정성 검증: 통과 ✅")
+
 // 4. DearTalkIntentEngine 온디바이스 AI 추론 검증
 print("\n[4] DearTalkIntentEngine 온디바이스 AI 추론 검증")
 let engine = DearTalkIntentEngine.shared
