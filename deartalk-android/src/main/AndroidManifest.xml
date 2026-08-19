@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- 테스트용 브로드캐스트를 같은 서명 앱에서만 허용하는 서명 보호 퍼미션 -->
+    <permission
+        android:name="ai.deartalk.android.permission.TEST_INFERENCE"
+        android:protectionLevel="signature" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DearTalk">
+
+        <!-- 메인 설정 및 테스트 액티비티 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.DearTalk">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 🔒 서명 퍼미션으로 보호 — 같은 서명 앱(ADB 디버그)에서만 테스트 추론 허용 -->
+        <receiver
+            android:name=".test.DearTalkTestReceiver"
+            android:exported="true"
+            android:permission="ai.deartalk.android.permission.TEST_INFERENCE">
+            <intent-filter>
+                <action android:name="ai.deartalk.android.TEST_INFERENCE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- DearTalk IME Service (핵심 키보드 서비스) -->
+        <service
+            android:name=".ime.DearTalkIME"
+            android:exported="true"
+            android:label="@string/ime_name"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
+    </application>
+
+</manifest>

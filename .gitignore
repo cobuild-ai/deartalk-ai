@@ -1,0 +1,62 @@
+# OS & System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.swp
+*~
+*.iml
+
+# Android & Gradle
+.gradle/
+/build/
+**/build/
+local.properties
+.cxx/
+.externalNativeBuild/
+captures/
+*.apk
+*.aab
+*.dex
+.kotlin/
+
+# Apple & Swift
+.build/
+**/.build/
+Packages/
+Package.pins
+Package.resolved
+xcuserdata/
+DerivedData/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+*.app
+**/*.app
+build/
+
+# On-Device AI Models (Large binary files)
+*.gguf
+*.bin
+*.tflite
+*.task
+*.onnx
+models/model.gguf
+**/models/*.gguf
+deartalk-apple/DearTalk-macOS/build/
+
+# Logs & Temporary Media
+*.log
+.tempmediaStorage/
+.user_uploaded/
