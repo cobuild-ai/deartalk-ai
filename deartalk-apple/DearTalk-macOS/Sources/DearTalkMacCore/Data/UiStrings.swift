@@ -26,8 +26,17 @@ public enum UiStrings {
     public static var applySuggestionShortcut: String { isKo ? "Tab 키를 눌러 교체" : "Press Tab to Apply" }
     public static var dismissShortcut: String { isKo ? "Esc 키로 닫기" : "Esc to Dismiss" }
     public static var copySuggestion: String { isKo ? "복사" : "Copy" }
-    public static var applyNow: String { isKo ? "적용" : "Apply" }
+    public static var copied: String { isKo ? "복사됨!" : "Copied!" }
+    public static var regenerate: String { isKo ? "다시 생성" : "Regenerate" }
+    public static var applyNow: String { isKo ? "적용하기" : "Apply" }
+    public static var applyNowWithTab: String { isKo ? "적용하기 (Tab)" : "Apply (Tab)" }
+    public static var tabApplyOn: String { isKo ? "Tab 적용 ON" : "Tab Apply ON" }
+    public static var tabApplyOff: String { isKo ? "Tab 적용 OFF" : "Tab Apply OFF" }
+    public static var tabApplyTooltipOn: String { isKo ? "Tab 키 입력 시 자동으로 완성 문장을 적용합니다 (클릭하여 끄기)" : "Press Tab to auto-apply suggested text (Click to disable)" }
+    public static var tabApplyTooltipOff: String { isKo ? "Tab 키 자동 완성이 꺼져 있습니다. [적용하기] 버튼을 클릭해 적용하세요 (클릭하여 켜기)" : "Tab auto-apply is disabled. Click [Apply] to replace text (Click to enable)" }
     public static var analyzing: String { isKo ? "🔒 온디바이스 AI가 분석 중..." : "🔒 On-device AI analyzing..." }
+    public static var originalBadge: String { isKo ? "원문" : "Original" }
+    public static var aiBadge: String { isKo ? "AI" : "AI" }
     public static var originalText: String { isKo ? "작성 중 원문" : "Original" }
     public static var suggestedText: String { isKo ? "AI 다듬기" : "AI Refined" }
     public static var noDiffFound: String { isKo ? "완벽한 문장입니다!" : "Looks great as is!" }

@@ -9,7 +9,7 @@ public struct CursorInfo: Equatable {
     public let fullText: String
 }
 
-/// macOS 접근성 API(AXUIElement) 기반 실시간 텍스트 및 커서 모니터링 서비스
+/// macOS Accessibility API (AXUIElement) real-time text & cursor tracking monitor
 public final class AccessibilityMonitor: ObservableObject {
     public static let shared = AccessibilityMonitor()
 
@@ -36,21 +36,21 @@ public final class AccessibilityMonitor: ObservableObject {
         hasAccessibilityPermission = trusted
     }
 
-    /// 이전 빌드의 유령(Stale) TCC 권한 캐시를 삭제하여 사용자 혼란 방지
+    /// Clears stale TCC permission cache from previous builds to prevent toggle confusion
     public func resetStaleTccPermission() {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
         task.arguments = ["reset", "Accessibility", "ai.deartalk.mac"]
         try? task.run()
         task.waitUntilExit()
-        DearTalkLogger.info("🧹 이전 손쉬운 사용(Accessibility) 유령 캐시 자동 초기화 완료", category: "Accessibility")
+        DearTalkLogger.info("🧹 Stale accessibility TCC cache successfully reset", category: "Accessibility")
     }
 
     public func requestPermission() {
-        // 1. 이전 유령 캐시 자동 삭제
+        // 1. Reset stale ghost cache
         resetStaleTccPermission()
 
-        // 2. 신규 권한 프롬프트 및 시스템 설정 열기
+        // 2. Prompt for permission and open Privacy & Security settings
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
         let trusted = AXIsProcessTrustedWithOptions(options)
         hasAccessibilityPermission = trusted
@@ -60,6 +60,7 @@ public final class AccessibilityMonitor: ObservableObject {
                 NSWorkspace.shared.open(url)
             }
         }
+        startMonitoring()
     }
 
     public func startMonitoring() {
@@ -67,15 +68,15 @@ public final class AccessibilityMonitor: ObservableObject {
         startActivePolling()
 
         if !hasAccessibilityPermission {
-            DearTalkLogger.warning("손쉬운 사용(Accessibility) 권한 확인 중... 백그라운드 폴링 가동", category: "Accessibility")
+            DearTalkLogger.warning("Waiting for Accessibility permission... Background polling active", category: "Accessibility")
         }
     }
 
     private func startActivePolling() {
         isMonitoring = true
-        DearTalkLogger.info("🟢 실시간 Accessibility 텍스트 모니터링 가동 (주기: 150ms)", category: "Accessibility")
+        DearTalkLogger.info("🟢 Real-time accessibility text monitoring started (Interval: 150ms)", category: "Accessibility")
 
-        // 150ms 주기로 활성 앱의 텍스트 요소 변화 감지
+        // Poll focused element changes across active applications every 150ms
         pollingTimer?.invalidate()
         pollingTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
             self?.pollActiveFocusedElement()
@@ -90,7 +91,7 @@ public final class AccessibilityMonitor: ObservableObject {
         debounceTimer = nil
         permissionRetryTimer?.invalidate()
         permissionRetryTimer = nil
-        DearTalkLogger.info("🔴 실시간 Accessibility 텍스트 모니터링 중지", category: "Accessibility")
+        DearTalkLogger.info("🔴 Real-time accessibility text monitoring stopped", category: "Accessibility")
     }
 
     private func pollActiveFocusedElement() {
@@ -252,13 +253,11 @@ public final class AccessibilityMonitor: ObservableObject {
                 return nil
             }
 
-            // macOS 글로벌 AX 좌표(Top-Left 기준)를 Cocoa 글로벌 좌표(Bottom-Left 기준)로 변환
-            // 주 모니터의 높이를 기준으로 전체 가상 데스크톱 Y축 변환
+            // Convert macOS AX global coordinates (Top-Left based) to Cocoa coordinates (Bottom-Left based)
             let primaryHeight = primaryScreen.frame.height
             let cocoaY = primaryHeight - point.y - size.height
 
-            // 플로팅 패널(높이 약 115)을 입력 필드 바로 위(상단)에 배치
-            let panelHeight: CGFloat = 115
+            // Place the floating panel directly above the focused input field
             let targetY = cocoaY + size.height + 10
             let targetX = max(20, point.x)
 
@@ -282,9 +281,9 @@ public final class AccessibilityMonitor: ObservableObject {
             return
         }
 
-        DearTalkLogger.debug("⌨️ 포커스 텍스트 변화 감지: '\(trimmed.prefix(30))...'", category: "Accessibility")
+        DearTalkLogger.debug("⌨️ Focused text change detected: '\(trimmed.prefix(30))...'", category: "Accessibility")
 
-        // 사용자가 타이핑을 멈춘 뒤 300ms 후 온디바이스 AI Diff 생성
+        // Trigger on-device AI Diff calculation 300ms after user pauses typing
         debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.30, repeats: false) { [weak self] _ in
             Task { [weak self] in
                 await self?.processTextWithAi(trimmed)
@@ -296,7 +295,7 @@ public final class AccessibilityMonitor: ObservableObject {
         let tone = toneManager.currentTone
         let result: IntentResult
 
-        DearTalkLogger.info("🧠 AI 문맥 분석 시작: '\(text.prefix(40))' (톤: \(tone.name))", category: "Engine")
+        DearTalkLogger.info("🧠 On-device AI inference started: '\(text.prefix(40))' (Tone: \(tone.name))", category: "Engine")
 
         if toneManager.isTranslationMode {
             result = await intentEngine.processTranslation(textInput: text, target: toneManager.currentTranslation)
@@ -306,12 +305,12 @@ public final class AccessibilityMonitor: ObservableObject {
 
         if case .success(let refinedText, let msg) = result {
             let diff = DiffEngine.computeWordDiff(original: text, suggested: refinedText)
-            DearTalkLogger.info("✨ AI 제안 결과: '\(refinedText.prefix(40))' (변경감지: \(diff.hasChanges), 메시지: \(msg))", category: "Engine")
+            DearTalkLogger.info("✨ AI suggestion completed: '\(refinedText.prefix(40))' (HasChanges: \(diff.hasChanges), Msg: \(msg))", category: "Engine")
             await MainActor.run {
                 self.latestDiffResult = diff
             }
         } else if case .error(let fallback, let err) = result {
-            DearTalkLogger.warning("⚠️ AI 분석 오류/원문유지: \(err)", category: "Engine")
+            DearTalkLogger.warning("⚠️ AI inference warning/preserving original: \(err)", category: "Engine")
             let diff = DiffEngine.computeWordDiff(original: text, suggested: fallback)
             await MainActor.run {
                 self.latestDiffResult = diff

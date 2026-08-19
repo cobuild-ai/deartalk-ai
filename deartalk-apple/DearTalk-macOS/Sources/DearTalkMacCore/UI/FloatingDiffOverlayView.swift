@@ -57,12 +57,12 @@ public struct FloatingDiffOverlayView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 1. 상단 헤더: 아이콘 + 제목 + 단축키 힌트 + 닫기 버튼
+            // 1. Top Header: App Icon, Title, Tab completion toggle, and Dismiss button
             HStack {
                 HStack(spacing: 6) {
                     Text("✨")
                         .font(.system(size: 13))
-                    Text("DearTalk AI")
+                    Text(UiStrings.appName)
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white)
                     if isProcessing {
@@ -75,14 +75,14 @@ public struct FloatingDiffOverlayView: View {
                 Spacer()
 
                 HStack(spacing: 6) {
-                    // Tab 자동완성 ON/OFF 토글 칩
+                    // Tab Auto-completion ON/OFF toggle chip
                     Button(action: {
                         toneManager.isTabCompletionEnabled.toggle()
                     }) {
                         HStack(spacing: 3) {
                             Text("⇥")
                                 .font(.system(size: 10, weight: .bold))
-                            Text(toneManager.isTabCompletionEnabled ? "Tab 적용 ON" : "Tab 적용 OFF")
+                            Text(toneManager.isTabCompletionEnabled ? UiStrings.tabApplyOn : UiStrings.tabApplyOff)
                                 .font(.system(size: 10, weight: .semibold))
                         }
                         .foregroundColor(toneManager.isTabCompletionEnabled ? .cyan : Color(nsColor: .secondaryLabelColor))
@@ -92,7 +92,7 @@ public struct FloatingDiffOverlayView: View {
                         .cornerRadius(4)
                     }
                     .buttonStyle(.plain)
-                    .help(toneManager.isTabCompletionEnabled ? "Tab 키 입력 시 자동으로 완성 문장을 적용합니다 (클릭하여 끄기)" : "Tab 키 자동 완성이 꺼져 있습니다. [적용하기] 버튼을 클릭해 적용하세요 (클릭하여 켜기)")
+                    .help(toneManager.isTabCompletionEnabled ? UiStrings.tabApplyTooltipOn : UiStrings.tabApplyTooltipOff)
 
                     Button(action: onDismiss) {
                         Image(systemName: "xmark")
@@ -101,11 +101,11 @@ public struct FloatingDiffOverlayView: View {
                             .padding(4)
                     }
                     .buttonStyle(.plain)
-                    .help("닫기 (Esc)")
+                    .help(UiStrings.dismissShortcut)
                 }
             }
 
-            // 2. Android 스타일 톤앤매너 인터랙티브 칩 셀렉터
+            // 2. Interactive Tone & Manner Chips Selector
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     ForEach(availableTones, id: \.id) { tone in
@@ -133,11 +133,11 @@ public struct FloatingDiffOverlayView: View {
                 }
             }
 
-            // 3. 2줄 레이아웃 (Android 동일 UI/UX: 1줄 원문 고정 + 2줄 AI 교정)
+            // 3. 2-Line Layout (Line 1: Immutable Original, Line 2: Real-time AI DIFF)
             VStack(alignment: .leading, spacing: 6) {
-                // 1줄: 📝 원문 (고정 유지)
+                // Line 1: Immutable Original
                 HStack(alignment: .top, spacing: 6) {
-                    Text("원문")
+                    Text(UiStrings.originalBadge)
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(Color(nsColor: .tertiaryLabelColor))
                         .padding(.horizontal, 4)
@@ -156,9 +156,9 @@ public struct FloatingDiffOverlayView: View {
                 .background(Color.white.opacity(0.03))
                 .cornerRadius(6)
 
-                // 2줄: ✨ AI 교정 / 톤 변환 (실시간 갱신 & DIFF)
+                // Line 2: Real-time AI DIFF Result
                 HStack(alignment: .top, spacing: 6) {
-                    Text("AI")
+                    Text(UiStrings.aiBadge)
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.black)
                         .padding(.horizontal, 4)
@@ -182,14 +182,14 @@ public struct FloatingDiffOverlayView: View {
                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
             )
 
-            // 4. 하단 조작 액션 툴바 (복사, 재생성, 즉시 적용)
+            // 4. Action Toolbar: Copy, Regenerate, Apply
             HStack(spacing: 8) {
-                // 클립보드 복사 버튼
+                // Copy to Clipboard Button
                 Button(action: copyToClipboard) {
                     HStack(spacing: 4) {
                         Image(systemName: copiedNotice ? "checkmark" : "doc.on.doc")
                             .font(.system(size: 10))
-                        Text(copiedNotice ? "복사됨!" : "복사")
+                        Text(copiedNotice ? UiStrings.copied : UiStrings.copySuggestion)
                             .font(.system(size: 11))
                     }
                     .foregroundColor(copiedNotice ? .green : Color(nsColor: .secondaryLabelColor))
@@ -200,12 +200,12 @@ public struct FloatingDiffOverlayView: View {
                 }
                 .buttonStyle(.plain)
 
-                // 재생성 버튼
+                // Regenerate Button
                 Button(action: regenerate) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 10))
-                        Text("다시 생성")
+                        Text(UiStrings.regenerate)
                             .font(.system(size: 11))
                     }
                     .foregroundColor(Color(nsColor: .secondaryLabelColor))
@@ -218,14 +218,14 @@ public struct FloatingDiffOverlayView: View {
 
                 Spacer()
 
-                // 즉시 치환 적용 버튼
+                // Apply Replacement Button
                 Button(action: {
                     onApply(currentDiff.suggested)
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 10, weight: .bold))
-                        Text(toneManager.isTabCompletionEnabled ? "적용하기 (Tab)" : "적용하기")
+                        Text(toneManager.isTabCompletionEnabled ? UiStrings.applyNowWithTab : UiStrings.applyNow)
                             .font(.system(size: 11, weight: .bold))
                     }
                     .foregroundColor(.black)

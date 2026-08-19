@@ -13,10 +13,10 @@ public enum IntentResult: Equatable {
     }
 }
 
-/// 100% 온디바이스 AI 추론 엔진 (macOS)
-/// [GEMINI.md 불변의 철칙 준수]
-/// - 하드코딩 꼼수(contains, replace, 정규식 기반 가짜 어미 합성) 영구 배제
-/// - 오직 로컬 신경망 추론으로만 동작하며, 모델 미로드 시 정직하게 원문을 보존합니다.
+/// 100% On-Device AI Neural Inference Engine (macOS)
+/// [GEMINI.md Core Principles Adherence]
+/// - Zero fake heuristics (no contains, replace, regex mock sentences).
+/// - 100% local neural network inference; honestly preserves original text if model is not loaded.
 public final class DearTalkIntentEngine: ObservableObject {
     @Published public private(set) var isModelLoaded: Bool = false
     @Published public private(set) var isProcessing: Bool = false
@@ -27,18 +27,18 @@ public final class DearTalkIntentEngine: ObservableObject {
     public static let shared = DearTalkIntentEngine()
 
     public init() {
-        DearTalkLogger.info("🔒 DearTalkIntentEngine 초기화: 100% 온디바이스 신경망 추론 모드", category: "Engine")
+        DearTalkLogger.info("🔒 DearTalkIntentEngine initialized: 100% on-device neural inference mode", category: "Engine")
         detectAndInitOnDeviceModel()
     }
 
-    /// 로컬 온디바이스 모델 파일 및 로컬 추론 서비스 탐색 및 기동
+    /// Discovers and initializes local on-device model files and inference services
     public func detectAndInitOnDeviceModel() {
         let fileManager = FileManager.default
         let homeDir = fileManager.homeDirectoryForCurrentUser.path
 
         var candidatePaths: [String] = []
 
-        // 1순위: .app 번들 내부 Contents/Resources/models/ 경로 (완전 독립형 패키징)
+        // Priority 1: Standalone .app bundle Contents/Resources/models/
         if let resourcePath = Bundle.main.resourcePath {
             candidatePaths.append("\(resourcePath)/models/model.gguf")
             candidatePaths.append("\(resourcePath)/models/gemma-2b-it.gguf")
@@ -47,13 +47,13 @@ public final class DearTalkIntentEngine: ObservableObject {
             candidatePaths.append("\(resourcePath)/model.gguf")
         }
 
-        // 2순위: macOS 표준 Application Support 디렉토리
+        // Priority 2: macOS Standard Application Support directory
         candidatePaths.append("\(homeDir)/Library/Application Support/DearTalk/models/model.gguf")
         candidatePaths.append("\(homeDir)/Library/Application Support/DearTalk/models/gemma-2b-it.gguf")
         candidatePaths.append("\(homeDir)/Library/Application Support/DearTalk/models/model.litertlm")
         candidatePaths.append("/Library/Application Support/DearTalk/models/model.litertlm")
 
-        // 3순위: 사용자 홈 .deartalk 디렉토리
+        // Priority 3: User home .deartalk directory
         candidatePaths.append("\(homeDir)/.deartalk/models/model.gguf")
         candidatePaths.append("\(homeDir)/.deartalk/models/gemma-2b-it.gguf")
         candidatePaths.append("\(homeDir)/.deartalk/models/model.litertlm")
