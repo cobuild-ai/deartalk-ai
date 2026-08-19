@@ -37,8 +37,14 @@ public enum DiffEngine {
         let origTokens = tokenize(original)
         let suggTokens = tokenize(suggested)
 
-        if original.trimmingCharacters(in: .whitespacesAndNewlines) == suggested.trimmingCharacters(in: .whitespacesAndNewlines) {
-            return DiffResult(original: original, suggested: suggested, operations: [.unchanged(suggested)])
+        if origTokens.isEmpty && suggTokens.isEmpty {
+            return DiffResult(original: original, suggested: suggested, operations: [])
+        }
+        if origTokens.isEmpty {
+            return DiffResult(original: original, suggested: suggested, operations: [.added(suggested)])
+        }
+        if suggTokens.isEmpty {
+            return DiffResult(original: original, suggested: suggested, operations: [.removed(original)])
         }
 
         let lcsMatrix = computeLCSMatrix(origTokens, suggTokens)
@@ -90,6 +96,7 @@ public enum DiffEngine {
         let n = a.count
         let m = b.count
         var dp = Array(repeating: Array(repeating: 0, count: m + 1), count: n + 1)
+        guard n > 0 && m > 0 else { return dp }
 
         for i in 1...n {
             for j in 1...m {
