@@ -352,23 +352,13 @@ class DearTalkIntentEngine(
         return@withContext process(voiceInput, currentEditorText, packageName)
     }
 
-    private fun cleanLlmOutput(raw: String): String {
+    internal fun cleanLlmOutput(raw: String): String {
         var text = raw
-            // 1. LLM 특수 제어 토큰 및 턴 태그 제거
-            .replace(Regex("""<(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>""", RegexOption.IGNORE_CASE), "")
+            // 1. LLM control tokens and turn tags (including trailing role identifiers like 'model' / 'user')
+            .replace(Regex("""<(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>\s*(model|user|assistant)?""", RegexOption.IGNORE_CASE), "")
             .replace(Regex("""</(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)>""", RegexOption.IGNORE_CASE), "")
-            // 2. 잔여 HTML/XML 태그 제거
+            // 2. Residual HTML/XML tags
             .replace(Regex("""</?[a-zA-Z0-9_-]+(\s+[^>]*)?>"""), "")
-            // 3. 인위적 라벨 접두어 제거 ("최종 문장:", "답변:", "model:", "AI:" 등)
-            .replace(Regex("""^(최종\s*문장|결과|답변|model|assistant|AI|Translation|Translated Text)\s*:\s*""", RegexOption.IGNORE_CASE), "")
-            .trim()
-            // 4. 마크다운 인용 기호, 불릿, 따옴표 제거
-            .removePrefix(">")
-            .removePrefix("-")
-            .removePrefix("*")
-            .removeSurrounding("\"")
-            .removeSurrounding("`")
-            .removeSurrounding("```")
             .trim()
 
         if (text.contains("\n")) {
@@ -377,6 +367,20 @@ class DearTalkIntentEngine(
                 text = lines.first()
             }
         }
+
+        // 3. Strip artificial label prefixes ("최종 문장:", "결과:", "Output:", etc.)
+        text = text
+            .replace(Regex("""^(최종\s*문장|수정된\s*문장|다듬은\s*문장|변환된\s*문장|결과|답변|제안|답|문장|Output|Result|Sentence|model|assistant|AI|Translation|Translated Text)\s*[:：]\s*""", RegexOption.IGNORE_CASE), "")
+            .trim()
+            // 4. Markdown quotes and formatting markers
+            .removePrefix(">")
+            .removePrefix("-")
+            .removePrefix("*")
+            .removeSurrounding("\"")
+            .removeSurrounding("`")
+            .removeSurrounding("```")
+            .trim()
+
         return text.trim()
     }
 }
