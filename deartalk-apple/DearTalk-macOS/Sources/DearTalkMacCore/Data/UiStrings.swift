@@ -118,6 +118,11 @@ public enum UiStrings {
              : "• 100% On-Device Neural Inference (NPU/GPU/CPU)\n• 0% External Network Traffic (Complete Privacy)\n• Zero Fake Heuristic Fallback Rules"
     }
 
+    // MARK: - Model Downloader
+    public static var downloaderConnecting: String { isKo ? "온디바이스 신경망 모델 다운로드 연결 중..." : "Connecting to download on-device model..." }
+    public static var downloaderCancelled: String { isKo ? "다운로드가 취소되었습니다." : "Download cancelled." }
+    public static var downloaderCompleted: String { isKo ? "모델 다운로드 및 설치 완료! 즉시 사용 가능합니다." : "Model download & setup complete! Ready to use." }
+
     // MARK: - Sandbox View
     public static var sandboxTitle: String { isKo ? "DearTalk AI 실시간 DIFF 샌드박스" : "DearTalk AI Real-time DIFF Sandbox" }
     public static var sandboxModelActive: String {

@@ -113,8 +113,8 @@ public struct FloatingDiffOverlayView: View {
                             changeTone(tone.id)
                         }) {
                             HStack(spacing: 4) {
-                                Image(systemName: tone.icon)
-                                    .font(.system(size: 9))
+                                Text(tone.icon)
+                                    .font(.system(size: 11))
                                 Text(tone.name)
                                     .font(.system(size: 11, weight: selectedTone == tone.id ? .bold : .medium))
                             }

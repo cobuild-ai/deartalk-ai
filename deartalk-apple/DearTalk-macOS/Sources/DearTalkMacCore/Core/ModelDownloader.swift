@@ -46,8 +46,8 @@ public final class ModelDownloader: NSObject, ObservableObject, URLSessionDownlo
         isCompleted = false
         errorMessage = nil
         progress = 0.0
-        statusMessage = "온디바이스 신경망 모델 다운로드 연결 중..."
-        DearTalkLogger.info("📥 온디바이스 모델 다운로드 시작: \(targetUrl.absoluteString)", category: "Downloader")
+        statusMessage = UiStrings.downloaderConnecting
+        DearTalkLogger.info("📥 On-device model download started: \(targetUrl.absoluteString)", category: "Downloader")
 
         let request = URLRequest(url: targetUrl)
         downloadTask = session?.downloadTask(with: request)
@@ -57,8 +57,8 @@ public final class ModelDownloader: NSObject, ObservableObject, URLSessionDownlo
     public func cancelDownload() {
         downloadTask?.cancel()
         isDownloading = false
-        statusMessage = "다운로드가 취소되었습니다."
-        DearTalkLogger.info("🛑 온디바이스 모델 다운로드 취소됨", category: "Downloader")
+        statusMessage = UiStrings.downloaderCancelled
+        DearTalkLogger.info("🛑 On-device model download cancelled", category: "Downloader")
     }
 
     // MARK: - URLSessionDownloadDelegate
@@ -79,7 +79,7 @@ public final class ModelDownloader: NSObject, ObservableObject, URLSessionDownlo
             self.downloadedSizeMB = writtenMB
             self.totalSizeMB = totalMB
             self.progress = max(0.0, min(1.0, calcProgress))
-            self.statusMessage = String(format: "다운로드 중: %.1f MB / %.1f MB (%.1f%%)", writtenMB, totalMB, self.progress * 100.0)
+            self.statusMessage = String(format: UiStrings.isKo ? "다운로드 중: %.1f MB / %.1f MB (%.1f%%)" : "Downloading: %.1f MB / %.1f MB (%.1f%%)", writtenMB, totalMB, self.progress * 100.0)
         }
     }
 
@@ -88,7 +88,7 @@ public final class ModelDownloader: NSObject, ObservableObject, URLSessionDownlo
         downloadTask: URLSessionDownloadTask,
         didFinishDownloadingTo location: URL
     ) {
-        DearTalkLogger.info("📦 모델 다운로드 완료. 로컬 저장소로 이동 중...", category: "Downloader")
+        DearTalkLogger.info("📦 Model download finished. Moving to local directory...", category: "Downloader")
 
         let targetUrl = destinationModelFile
         do {
@@ -97,22 +97,22 @@ public final class ModelDownloader: NSObject, ObservableObject, URLSessionDownlo
             }
             try FileManager.default.moveItem(at: location, to: targetUrl)
 
-            DearTalkLogger.info("✅ 온디바이스 모델 배치 완료: \(targetUrl.path)", category: "Downloader")
+            DearTalkLogger.info("✅ On-device model installed: \(targetUrl.path)", category: "Downloader")
 
             DispatchQueue.main.async {
                 self.isDownloading = false
                 self.isCompleted = true
                 self.progress = 1.0
-                self.statusMessage = "✅ 온디바이스 모델 설치 완료! 신경망 로드 중..."
+                self.statusMessage = UiStrings.downloaderCompleted
 
-                // 엔진에 모델 로드 갱신 알림
+                // Trigger engine to detect and load newly installed model
                 DearTalkIntentEngine.shared.detectAndInitOnDeviceModel()
             }
         } catch {
-            DearTalkLogger.error("❌ 모델 파일 이동 실패: \(error.localizedDescription)", category: "Downloader", error: error)
+            DearTalkLogger.error("❌ Failed to move downloaded model: \(error.localizedDescription)", category: "Downloader", error: error)
             DispatchQueue.main.async {
                 self.isDownloading = false
-                self.errorMessage = "파일 저장 중 오류가 발생했습니다: \(error.localizedDescription)"
+                self.errorMessage = "Failed to move file: \(error.localizedDescription)"
             }
         }
     }
