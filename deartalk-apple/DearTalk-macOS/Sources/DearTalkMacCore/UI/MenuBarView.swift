@@ -27,7 +27,7 @@ public struct MenuBarView: View {
                     Button(action: {
                         OnboardingWindowController.shared.showOnboarding()
                     }) {
-                        Text("⚠️ 권한 필요")
+                        Text(UiStrings.permissionNeeded)
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.orange)
                     }
@@ -41,7 +41,7 @@ public struct MenuBarView: View {
 
             Divider()
 
-            // 실시간 모니터링 토글 버튼
+            // Real-time Monitoring Toggle Button
             Button(action: {
                 if !monitor.hasAccessibilityPermission {
                     OnboardingWindowController.shared.showOnboarding()
@@ -54,7 +54,7 @@ public struct MenuBarView: View {
                 HStack {
                     Image(systemName: monitor.isMonitoring && monitor.hasAccessibilityPermission ? "pause.circle.fill" : "play.circle.fill")
                         .foregroundColor(monitor.isMonitoring && monitor.hasAccessibilityPermission ? .orange : .green)
-                    Text(monitor.hasAccessibilityPermission ? (monitor.isMonitoring ? UiStrings.disabled : UiStrings.enabled) : "손쉬운 사용 권한 허용하기")
+                    Text(monitor.hasAccessibilityPermission ? (monitor.isMonitoring ? UiStrings.disabled : UiStrings.enabled) : UiStrings.grantPermission)
                 }
             }
             .buttonStyle(.plain)

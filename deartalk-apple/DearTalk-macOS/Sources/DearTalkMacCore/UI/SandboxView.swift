@@ -24,7 +24,7 @@ public struct SandboxView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            // 상단 헤더 & 상태 바
+            // Header & Status Bar
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
@@ -34,14 +34,14 @@ public struct SandboxView: View {
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
                     }
-                    Text(intentEngine.isModelLoaded ? "🔒 온디바이스 LLM 신경망 활성화 · 100% 오프라인 실시간 추론" : "🔒 온디바이스 LLM 모델 준비 대기 중 · 원문 100% 보존 모드")
+                    Text(intentEngine.isModelLoaded ? UiStrings.sandboxModelActive : UiStrings.sandboxModelWaiting)
                         .font(.system(size: 11))
                         .foregroundColor(intentEngine.isModelLoaded ? Color(red: 0.4, green: 0.85, blue: 0.7) : Color.orange)
                 }
 
                 Spacer()
 
-                // 플로팅 오버레이 즉시 띄우기 테스트 버튼
+                // Test trigger button for floating overlay
                 Button(action: {
                     let diff = DiffEngine.computeWordDiff(original: "오늘 약속 있어?", suggested: "오늘 약속이 있으신가요?")
                     OverlayPanelController.shared.showManual(diffResult: diff)
@@ -49,7 +49,7 @@ public struct SandboxView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "sparkles")
                             .font(.system(size: 10, weight: .bold))
-                        Text("플로팅 패널 띄우기")
+                        Text(UiStrings.sandboxShowPanelBtn)
                             .font(.system(size: 11, weight: .bold))
                     }
                     .foregroundColor(.black)
@@ -60,7 +60,7 @@ public struct SandboxView: View {
                 }
                 .buttonStyle(.plain)
 
-                // 모니터링 상태 토글 버튼
+                // Monitoring status toggle button
                 Button(action: {
                     if !monitor.hasAccessibilityPermission {
                         OnboardingWindowController.shared.showOnboarding()
@@ -74,7 +74,7 @@ public struct SandboxView: View {
                         Circle()
                             .fill(monitor.isMonitoring && monitor.hasAccessibilityPermission ? Color.green : Color.orange)
                             .frame(width: 8, height: 8)
-                        Text(monitor.hasAccessibilityPermission ? (monitor.isMonitoring ? UiStrings.statusActive : UiStrings.statusPaused) : "⚠️ 권한 설정")
+                        Text(monitor.hasAccessibilityPermission ? (monitor.isMonitoring ? UiStrings.statusActive : UiStrings.statusPaused) : UiStrings.permissionNeeded)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(monitor.isMonitoring && monitor.hasAccessibilityPermission ? .green : .orange)
                     }
@@ -88,7 +88,7 @@ public struct SandboxView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .help(monitor.isMonitoring ? "클릭하여 실시간 모니터링 일시 정지" : "클릭하여 실시간 모니터링 시작 (손쉬운 사용 권한 필요)")
+                .help(monitor.isMonitoring ? UiStrings.sandboxMonitoringTooltipActive : UiStrings.sandboxMonitoringTooltipPaused)
             }
             .padding(16)
             .background(Color(red: 0.1, green: 0.12, blue: 0.16))

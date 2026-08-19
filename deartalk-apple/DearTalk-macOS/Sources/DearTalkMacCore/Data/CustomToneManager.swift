@@ -73,37 +73,37 @@ public final class CustomToneManager: ObservableObject {
             CustomTone(
                 id: "tone_refine",
                 name: UiStrings.toneRefine,
-                instruction: "문맥을 살려 중복과 어색한 끊김 없이 자연스럽고 유려한 완성형 문장으로 다듬어 작성하세요.",
+                instruction: UiStrings.toneRefineInstruction,
                 icon: "✨"
             ),
             CustomTone(
                 id: "tone_polite",
                 name: UiStrings.tonePolite,
-                instruction: "상대방에게 정중하고 예의 바른 비즈니스 경어체로 다듬어 완성형 문장 하나로 작성하세요.",
+                instruction: UiStrings.tonePoliteInstruction,
                 icon: "👔"
             ),
             CustomTone(
                 id: "tone_casual",
                 name: UiStrings.toneCasual,
-                instruction: "친구에게 대화하듯 부드럽고 친근한 톤으로 자연스러운 완성형 문장 하나로 작성하세요.",
+                instruction: UiStrings.toneCasualInstruction,
                 icon: "😊"
             ),
             CustomTone(
                 id: "tone_business",
                 name: UiStrings.toneBusiness,
-                instruction: "격식 있는 이메일/업무 메신저에 어울리는 명확하고 신뢰감 있는 문장으로 작성하세요.",
+                instruction: UiStrings.toneBusinessInstruction,
                 icon: "💼"
             ),
             CustomTone(
                 id: "tone_funny",
                 name: UiStrings.toneFunny,
-                instruction: "재치 있고 위트와 유머가 넘치며 빵 터지는 센스 있는 유쾌한 어조로 작성하세요.",
+                instruction: UiStrings.toneFunnyInstruction,
                 icon: "🤣"
             ),
             CustomTone(
                 id: "tone_cheeky",
                 name: UiStrings.toneCheeky,
-                instruction: "자신만만하고 쿨하며 살짝 얄밉고 거만하지만 밉지 않은 도도한 반말 어조로 작성하세요.",
+                instruction: UiStrings.toneCheekyInstruction,
                 icon: "😼"
             )
         ]
