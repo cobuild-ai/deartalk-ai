@@ -22,9 +22,19 @@ echo "🚀 [Ralph Loop] Starting Autonomous Cycle at $(date)"
 echo "========================================================"
 
 # 1. Check Git Status
-if [[ -n $(git status --porcelain) ]]; then
-  echo "⚠️ [Ralph Loop] Working tree is dirty. Skipping loop to protect local edits."
+# Exclude .agents/INBOX.md from dirty check because users write tasks there
+DIRTY_FILES=$(git status --porcelain | grep -v "\.agents/INBOX\.md" || true)
+if [[ -n "$DIRTY_FILES" ]]; then
+  echo "⚠️ [Ralph Loop] Working tree has uncommitted code changes. Skipping loop to protect local edits:"
+  echo "$DIRTY_FILES"
   exit 0
+fi
+
+# Auto-commit INBOX.md on main if modified so the branch inherits latest tasks
+if [[ -n $(git status --porcelain .agents/INBOX.md) ]]; then
+  echo "📥 [Ralph Loop] Committing latest INBOX.md tasks to main..."
+  git add .agents/INBOX.md
+  git commit -m "docs(inbox): update task list" || true
 fi
 
 # Ensure we are on main and up to date
