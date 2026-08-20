@@ -57,6 +57,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
+
         sttManager = SpeechRecognitionManager(this)
         contextRepository = ContextRepository(this)
         intentEngine = DearTalkIntentEngine(this, contextRepository)
@@ -191,7 +193,7 @@ fun MainOnDeviceScreen(
         }
     }
 
-    val isKorean = java.util.Locale.getDefault().language == "ko"
+    val isKorean = DearTalkSettings.getEffectiveLocale(context).language == "ko"
 
     // 히스토리 초기화 확인 다이얼로그
     if (showClearHistoryDialog) {
@@ -600,6 +602,7 @@ fun MainOnDeviceScreen(
                             onCheckedChange = { checked ->
                                 isAutoLanguage = checked
                                 DearTalkSettings.setAutoLanguage(context, checked)
+                                UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(context))
                                 languageDisplayTitle = DearTalkSettings.getLanguageDisplayTitle(context)
                             },
                             colors = SwitchDefaults.colors(
@@ -632,6 +635,7 @@ fun MainOnDeviceScreen(
                                     onClick = {
                                         selectedLanguageCode = lang.code
                                         DearTalkSettings.setSelectedLanguageCode(context, lang.code)
+                                        UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(context))
                                         languageDisplayTitle = DearTalkSettings.getLanguageDisplayTitle(context)
                                     },
                                     label = { Text("${lang.flag} ${lang.nativeName}", fontSize = 12.sp) },

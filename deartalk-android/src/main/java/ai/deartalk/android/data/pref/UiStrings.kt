@@ -8,8 +8,17 @@ import java.util.Locale
  * - 모든 사용자 대면 UI 문자열을 한 곳에서 관리
  */
 object UiStrings {
+    private var overrideLocale: Locale? = null
+
+    fun setLocale(locale: Locale) {
+        overrideLocale = locale
+    }
+
     private val isKo: Boolean
-        get() = Locale.getDefault().language == "ko"
+        get() {
+            val locale = overrideLocale ?: Locale.getDefault()
+            return locale.language == "ko"
+        }
 
     // ═══════════════════════════════════════════════════
     // DearTalkScreen.kt — 마이크 버튼 상태

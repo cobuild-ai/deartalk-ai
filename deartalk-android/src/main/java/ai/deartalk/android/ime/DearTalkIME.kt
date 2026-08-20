@@ -66,6 +66,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
 
+        UiStrings.setLocale(ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this))
+
         contextRepository = ContextRepository(this)
         intentEngine = DearTalkIntentEngine(this, contextRepository)
         sttManager = SpeechRecognitionManager(this)
@@ -82,6 +84,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         val pkg = info?.packageName ?: ""
         currentPackageName = pkg
         hangulComposer.reset()
+
+        UiStrings.setLocale(ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this))
 
         tonesState = CustomToneManager.getTones(this)
         aiModesState = CustomToneManager.getAllAiModes(this)
