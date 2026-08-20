@@ -4,6 +4,16 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Android 11+ (API 30+) On-Device Speech Recognition & TTS Package Visibility -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <!-- 테스트용 브로드캐스트를 같은 서명 앱에서만 허용하는 서명 보호 퍼미션 -->
     <permission
         android:name="ai.deartalk.android.permission.TEST_INFERENCE"
