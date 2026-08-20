@@ -53,4 +53,25 @@ class DearTalkIntentEngineTest {
         // 모델 미로드 시 왜곡 없이 원문 반환
         assertEquals(input, (result as IntentResult.Success).text)
     }
+
+    @Test
+    fun `톤앤매너_다국어_입력_및_모델미로드_원문보존_테스트`() = runBlocking {
+        val tone = ai.deartalk.android.data.pref.CustomTone(
+            id = "tone_polite",
+            name = "Polite",
+            instruction = "Be polite"
+        )
+        
+        // 영어 입력 테스트
+        val englishInput = "Do you want to have lunch?"
+        val resultEn = intentEngine.processWithTone(englishInput, tone)
+        assertTrue(resultEn is IntentResult.Success)
+        assertEquals(englishInput, (resultEn as IntentResult.Success).text)
+
+        // 일본어 입력 테스트
+        val japaneseInput = "ご飯一緒に食べますか？"
+        val resultJa = intentEngine.processWithTone(japaneseInput, tone)
+        assertTrue(resultJa is IntentResult.Success)
+        assertEquals(japaneseInput, (resultJa as IntentResult.Success).text)
+    }
 }

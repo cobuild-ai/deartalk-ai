@@ -221,54 +221,123 @@ class DearTalkIntentEngine(
 
         if (isModelLoaded) {
             try {
-                val examples = when (tone.id) {
-                    "tone_polite", "공손하게" -> """
-                        [변환 예시]
-                        - 원문: "식사 같이 하실래요?" -> 혹시 식사 함께 하실 수 있으실까요?
-                        - 원문: "내일 시간 되세요?" -> 내일 시간 내어주실 수 있으신지 여쭙습니다.
-                        - 원문: "자료 보내줘" -> 요청하신 자료를 송부해 드립니다.
-                    """.trimIndent()
-                    "tone_casual", "친근하게" -> """
-                        [변환 예시]
-                        - 원문: "식사 같이 하실래요?" -> 우리 같이 식사해요! 😊
-                        - 원문: "내일 시간 되세요?" -> 내일 혹시 시간 괜찮아요? 😊
-                        - 원문: "오늘 재밌었어" -> 오늘 너무 즐거웠어! 😊
-                    """.trimIndent()
-                    "tone_business", "비즈니스" -> """
-                        [변환 예시]
-                        - 원문: "식사 같이 하실래요?" -> 금일 오찬 함께 하실 수 있는지 확인 부탁드립니다.
-                        - 원문: "내일 회의 언제 할까요?" -> 익일 회의 일정 조율 요청드립니다.
-                        - 원문: "자료 검토해봐" -> 송부드린 자료 검토 부탁드립니다.
-                    """.trimIndent()
-                    "tone_funny", "재미있게" -> """
-                        [변환 예시]
-                        - 원문: "식사 같이 하실래요?" -> 밥 먹으러 안 가면 유죄! 같이 맛있는 거 먹으러 가요 🤣
-                        - 원문: "내일 시간 되세요?" -> 내일 저랑 놀아줄 귀한 시간 1초만 기부해 주시죠! 🤣
-                        - 원문: "오늘 재밌었어" -> 오늘 너무 재밌어서 배꼽 가출할 뻔했잖아 🤣
-                    """.trimIndent()
-                    "tone_cheeky", "건방지게" -> """
-                        [변환 예시]
-                        - 원문: "식사 같이 하실래요?" -> 오늘 밥은 내가 같이 먹어주는 거니까 영광인 줄 알아 😼
-                        - 원문: "내일 시간 되세요?" -> 내일 시간 비워둬, 내가 만나줄게 😼
-                        - 원문: "오늘 재밌었어" -> 오늘 나랑 놀았으니 넌 복 받은 거야 😼
-                    """.trimIndent()
-                    else -> """
-                        [변환 예시]
-                        - 원문: "식사 같이 하실래요?" -> 식사 같이 하실래요?
-                        - 원문: "내일 몇 시에 만날까?" -> 내일 몇 시에 만날까요?
-                    """.trimIndent()
+                val targetLocale = context?.let { DearTalkSettings.getEffectiveLocale(it) } ?: Locale.getDefault()
+                val isKo = targetLocale.language == "ko"
+
+                val examples = if (isKo) {
+                    when (tone.id) {
+                        "tone_polite", "공손하게" -> """
+                            [변환 예시]
+                            - 원문: "식사 같이 하실래요?" -> 혹시 식사 함께 하실 수 있으실까요?
+                            - 원문: "내일 시간 되세요?" -> 내일 시간 내어주실 수 있으신지 여쭙습니다.
+                            - 원문: "자료 보내줘" -> 요청하신 자료를 송부해 드립니다.
+                            - 원문: "Do you want to have lunch?" -> Would you like to have lunch with me?
+                            - 원문: "ご飯一緒に食べますか？" -> もしよろしければ、ご一緒に食事でもいかがでしょうか？
+                        """.trimIndent()
+                        "tone_casual", "친근하게" -> """
+                            [변환 예시]
+                            - 원문: "식사 같이 하실래요?" -> 우리 같이 식사해요! 😊
+                            - 원문: "내일 시간 되세요?" -> 내일 혹시 시간 괜찮아요? 😊
+                            - 원문: "오늘 재밌었어" -> 오늘 너무 즐거웠어! 😊
+                            - 원문: "Do you want to have lunch?" -> Let's grab some lunch! 😊
+                            - 원문: "ご飯一緒に食べますか？" -> 一緒にご飯食べよう！ 😊
+                        """.trimIndent()
+                        "tone_business", "비즈니스" -> """
+                            [변환 예시]
+                            - 원문: "식사 같이 하실래요?" -> 금일 오찬 함께 하실 수 있는지 확인 부탁드립니다.
+                            - 원문: "내일 회의 언제 할까요?" -> 익일 회의 일정 조율 요청드립니다.
+                            - 원문: "자료 검토해봐" -> 송부드린 자료 검토 부탁드립니다.
+                            - 원문: "Do you want to have lunch?" -> Please let me know if you are available for lunch today.
+                            - 원문: "ご飯一緒に食べますか？" -> 本日の昼食をご一緒させていただければと存じます。
+                        """.trimIndent()
+                        "tone_funny", "재미있게" -> """
+                            [변환 예시]
+                            - 원문: "식사 같이 하실래요?" -> 밥 먹으러 안 가면 유죄! 같이 맛있는 거 먹으러 가요 🤣
+                            - 원문: "오늘 재밌었어" -> 오늘 너무 재밌어서 배꼽 가출할 뻔했잖아 🤣
+                            - 원문: "Do you want to have lunch?" -> Lunch is calling, and we must go! 🤣
+                            - 원문: "ご飯一緒に食べますか？" -> ご飯食べに行かないと有罪！一緒に美味しいもの食べに行こう 🤣
+                        """.trimIndent()
+                        "tone_cheeky", "건방지게" -> """
+                            [변환 예시]
+                            - 원문: "식사 같이 하실래요?" -> 오늘 밥은 내가 같이 먹어주는 거니까 영광인 줄 알아 😼
+                            - 원문: "오늘 재밌었어" -> 오늘 나랑 놀았으니 넌 복 받은 거야 😼
+                            - 원문: "Do you want to have lunch?" -> You should be honored to have lunch with me today. 😼
+                            - 원문: "ご飯一緒に食べますか？" -> 今日は私が一緒にご飯を食べてあげるんだから光栄に思いなさい 😼
+                        """.trimIndent()
+                        else -> """
+                            [변환 예시]
+                            - 원문: "식사 같이 하실래요?" -> 식사 같이 하실래요?
+                            - 원문: "Do you want to have lunch?" -> Do you want to have lunch?
+                        """.trimIndent()
+                    }
+                } else {
+                    when (tone.id) {
+                        "tone_polite", "공손하게" -> """
+                            [Examples]
+                            - Input: "Do you want to have lunch?" -> Would you like to have lunch with me?
+                            - Input: "Are you free tomorrow?" -> I was wondering if you would have some time tomorrow.
+                            - Input: "식사 같이 하실래요?" -> 혹시 식사 함께 하실 수 있으실까요?
+                            - Input: "ご飯一緒に食べますか？" -> もしよろしければ、ご一緒に食事でもいかがでしょうか？
+                        """.trimIndent()
+                        "tone_casual", "친근하게" -> """
+                            [Examples]
+                            - Input: "Do you want to have lunch?" -> Let's grab some lunch! 😊
+                            - Input: "Are you free tomorrow?" -> Are you free tomorrow? 😊
+                            - Input: "식사 같이 하실래요?" -> 우리 같이 식사해요! 😊
+                            - Input: "ご飯一緒に食べますか？" -> 一緒にご飯食べよう！ 😊
+                        """.trimIndent()
+                        "tone_business", "비즈니스" -> """
+                            [Examples]
+                            - Input: "Do you want to have lunch?" -> Please let me know if you are available for lunch today.
+                            - Input: "Send me the file" -> Please review the attached document at your earliest convenience.
+                            - Input: "식사 같이 하실래요?" -> 금일 오찬 함께 하실 수 있는지 확인 부탁드립니다.
+                            - Input: "ご飯一緒に食べますか？" -> 本日の昼食をご一緒させていただければと存じます。
+                        """.trimIndent()
+                        "tone_funny", "재미있게" -> """
+                            [Examples]
+                            - Input: "Do you want to have lunch?" -> Lunch is calling, and we must go! 🤣
+                            - Input: "식사 같이 하실래요?" -> 밥 먹으러 안 가면 유죄! 같이 맛있는 거 먹으러 가요 🤣
+                            - Input: "ご飯一緒に食べますか？" -> ご飯食べに行かないと有罪！一緒に美味しいもの食べに行こう 🤣
+                        """.trimIndent()
+                        "tone_cheeky", "건방지게" -> """
+                            [Examples]
+                            - Input: "Do you want to have lunch?" -> You should be honored to have lunch with me today. 😼
+                            - Input: "식사 같이 하실래요?" -> 오늘 밥은 내가 같이 먹어주는 거니까 영광인 줄 알아 😼
+                            - Input: "ご飯一緒に食べますか？" -> 今日は私が一緒にご飯を食べてあげるんだから光栄に思いなさい 😼
+                        """.trimIndent()
+                        else -> """
+                            [Examples]
+                            - Input: "Do you want to have lunch?" -> Do you want to have lunch?
+                            - Input: "식사 같이 하실래요?" -> 식사 같이 하실래요?
+                        """.trimIndent()
+                    }
                 }
 
-                val prompt = "<start_of_turn>user\n" +
-                        "당신은 모바일 키보드의 '텍스트 어조/톤 변환기'입니다.\n" +
-                        "⚠️ 중요: 당신은 챗봇이 아니므로 절대로 질문에 대답하거나 대화를 시도하지 마세요!\n" +
-                        "화자의 핵심 의도와 내용을 100% 보존하면서, 텍스트의 어조만 '${tone.name}'(${tone.instruction}) 스타일로 다시 작성하세요.\n\n" +
-                        "$examples\n\n" +
-                        "[출력 규칙]\n" +
-                        "1. 원문이 질문이더라도 절대 답하지 말고, 원문 자체를 ${tone.name} 어조로 변환한 한 줄의 문장만 출력하세요.\n" +
-                        "2. 설명, 인사말, 따옴표, 라벨 접두어 없이 오직 변환된 텍스트만 평문으로 출력하세요.\n\n" +
-                        "변환할 원문: \"$trimmed\"<end_of_turn>\n" +
-                        "<start_of_turn>model\n"
+                val prompt = if (isKo) {
+                    "<start_of_turn>user\n" +
+                            "당신은 모바일 키보드의 '텍스트 어조/톤 변환기'입니다.\n" +
+                            "⚠️ 중요: 당신은 챗봇이 아니므로 절대로 질문에 대답하거나 대화를 시도하지 마세요!\n" +
+                            "화자의 핵심 의도와 내용을 100% 보존하면서, 텍스트의 어조만 '${tone.name}'(${tone.instruction}) 스타일로 다시 작성하세요.\n" +
+                            "⚠️ 규칙: 입력 문장이 한국어가 아닌 다국어(영어, 일본어 등)인 경우에도, 번역하지 말고 입력 문장의 원래 언어를 그대로 유지하며 해당 언어의 톤앤매너에 맞게 변환하세요.\n\n" +
+                            "$examples\n\n" +
+                            "[출력 규칙]\n" +
+                            "1. 원문이 질문이더라도 절대 답하지 말고, 원문 자체를 ${tone.name} 어조로 변환한 한 줄의 문장만 출력하세요.\n" +
+                            "2. 설명, 인사말, 따옴표, 라벨 접두어 없이 오직 변환된 텍스트만 평문으로 출력하세요.\n\n" +
+                            "변환할 원문: \"$trimmed\"<end_of_turn>\n" +
+                            "<start_of_turn>model\n"
+                } else {
+                    "<start_of_turn>user\n" +
+                            "You are a mobile keyboard's 'tone & style transformer'.\n" +
+                            "⚠️ CRITICAL: You are NOT a chatbot. Do NOT answer questions or converse with the user!\n" +
+                            "Convert the tone of the input text into the target style '${tone.name}' (${tone.instruction}) while preserving the original content.\n" +
+                            "⚠️ RULE: Keep the original language (e.g. English, Japanese, Korean, etc.) of the input text. Do NOT translate it to another language. Just convert its tone and style within its original language.\n\n" +
+                            "$examples\n\n" +
+                            "[Output Rules]\n" +
+                            "1. Even if the input is a question, do NOT answer it. Just refine and convert the question itself.\n" +
+                            "2. Output ONLY the refined text without explanations, greetings, quotes, or markdown.\n\n" +
+                            "Input: \"$trimmed\"<end_of_turn>\n" +
+                            "<start_of_turn>model\n"
+                }
 
                 var output = ""
                 sharedLiteRtEngine?.let { engine ->
