@@ -58,46 +58,52 @@ echo "🤖 [Ralph Loop] Invoking agy CLI (autonomous mode)..."
 agy --mode accept-edits --dangerously-skip-permissions --effort high --prompt "$PROMPT_CONTENT"
 
 # 3. Build & Test Verification (Gatekeeper)
-echo "🛡️ [Ralph Loop] Running Swift Build Gatekeeper..."
+echo "🛡️ [Ralph Loop] Running macOS Swift & Android Unit Test Gatekeepers..."
 BUILD_SUCCESS=true
 
+echo "  📦 [1/2] Swift Build (DearTalk-macOS)..."
 if ! swift build --package-path "$PROJECT_DIR/deartalk-apple/DearTalk-macOS"; then
   BUILD_SUCCESS=false
   echo "❌ [Ralph Loop] Swift build failed!"
+fi
+
+if [[ "$BUILD_SUCCESS" = true ]]; then
+  echo "  🤖 [2/2] Android Gradle Tests (:deartalk-android)..."
+  if ! ./gradlew test; then
+    BUILD_SUCCESS=false
+    echo "❌ [Ralph Loop] Android tests failed!"
+  fi
 fi
 
 # 4. Handle Result
 if [[ "$BUILD_SUCCESS" = true ]]; then
   # Check if there are any changes made by agy
   if [[ -n $(git status --porcelain) ]]; then
-    echo "✅ [Ralph Loop] Changes detected and build passed. Committing..."
+    echo "✅ [Ralph Loop] Changes detected and all gatekeeper tests passed. Committing..."
     git add .
     git commit -m "chore(auto): autonomous ralph loop improvement [${TIMESTAMP}]"
     
-    echo "📤 [Ralph Loop] Pushing to remote branch: $BRANCH_NAME..."
+    echo "📤 [Ralph Loop] Pushing backup branch: $BRANCH_NAME..."
     git push origin "$BRANCH_NAME"
     
-    # Try creating PR if gh cli is available
-    if command -v gh &> /dev/null; then
-      echo "📝 [Ralph Loop] Creating GitHub PR via gh CLI..."
-      gh pr create \
-        --title "🤖 [Auto Loop] Autonomous Improvement (${TIMESTAMP})" \
-        --body "Automated improvement cycle completed by \`agy cli\`.\n\n- Build & Verification: Passed\n- Branch: \`$BRANCH_NAME\`" \
-        --base main \
-        --head "$BRANCH_NAME" || true
-    else
-      echo "ℹ️ [Ralph Loop] 'gh' CLI not installed. Branch pushed without PR creation."
-    fi
+    echo "🔀 [Ralph Loop] Auto-merging verified changes into main..."
+    git checkout main
+    git merge "$BRANCH_NAME" --no-edit
     
-    echo "🎉 [Ralph Loop] Cycle successfully completed!"
+    echo "🚀 [Ralph Loop] Pushing merged main branch to origin/main..."
+    git push origin main
+    
+    # Cleanup local auto branch
+    git branch -d "$BRANCH_NAME" || true
+    
+    echo "🎉 [Ralph Loop] Cycle successfully completed and merged into main!"
   else
     echo "✨ [Ralph Loop] No code changes required in this cycle. Clean exit."
+    git checkout main
+    git branch -d "$BRANCH_NAME" || true
   fi
-  
-  # Return to main branch
-  git checkout main
 else
-  echo "🚨 [Ralph Loop] Build verification failed! Rolling back changes..."
+  echo "🚨 [Ralph Loop] Build/Test verification failed! Rolling back changes..."
   git reset --hard HEAD
   git clean -fd
   git checkout main
