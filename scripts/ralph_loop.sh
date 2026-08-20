@@ -58,17 +58,25 @@ echo "🤖 [Ralph Loop] Invoking agy CLI (autonomous mode)..."
 agy --mode accept-edits --dangerously-skip-permissions --effort high --prompt "$PROMPT_CONTENT"
 
 # 3. Build & Test Verification (Gatekeeper)
-echo "🛡️ [Ralph Loop] Running macOS Swift & Android Unit Test Gatekeepers..."
+echo "🛡️ [Ralph Loop] Running Multiplatform (macOS, iOS, Android) Gatekeepers..."
 BUILD_SUCCESS=true
 
-echo "  📦 [1/2] Swift Build (DearTalk-macOS)..."
-if ! swift build --package-path "$PROJECT_DIR/deartalk-apple/DearTalk-macOS"; then
+echo "  📦 [1/3] Swift Build & Run (DearTalk-macOS)..."
+if ! swift build --package-path "$PROJECT_DIR/deartalk-apple/DearTalk-macOS" || ! swift run --package-path "$PROJECT_DIR/deartalk-apple/DearTalk-macOS" DearTalkMacRunner; then
   BUILD_SUCCESS=false
-  echo "❌ [Ralph Loop] Swift build failed!"
+  echo "❌ [Ralph Loop] macOS Swift build or runner failed!"
 fi
 
 if [[ "$BUILD_SUCCESS" = true ]]; then
-  echo "  🤖 [2/2] Android Gradle Tests (:deartalk-android)..."
+  echo "  📱 [2/3] Swift Build & Run (DearTalk-iOS)..."
+  if ! swift build --package-path "$PROJECT_DIR/deartalk-apple/DearTalk-iOS" || ! swift run --package-path "$PROJECT_DIR/deartalk-apple/DearTalk-iOS" DearTalkIOSRunner; then
+    BUILD_SUCCESS=false
+    echo "❌ [Ralph Loop] iOS Swift build or runner failed!"
+  fi
+fi
+
+if [[ "$BUILD_SUCCESS" = true ]]; then
+  echo "  🤖 [3/3] Android Gradle Tests (:deartalk-android)..."
   if ! ./gradlew test; then
     BUILD_SUCCESS=false
     echo "❌ [Ralph Loop] Android tests failed!"
