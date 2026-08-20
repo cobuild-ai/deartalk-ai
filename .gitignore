@@ -58,5 +58,6 @@ deartalk-apple/DearTalk-macOS/build/
 
 # Logs & Temporary Media
 *.log
+logs/
 .tempmediaStorage/
 .user_uploaded/
