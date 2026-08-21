@@ -126,6 +126,13 @@ fun MainOnDeviceScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
+    val isModelLoaded by intentEngine.isModelLoadedFlow.collectAsState(initial = intentEngine.isModelLoaded)
+    val isDownloading by ai.deartalk.android.agent.ModelDownloader.shared.isDownloading.collectAsState(initial = false)
+    val downloadProgress by ai.deartalk.android.agent.ModelDownloader.shared.progress.collectAsState(initial = 0.0f)
+    val statusMessage by ai.deartalk.android.agent.ModelDownloader.shared.statusMessage.collectAsState(initial = "")
+    val downloadErrorMessage by ai.deartalk.android.agent.ModelDownloader.shared.errorMessage.collectAsState(initial = null)
+
+
     // 설정 상태
     var isAutoLanguage by remember { mutableStateOf(DearTalkSettings.isAutoLanguage(context)) }
     var selectedLanguageCode by remember { mutableStateOf(DearTalkSettings.getSelectedLanguageCode(context)) }
@@ -276,13 +283,13 @@ fun MainOnDeviceScreen(
                                 color = DearTalkSecondary
                             )
                             Text(
-                                text = if (intentEngine.isModelLoaded) {
+                                text = if (isModelLoaded) {
                                     if (isKorean) "✨ 온디바이스 Gemma LLM 가동 중 (외부 통신 0%)" else "✨ On-Device Gemma LLM Running (Zero Network)"
                                 } else {
                                     if (isKorean) "ℹ️ 온디바이스 Gemma LLM 모델 준비 중 (STT 원문 모드)" else "ℹ️ Initializing On-Device LLM (STT Raw Mode)"
                                 },
                                 fontSize = 12.sp,
-                                color = if (intentEngine.isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
+                                color = if (isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
                             )
                         }
                     }
@@ -309,6 +316,143 @@ fun MainOnDeviceScreen(
                         }
                     }
 
+                    // 모델 미배치 시 원클릭 인앱 자동 다운로더 카드 노출
+                    if (!isModelLoaded) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(DearTalkKey.copy(alpha = 0.5f))
+                                .padding(12.dp)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = if (isKorean) "📦 Google Gemma 온디바이스 AI 모델 설치" else "📦 Install Google Gemma On-Device AI Model",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DearTalkText
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = DearTalkSecondary.copy(alpha = 0.15f)
+                                    ) {
+                                        Text(
+                                            text = if (isKorean) "오프라인 저장 (~1.3GB)" else "Offline Store (~1.3GB)",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = DearTalkSecondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                
+                                Text(
+                                    text = if (isKorean) 
+                                        "외부 도구 설치 없이 앱 내부에서 100% 온디바이스 Gemma 신경망을 원클릭으로 다운로드하여 즉시 실시간 글쓰기 교정을 활성화합니다."
+                                    else 
+                                        "Download the 100% on-device Gemma neural network directly inside the app with a single click to instantly activate real-time writing refinement.",
+                                    fontSize = 11.sp,
+                                    color = DearTalkTextDim
+                                )
+
+                                if (isDownloading) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        LinearProgressIndicator(
+                                            progress = { downloadProgress },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            color = DearTalkSecondary,
+                                            trackColor = DearTalkKey
+                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = statusMessage,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = DearTalkSecondary
+                                            )
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            TextButton(
+                                                onClick = { ai.deartalk.android.agent.ModelDownloader.shared.cancelDownload() },
+                                                contentPadding = PaddingValues(0.dp),
+                                                modifier = Modifier.height(24.dp)
+                                            ) {
+                                                Text(
+                                                    text = if (isKorean) "취소" else "Cancel",
+                                                    fontSize = 11.sp,
+                                                    color = Color(0xFFEF4444)
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Button(
+                                            onClick = { 
+                                                ai.deartalk.android.agent.ModelDownloader.shared.startDownload(context, intentEngine) 
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkSecondary),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                            modifier = Modifier.height(36.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.ArrowCircleDown,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(14.dp),
+                                                    tint = Color.Black
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = if (isKorean) "🚀 온디바이스 AI 모델 다운로드" else "🚀 Download On-Device AI Model",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.Black
+                                                )
+                                            }
+                                        }
+
+                                        Button(
+                                            onClick = { 
+                                                intentEngine.detectAndInitOnDeviceModel() 
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkKey),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                            modifier = Modifier.height(36.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(12.dp),
+                                                    tint = DearTalkText
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = if (isKorean) "로컬 감지 새로고침" else "Refresh Local Detection",
+                                                    fontSize = 11.sp,
+                                                    color = DearTalkText
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                downloadErrorMessage?.let { err ->
+                                    Text(
+                                        text = err,
+                                        fontSize = 10.sp,
+                                        color = Color(0xFFEF4444)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(12.dp))
                     HorizontalDivider(color = DearTalkKey)
                     Spacer(modifier = Modifier.height(12.dp))
@@ -322,9 +466,10 @@ fun MainOnDeviceScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val modelDir = File("/data/local/tmp/llm/")
-                    val modelFiles = try {
-                        modelDir.listFiles()?.filter {
+                    val modelDir1 = File("/data/local/tmp/llm/")
+                    val modelDir2 = File(context.filesDir, "models/")
+                    val modelFiles1 = try {
+                        modelDir1.listFiles()?.filter {
                             it.isFile &&
                             (it.name.endsWith(".litertlm", ignoreCase = true) || it.name.endsWith(".bin", ignoreCase = true)) &&
                             !it.name.contains("cache") &&
@@ -332,11 +477,18 @@ fun MainOnDeviceScreen(
                             !it.name.contains("adapter")
                         } ?: emptyList()
                     } catch (_: Exception) { emptyList() }
+                    val modelFiles2 = try {
+                        modelDir2.listFiles()?.filter {
+                            it.isFile &&
+                            (it.name.endsWith(".litertlm", ignoreCase = true) || it.name.endsWith(".bin", ignoreCase = true))
+                        } ?: emptyList()
+                    } catch (_: Exception) { emptyList() }
+                    val modelFiles = modelFiles1 + modelFiles2
 
                     DiagnosticRow(
                         label = if (isKorean) "엔진 상태" else "Engine Status",
-                        value = if (intentEngine.isModelLoaded) (if (isKorean) "✅ 정상 가동 중 (온디바이스 LLM)" else "✅ Running (On-Device LLM)") else (if (isKorean) "⏳ 초기화 중 / 미로드" else "⏳ Initializing"),
-                        valueColor = if (intentEngine.isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
+                        value = if (isModelLoaded) (if (isKorean) "✅ 정상 가동 중 (온디바이스 LLM)" else "✅ Running (On-Device LLM)") else (if (isKorean) "⏳ 초기화 중 / 미로드" else "⏳ Initializing"),
+                        valueColor = if (isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
                     )
                     DiagnosticRow(
                         label = if (isKorean) "로드된 모델" else "Loaded Model",
@@ -345,7 +497,7 @@ fun MainOnDeviceScreen(
                     )
                     DiagnosticRow(
                         label = if (isKorean) "모델 디렉토리" else "Model Directory",
-                        value = "/data/local/tmp/llm/",
+                        value = if (modelFiles2.isNotEmpty()) context.filesDir.absolutePath + "/models/" else "/data/local/tmp/llm/",
                         valueColor = DearTalkTextDim
                     )
                     DiagnosticRow(

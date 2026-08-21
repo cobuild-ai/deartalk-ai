@@ -74,4 +74,25 @@ class DearTalkIntentEngineTest {
         assertTrue(resultJa is IntentResult.Success)
         assertEquals(japaneseInput, (resultJa as IntentResult.Success).text)
     }
+
+    @Test
+    fun `모델_감지_및_초기화_메소드와_Flow_갱신_테스트`() = runBlocking {
+        assertFalse(intentEngine.isModelLoaded)
+        assertFalse(intentEngine.isModelLoadedFlow.value)
+        intentEngine.detectAndInitOnDeviceModel()
+        assertFalse(intentEngine.isModelLoadedFlow.value)
+    }
+
+
+    @Test
+    fun `ModelDownloader_상태_및_다운로드_취소_테스트`() = runBlocking {
+        val downloader = ModelDownloader.shared
+        assertFalse(downloader.isDownloading.value)
+        
+        downloader.cancelDownload()
+        assertFalse(downloader.isDownloading.value)
+        val expectedStatus = if (java.util.Locale.getDefault().language == "ko") "다운로드 취소됨" else "Download cancelled"
+        assertEquals(expectedStatus, downloader.statusMessage.value)
+    }
 }
+

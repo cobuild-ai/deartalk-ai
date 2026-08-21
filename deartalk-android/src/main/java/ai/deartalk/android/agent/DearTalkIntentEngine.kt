@@ -13,6 +13,9 @@ import com.google.ai.edge.litertlm.InputData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -41,6 +44,9 @@ class DearTalkIntentEngine(
         private var sharedLiteRtEngine: Engine? = null
         private var sharedInitJob: Job? = null
 
+        private val _isModelLoadedFlow = MutableStateFlow(false)
+        val isModelLoadedFlow: StateFlow<Boolean> = _isModelLoadedFlow.asStateFlow()
+
         @Volatile
         var sharedLoaded: Boolean = false
             private set
@@ -48,6 +54,9 @@ class DearTalkIntentEngine(
 
     val isModelLoaded: Boolean
         get() = sharedLoaded
+
+    val isModelLoadedFlow: StateFlow<Boolean>
+        get() = DearTalkIntentEngine.isModelLoadedFlow
 
     init {
         ensureModelLoaded()
@@ -112,11 +121,25 @@ class DearTalkIntentEngine(
 
                         sharedLiteRtEngine = engine
                         sharedLoaded = true
+                        _isModelLoadedFlow.value = true
                         Log.d(TAG, "✅ [초경량 온디바이스 LLM 로드 완료 ($backend)]: $path (${file.length() / 1024 / 1024}MB)")
                         return
                     } catch (e: Throwable) {
                         Log.e(TAG, "⚠️ 온디바이스 LLM 초기화 실패 ($path, $backend): ${e.message}")
                     }
+                }
+            }
+        }
+    }
+
+    fun detectAndInitOnDeviceModel() {
+        if (context == null) return
+        synchronized(DearTalkIntentEngine::class.java) {
+            sharedInitJob = initScope.launch {
+                initMutex.withLock {
+                    sharedLoaded = false
+                    _isModelLoadedFlow.value = false
+                    initOnDeviceModel(context.applicationContext)
                 }
             }
         }
