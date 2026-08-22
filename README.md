@@ -13,7 +13,7 @@
 
 It refines typed text and spoken voice (STT) with real-time, context-aware tone adjustments, typo correction, and multilingual translations — powered strictly by local on-device neural networks without any network connection.
 
-[Key Features](#-key-platform-features) • [Before & After Samples](#-tone-transformation-samples) • [Architecture](docs/ARCHITECTURE.md) • [10-Year Roadmap](docs/ROADMAP.md) • [Model Specs](docs/MODELS.md) • [Contributing](CONTRIBUTING.md)
+[Key Features](#-key-platform-features) • [Before & After Samples](#-tone-transformation-samples) • [Architecture](docs/ARCHITECTURE.md) • [Long-Term Roadmap](docs/ROADMAP.md) • [Model Specs](docs/MODELS.md) • [Contributing](CONTRIBUTING.md)
 
 </div>
 

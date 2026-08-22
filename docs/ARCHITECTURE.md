@@ -85,6 +85,6 @@ sequenceDiagram
 ---
 
 ## 📚 Related Documentation
-- [10-Year Technology Roadmap](ROADMAP.md)
+- [Long-Term Technology Roadmap](ROADMAP.md)
 - [On-Device Model Compatibility Specifications](MODELS.md)
 - [Cross-Platform Testing Specifications](TESTING.md)

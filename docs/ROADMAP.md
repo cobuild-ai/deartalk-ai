@@ -1,6 +1,6 @@
-# 🗺️ DearTalkAI 10-Year Technology Roadmap
+# 🗺️ DearTalkAI Long-Term Technology Roadmap
 
-This document outlines the long-term vision, architectural evolution, and upcoming release milestones for **DearTalkAI**.
+This document outlines the architectural vision, sustainable development principles, and upcoming release milestones for **DearTalkAI**.
 
 ---
 
