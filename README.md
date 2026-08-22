@@ -13,9 +13,19 @@
 
 It refines typed text and spoken voice (STT) with real-time, context-aware tone adjustments, typo correction, and multilingual translations — powered strictly by local on-device neural networks without any network connection.
 
-[Key Features](#-key-platform-features) • [Before & After Samples](#-tone-transformation-samples) • [Architecture](#-architecture) • [Testing Guide](docs/TESTING.md) • [Contributing](CONTRIBUTING.md)
+[Key Features](#-key-platform-features) • [Before & After Samples](#-tone-transformation-samples) • [Architecture](docs/ARCHITECTURE.md) • [10-Year Roadmap](docs/ROADMAP.md) • [Model Specs](docs/MODELS.md) • [Contributing](CONTRIBUTING.md)
 
 </div>
+
+---
+
+## 📊 Platform Release Status
+
+| Platform | Current Version | Status | Primary Features |
+| :--- | :---: | :---: | :--- |
+| 🤖 **Android** | `v1.3.0` | **Stable (Production)** | Custom Keyboard (IME), Offline STT, 6 Tones, In-App Model Downloader |
+| 🍏 **macOS** | `v1.3.0` | **Stable (Production)** | Floating Overlay, Metal GPU, AXUIElement, 1-Click Runtime Installer |
+| 📱 **iOS** | `feat/ios-app` | **In Development** | Core Engine & SwiftUI Sandbox (Physical Device Profiling in Progress) |
 
 ---
 
@@ -26,10 +36,12 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 - **6 Unified Tone Presets:** `✨ Refine`, `👔 Polite`, `😊 Casual`, `💼 Business`, `🤣 Humorous`, and `😼 Cheeky`.
 - **Raw STT Preservation:** Multiple tone changes keep the original voice input intact while dynamically swapping AI outputs.
 - **Compose-based Slate UI:** Modern dark glassmorphism keyboard with dedicated settings, test receiver, and haptic feedback.
+- **In-App 1-Click Model Setup:** Automatic download and reactive state management for Gemma LiteRT models.
 
 ### 🍏 macOS Floating Assistant (`deartalk-apple/DearTalk-macOS`)
 - **System-Wide Accessibility Overlay:** Detects focused text fields across KakaoTalk, Chrome, Antigravity/VS Code, Slack, and Notes.
 - **Metal GPU Hardware Acceleration:** Sub-100ms real-time neural inference powered by Apple Silicon GPU.
+- **3-Step Environment Diagnosis & 1-Click Installer:** Automatically diagnoses Gemma GGUF model files, Metal runtime (`llama-server`), and Homebrew, offering one-click automated background installation.
 - **2-Line Live Diff Layout:** Line 1 shows immutable original text, Line 2 highlights real-time word-level diff badges.
 - **Interactive Control Toolbar:** One-click Tone chips, Copy (`📋`), Regenerate (`🔄`), Apply (`✅`), and Tab Key completion toggle (`⇥`).
 - **Raycast-Style Onboarding Wizard:** Seamless accessibility setup with automatic TCC stale permission cleaner.

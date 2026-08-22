@@ -27,11 +27,34 @@ Before writing any code, please review our inviolable principle in [GEMINI.md](G
 ### macOS (`deartalk-apple/DearTalk-macOS`)
 - **OS:** macOS 14.0 (Sonoma) or macOS 15+ (Apple Silicon recommended)
 - **Xcode / Swift:** Swift 6.0+
-- **Build & Package:**
+- **Build & Test Runner:**
   ```bash
   cd deartalk-apple/DearTalk-macOS
+  swift run DearTalkMacRunner
+  ```
+- **Package Standalone `.app`:**
+  ```bash
   bash scripts/package_macos_app.sh
   ```
+
+### iOS Contributions (`feat/ios-app` branch)
+- iOS development is actively taking place on the [`feat/ios-app`](https://github.com/smilelife/deartalk-ai/tree/feat/ios-app) branch.
+- To contribute to iOS physical device optimization, keyboard extension bridges, or SwiftUI UI:
+  ```bash
+  git checkout feat/ios-app
+  ```
+
+---
+
+## 🎯 Good First Issues & Contribution Areas
+
+| Difficulty | Area | Description | Target Files |
+| :--- | :--- | :--- | :--- |
+| 🟢 **Easy** | Localization | Add new translation target languages or improve bilingual UI texts | `UiStrings.kt`, `UiStrings.swift` |
+| 🟢 **Easy** | UI / Theming | Enhance dark mode styling, animations, or keyboard haptics | `DearTalkScreen.kt`, `FloatingDiffOverlayView.swift` |
+| 🟡 **Medium**| Prompt Engineering | Optimize few-shot examples in system prompts for 6 tone presets | `DearTalkIntentEngine.kt`, `DearTalkIntentEngine.swift` |
+| 🟡 **Medium**| Diff Engine | Improve word-level tokenization boundary and performance | `DiffEngine.kt`, `DiffEngine.swift` |
+| 🔴 **Hard** | Hardware Acceleration | Optimize LiteRT NPU delegates or Metal GPU context caching | `LiteRtEngine.kt`, `llama-server` runtime |
 
 ---
 
@@ -55,10 +78,13 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
    ```bash
    git checkout -b feat/your-feature-name
    ```
-2. Ensure all unit tests pass:
+2. Ensure all unit tests and platform runners pass 100%:
    ```bash
+   # Android Tests
    ./gradlew test
-   swift test --package-path deartalk-apple/DearTalk-macOS
+
+   # macOS Core Verification Runner
+   swift run --package-path deartalk-apple/DearTalk-macOS DearTalkMacRunner
    ```
 3. Commit your changes following Conventional Commits.
 4. Push to your fork and submit a Pull Request describing your changes, motivation, and test verification.

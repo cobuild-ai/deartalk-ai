@@ -81,3 +81,10 @@ sequenceDiagram
 
 ### 4. `UiStrings` (Multilingual Engine)
 - **Role:** Automatically determines whether to render Korean (`ko`) or English fallback based on system preferences (`Locale.preferredLanguages` / `Locale.getDefault()`).
+
+---
+
+## 📚 Related Documentation
+- [10-Year Technology Roadmap](ROADMAP.md)
+- [On-Device Model Compatibility Specifications](MODELS.md)
+- [Cross-Platform Testing Specifications](TESTING.md)
