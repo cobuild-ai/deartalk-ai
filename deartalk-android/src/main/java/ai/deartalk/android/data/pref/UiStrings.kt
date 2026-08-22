@@ -140,4 +140,27 @@ object UiStrings {
     fun settingsSttError(code: Int) = if (isKo) "음성 인식 대기 중 (코드: $code)" else "Waiting for speech (code: $code)"
     val settingsAiRefining get() = if (isKo) "온디바이스 AI 조율 중..." else "Refining with On-Device AI..."
     val settingsAiRefined get() = if (isKo) "🔒 온디바이스 AI 조율 완료" else "🔒 On-Device AI Completed"
+
+    // ═══════════════════════════════════════════════════
+    // MainActivity.kt — 정보 및 도움말
+    // ═══════════════════════════════════════════════════
+    val settingsTabAbout get() = if (isKo) "ℹ️ 정보 및 도움말" else "ℹ️ About & Help"
+    val appVersionLabel get() = if (isKo) "앱 버전" else "App Version"
+    val buildTimestampLabel get() = if (isKo) "빌드 타임스탬프" else "Build Timestamp"
+    val userGuideTitle get() = if (isKo) "📖 DearTalk AI 사용 설명서" else "📖 DearTalk AI User Guide"
+    val userGuideHowToUseTitle get() = if (isKo) "💡 사용 방법" else "💡 How to Use"
+    val userGuideHowToUseContent get() = if (isKo) {
+        "1. 안드로이드 키보드 설정에서 DearTalkAI를 활성화하고 기본 키보드로 설정합니다.\n" +
+        "2. 메시지 입력창 등 타이핑 가능한 곳에서 DearTalk AI 자판을 엽니다.\n" +
+        "3. 상단 마이크(🎙️) 버튼을 누르고 말하면 온디바이스 AI가 실시간으로 입력된 목소리를 받아적습니다.\n" +
+        "4. [기본다듬기], [공손하게] 등 톤 칩을 탭하면 온디바이스 AI 제안이 생성됩니다.\n" +
+        "5. 우측 [입력] 버튼을 누르면 AI가 다듬은 문장이 에디터에 자동으로 입력됩니다."
+    } else {
+        "1. Enable DearTalkAI in Android Keyboard Settings and select it as default.\n" +
+        "2. Open the DearTalk AI keyboard in any text field.\n" +
+        "3. Tap the mic (🎙️) button and speak; the on-device AI transcribes your voice in real time.\n" +
+        "4. Tap one of the tone chips like [Refine] or [Polite] to trigger AI suggestions.\n" +
+        "5. Tap the [Apply] button on the right to insert the refined text into your input field."
+    }
 }
+

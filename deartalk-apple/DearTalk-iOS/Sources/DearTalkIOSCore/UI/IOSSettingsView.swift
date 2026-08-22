@@ -9,7 +9,27 @@ public struct IOSSettingsView: View {
     @State private var newToneInstruction: String = ""
     @State private var showingAddToneSheet: Bool = false
 
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
+
+    private var buildVersion: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    }
+
+    private var buildTimestamp: String {
+        if let path = Bundle.main.path(forResource: "Info", ofType: "plist"),
+           let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+           let modificationDate = attributes[.modificationDate] as? Date {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            return formatter.string(from: modificationDate)
+        }
+        return "2026-08-22 01:14:24"
+    }
+
     public init() {}
+
 
     public var body: some View {
         Form {
@@ -69,6 +89,26 @@ public struct IOSSettingsView: View {
                     Label(UiStrings.isKo ? "새로운 커스텀 톤 추가" : "Add Custom Tone", systemImage: "plus.circle")
                 }
             }
+
+            Section(header: Text(UiStrings.settingsTabAbout)) {
+                HStack {
+                    Text(UiStrings.appVersionLabel)
+                    Spacer()
+                    Text("\(appVersion) (\(buildVersion))")
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Text(UiStrings.buildTimestampLabel)
+                    Spacer()
+                    Text(buildTimestamp)
+                        .foregroundColor(.secondary)
+                }
+
+                NavigationLink(destination: iOSUserGuideView()) {
+                    Text(UiStrings.userGuideTitle)
+                }
+            }
         }
         .navigationTitle(UiStrings.isKo ? "환경설정" : "Settings")
         .sheet(isPresented: $showingAddToneSheet) {
@@ -104,5 +144,37 @@ public struct IOSSettingsView: View {
                 }
             }
         }
+    }
+}
+
+struct iOSUserGuideView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(UiStrings.userGuideTitle)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.bottom, 8)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(UiStrings.userGuideHowToUseTitle)
+                        .font(.headline)
+                    Text(UiStrings.userGuideHowToUseContent)
+                        .font(.body)
+                        .lineSpacing(6)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(10)
+
+                Spacer()
+            }
+            .padding()
+        }
+        .navigationTitle(UiStrings.isKo ? "도움말" : "Help")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }

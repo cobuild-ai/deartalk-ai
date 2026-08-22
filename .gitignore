@@ -33,6 +33,8 @@ captures/
 # Apple & Swift
 .build/
 **/.build/
+.swiftpm/
+**/.swiftpm/
 Packages/
 Package.pins
 Package.resolved

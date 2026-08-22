@@ -5,9 +5,9 @@
 set -euo pipefail
 
 # Ensure environment paths for cron execution
-export PATH="/opt/homebrew/bin:/Users/smilelife/.local/bin:/usr/local/bin:$PATH"
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
-PROJECT_DIR="/Users/smilelife/Projects/deartalk-ai"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_DIR"
 
 LOG_DIR="$PROJECT_DIR/logs"

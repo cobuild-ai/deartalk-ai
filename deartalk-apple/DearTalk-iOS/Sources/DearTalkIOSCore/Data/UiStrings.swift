@@ -72,4 +72,17 @@ public enum UiStrings {
     public static var langFrench: String { isKo ? "프랑스어" : "French" }
     public static var langGerman: String { isKo ? "독일어" : "German" }
     public static var langVietnamese: String { isKo ? "베트남어" : "Vietnamese" }
+
+    // MARK: - About & Help
+    public static var settingsTabGeneral: String { isKo ? "⚙️ 일반 설정" : "⚙️ General" }
+    public static var settingsTabAbout: String { isKo ? "ℹ️ 정보 및 도움말" : "ℹ️ About & Help" }
+    public static var appVersionLabel: String { isKo ? "앱 버전" : "App Version" }
+    public static var buildTimestampLabel: String { isKo ? "빌드 타임스탬프" : "Build Timestamp" }
+    public static var userGuideTitle: String { isKo ? "📖 DearTalk AI 사용 설명서" : "📖 DearTalk AI User Guide" }
+    public static var userGuideHowToUseTitle: String { isKo ? "💡 사용 방법" : "💡 How to Use" }
+    public static var userGuideHowToUseContent: String {
+        isKo ? "1. 앱 메인 화면에서 텍스트를 입력하거나 샌드박스를 사용합니다.\n2. 상단 마이크 버튼을 통해 온디바이스 AI 음성 인식을 시작할 수 있습니다.\n3. 키보드로 타이핑을 하거나 음성 입력을 진행한 뒤, 원하는 대화 톤이나 번역 타깃 언어를 선택하여 다듬기 결과를 확인합니다.\n4. 결과물의 복사 버튼을 눌러 손쉽게 복사해 사용할 수 있습니다."
+             : "1. Type text on the main screen or try the playground sandbox.\n2. Tap the top mic button to start on-device AI speech-to-text recognition.\n3. After entering text, tap one of the tone or translation target buttons to see the refined AI suggestion.\n4. Copy the result with one tap using the copy button."
+    }
 }
+

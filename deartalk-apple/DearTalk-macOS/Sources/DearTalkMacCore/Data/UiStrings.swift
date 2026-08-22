@@ -146,5 +146,37 @@ public enum UiStrings {
     public static var privacyNotice: String { isKo ? "🔒 100% 온디바이스 추론 · 외부 네트워크 통신 0% · 데이터 미수집" : "🔒 100% On-Device · Zero Network · No Data Collected" }
     public static var modelNotLoaded: String { isKo ? "온디바이스 LLM 모델 준비 중 (원문 보존)" : "On-device LLM model preparing (original preserved)" }
     public static var modelLoadedNotice: String { isKo ? "온디바이스 LLM 실시간 신경망 추론 완료" : "On-device LLM neural inference complete" }
+
+    // MARK: - About & Help
+    public static var settingsTabGeneral: String { isKo ? "⚙️ 일반 설정" : "⚙️ General" }
+    public static var settingsTabAbout: String { isKo ? "ℹ️ 정보 및 도움말" : "ℹ️ About & Help" }
+    public static var appVersionLabel: String { isKo ? "앱 버전" : "App Version" }
+    public static var buildTimestampLabel: String { isKo ? "빌드 타임스탬프" : "Build Timestamp" }
+    public static var userGuideTitle: String { isKo ? "📖 DearTalk AI 사용 설명서" : "📖 DearTalk AI User Guide" }
+    public static var userGuideHowToUseTitle: String { isKo ? "💡 사용 방법" : "💡 How to Use" }
+    public static var userGuideHowToUseContent: String {
+        isKo ? "1. 메모장, 슬랙, 카카오톡 등 텍스트 입력창에서 타이핑을 시작합니다.\n2. 입력을 멈추면(반응 대기 시간 후) 온디바이스 AI 제안 팝업이 뜹니다.\n3. Tab 키를 누르면 AI 추천 문장으로 즉시 교체되며, Esc 키를 누르면 제안이 닫힙니다.\n4. 화면 상단 메뉴 바 아이콘(✨)에서 원하는 대화 톤앤매너나 번역 기능을 변경할 수 있습니다."
+             : "1. Start typing in any text field (Slack, KakaoTalk, Notes, etc.).\n2. When you pause (after the debounce delay), the AI suggestion popup appears.\n3. Press Tab to replace your text with the suggestion, or press Esc to dismiss it.\n4. Click the menu bar icon (✨) to change the tone or translation settings."
+    }
+
+    // MARK: - Environment Diagnosis & Runtime Setup
+    public static var envDiagnosisTitle: String { isKo ? "온디바이스 실행 환경 진단 & 설정" : "On-Device Environment Diagnosis & Setup" }
+    public static var envModelStatus: String { isKo ? "1. AI 신경망 모델 (Gemma GGUF)" : "1. AI Neural Model (Gemma GGUF)" }
+    public static var envRuntimeStatus: String { isKo ? "2. Metal 가속 런타임 (llama.cpp)" : "2. Metal GPU Runtime (llama.cpp)" }
+    public static var envDaemonStatus: String { isKo ? "3. 로컬 추론 데몬 서비스 (Port 11435)" : "3. Local Inference Daemon (Port 11435)" }
+    public static var envStatusInstalled: String { isKo ? "설치됨 ✅" : "Installed ✅" }
+    public static var envStatusMissing: String { isKo ? "미설치 ⚠️" : "Missing ⚠️" }
+    public static var envStatusRunning: String { isKo ? "실행 중 ⚡" : "Running ⚡" }
+    public static var envStatusStopped: String { isKo ? "대기 중 ⏸️" : "Standby ⏸️" }
+    public static var envInstallRuntimeBtn: String { isKo ? "⚡ llama.cpp 자동 설치" : "⚡ Auto-Install llama.cpp" }
+    public static var envInstalling: String { isKo ? "설치 진행 중..." : "Installing..." }
+    public static var envRefreshDiagnosis: String { isKo ? "🔄 환경 다시 검사" : "🔄 Refresh Diagnosis" }
+    public static var envCopyBrewCmd: String { isKo ? "📋 터미널 설치 명령 복사" : "📋 Copy Terminal Command" }
+    public static var envBrewCmdCopied: String { isKo ? "복사됨! 터미널(Terminal)에 붙여넣으세요" : "Copied! Paste into Terminal" }
+    public static var envBrewInstruction: String {
+        isKo ? "Mac 터미널에서 다음 명령어를 실행하여 설치할 수도 있습니다: brew install llama.cpp"
+             : "You can also install via macOS Terminal: brew install llama.cpp"
+    }
 }
+
 

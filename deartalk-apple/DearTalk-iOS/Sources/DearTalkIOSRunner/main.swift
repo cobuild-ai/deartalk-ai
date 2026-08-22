@@ -40,10 +40,16 @@ struct DearTalkIOSRunner {
         let testInput = "내일 회의 일정 공유드립니다"
         let result = await engine.process(text: testInput)
         assert(result.text == testInput || engine.isModelLoaded, "Zero fake rules fallback failed: original text must be preserved when model is not loaded")
-        print("🛡️ [4/4] Zero Fake Rules Honest Fallback test PASSED")
+        print("🛡️ [4/5] Zero Fake Rules Honest Fallback test PASSED")
+
+        // 5. iOS UiStrings Verification
+        assert(!UiStrings.settingsTabAbout.isEmpty, "settingsTabAbout should not be empty")
+        assert(!UiStrings.userGuideTitle.isEmpty, "userGuideTitle should not be empty")
+        print("ℹ️ [5/5] iOS UiStrings Verification test PASSED")
 
         print("========================================================")
         print("🎉 [DearTalkIOSRunner] ALL iOS CORE TESTS PASSED SUCCESSFULLY!")
         print("========================================================")
+
     }
 }

@@ -941,7 +941,7 @@ fun MainOnDeviceScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = if (isKorean) "ℹ️ 앱 정보" else "ℹ️ App Info",
+                        text = UiStrings.settingsTabAbout,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = DearTalkText
@@ -951,6 +951,11 @@ fun MainOnDeviceScreen(
                     val packageInfo = try {
                         context.packageManager.getPackageInfo(context.packageName, 0)
                     } catch (_: Exception) { null }
+
+                    val buildTimeStr = packageInfo?.let {
+                        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                        sdf.format(java.util.Date(it.lastUpdateTime))
+                    } ?: "2026-08-22 01:14:24"
 
                     DiagnosticRow(
                         label = if (isKorean) "앱 이름" else "App Name",
@@ -963,14 +968,51 @@ fun MainOnDeviceScreen(
                         valueColor = DearTalkTextDim
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "버전" else "Version",
+                        label = UiStrings.appVersionLabel,
                         value = "${packageInfo?.versionName ?: "1.0"} (${packageInfo?.longVersionCode ?: 1})",
+                        valueColor = DearTalkText
+                    )
+                    DiagnosticRow(
+                        label = UiStrings.buildTimestampLabel,
+                        value = buildTimeStr,
                         valueColor = DearTalkText
                     )
                     DiagnosticRow(
                         label = if (isKorean) "AI 철학" else "AI Philosophy",
                         value = if (isKorean) "🔒 100% 온디바이스 · 외부통신 0% · 가짜규칙 0%" else "🔒 100% On-Device · Zero Network · Zero Fake",
                         valueColor = DearTalkSecondary
+                    )
+                }
+            }
+
+            // ═══════════════════════════════════════════════════
+            // 6. 📖 사용 설명서
+            // ═══════════════════════════════════════════════════
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = DearTalkSurface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = UiStrings.userGuideTitle,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DearTalkText
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = UiStrings.userGuideHowToUseTitle,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DearTalkSecondary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = UiStrings.userGuideHowToUseContent,
+                        fontSize = 12.sp,
+                        color = DearTalkTextDim,
+                        lineHeight = 18.sp
                     )
                 }
             }

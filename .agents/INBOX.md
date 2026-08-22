@@ -13,7 +13,7 @@
 ---
 
 ## 🔥 우선 구현 요청 (Priority Tasks)
-- [ ] [버전 관리 & 도움말(About) 화면 구현] macOS/iOS/Android 전 플랫폼 앱 버전(SemVer), 빌드 타임스탬프, 사용 설명(도움말) 화면 개발
+- [x] (완료: 2026-08-22 01:18) [버전 관리 & 도움말(About) 화면 구현] macOS/iOS/Android 전 플랫폼 앱 버전(SemVer), 빌드 타임스탬프, 사용 설명(도움말) 화면 개발
 - [x] (완료: 2026-08-22 01:10) [온디바이스 AI 필수 환경 진단 및 모델 자동 설치] macOS/iOS/Android 온디바이스 LLM 미설치/미준비 상태 진단 안내 및 원클릭 다운로드 UI 고도화
 - [x] (완료: 2026-08-21 00:09) [1단계: iOS 메인 앱 코어] DearTalk-iOS 메인 앱 구현 (100% 온디바이스 Gemma LLM 엔진, SandboxView, 톤앤매너 설정 연동)
   > 📌 합의된 설계 전략: 1단계로 OOM 0% 안전성을 보장하는 iOS 메인 앱(SwiftUI + On-Device Gemma 추론 엔진)을 구축하고, 추후 2단계에서 App Groups 기반 키보드 브릿지로 확장.

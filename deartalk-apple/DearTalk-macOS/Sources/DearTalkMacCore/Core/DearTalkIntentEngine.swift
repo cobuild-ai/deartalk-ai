@@ -105,14 +105,17 @@ public final class DearTalkIntentEngine: ObservableObject {
             }
 
             // llama-server 바이너리 경로 탐색
+            let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
             let serverBinCandidates = [
                 "/opt/homebrew/bin/llama-server",
                 "/usr/local/bin/llama-server",
+                "\(homeDir)/.local/bin/llama-server",
+                "\(homeDir)/.deartalk/bin/llama-server",
                 Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/llama-server").path
             ]
 
             guard let serverBin = serverBinCandidates.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
-                DearTalkLogger.warning("ℹ️ llama-server 바이너리 탐색 중", category: "Engine")
+                DearTalkLogger.warning("ℹ️ llama-server 바이너리 미설치 또는 탐색 중 (Homebrew brew install llama.cpp 필요)", category: "Engine")
                 return
             }
 

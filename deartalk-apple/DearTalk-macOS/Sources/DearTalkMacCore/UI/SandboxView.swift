@@ -5,11 +5,13 @@ public struct SandboxView: View {
     @StateObject private var toneManager = CustomToneManager.shared
     @StateObject private var intentEngine = DearTalkIntentEngine.shared
     @StateObject private var downloader = ModelDownloader.shared
+    @StateObject private var runtimeSetup = RuntimeSetupManager.shared
     @State private var inputText: String = ""
     @State private var liveDiffResult: DiffResult?
     @State private var statusNotice: String?
     @State private var isProcessing: Bool = false
     @State private var debounceTask: Task<Void, Never>?
+    @State private var showCopiedAlert: Bool = false
 
     private let samplePresets = [
         "내일 아침 9시 만나 이것을 좀 공손하게 바꿔 줘",
@@ -99,32 +101,87 @@ public struct SandboxView: View {
             // 메인 콘텐츠 영역
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // 모델 미배치 시 원클릭 인앱 자동 다운로더 카드
-                    if !intentEngine.isModelLoaded {
-                        VStack(alignment: .leading, spacing: 10) {
+                    // 환경 미준비 시 온디바이스 AI 환경 진단 및 원클릭 설정 카드
+                    if !intentEngine.isModelLoaded || !runtimeSetup.hasRuntimeBinary {
+                        VStack(alignment: .leading, spacing: 12) {
                             HStack(alignment: .top, spacing: 10) {
-                                Text("📦")
-                                    .font(.system(size: 20))
-                                VStack(alignment: .leading, spacing: 4) {
+                                Text("🛠️")
+                                    .font(.system(size: 22))
+                                VStack(alignment: .leading, spacing: 3) {
                                     HStack {
-                                        Text("Google Gemma 온디바이스 AI 모델 설치")
+                                        Text(UiStrings.envDiagnosisTitle)
                                             .font(.system(size: 13, weight: .bold))
                                             .foregroundColor(.white)
                                         Spacer()
-                                        Text("오프라인 영구 저장 (~1.6GB)")
+                                        Text(intentEngine.isModelLoaded ? "준비 완료" : "환경 구성 필요")
                                             .font(.system(size: 10, weight: .medium))
-                                            .foregroundColor(Color.cyan)
+                                            .foregroundColor(intentEngine.isModelLoaded ? .green : .orange)
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
-                                            .background(Color.cyan.opacity(0.15))
+                                            .background((intentEngine.isModelLoaded ? Color.green : Color.orange).opacity(0.15))
                                             .cornerRadius(4)
                                     }
-                                    Text("외부 도구 설치 없이 앱 내부에서 100% 온디바이스 Gemma 신경망을 원클릭으로 다운로드하여 즉시 실시간 글쓰기 교정을 활성화합니다.")
+                                    Text("온디바이스 LLM 신경망(Gemma)과 Metal GPU 가속 런타임(llama.cpp)을 진단하고 원클릭으로 설치합니다.")
                                         .font(.system(size: 11))
                                         .foregroundColor(Color(nsColor: .secondaryLabelColor))
                                 }
                             }
 
+                            Divider()
+                                .background(Color.white.opacity(0.1))
+
+                            // 1. 모델 파일 상태
+                            HStack {
+                                Text(UiStrings.envModelStatus)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                if runtimeSetup.hasModelFile {
+                                    Text("\(UiStrings.envStatusInstalled) (\(runtimeSetup.modelFileSizeMB) MB)")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.green)
+                                } else {
+                                    Text(UiStrings.envStatusMissing)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.orange)
+                                }
+                            }
+
+                            // 2. Metal 가속 런타임 상태
+                            HStack {
+                                Text(UiStrings.envRuntimeStatus)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                if runtimeSetup.hasRuntimeBinary {
+                                    Text(UiStrings.envStatusInstalled)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.green)
+                                } else {
+                                    Text(UiStrings.envStatusMissing)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.orange)
+                                }
+                            }
+
+                            // 3. 데몬 서비스 상태
+                            HStack {
+                                Text(UiStrings.envDaemonStatus)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                if intentEngine.isModelLoaded || runtimeSetup.isDaemonRunning {
+                                    Text(UiStrings.envStatusRunning)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.cyan)
+                                } else {
+                                    Text(UiStrings.envStatusStopped)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.gray)
+                                }
+                            }
+
+                            // 다운로드 및 설치 액션 영역
                             if downloader.isDownloading {
                                 VStack(alignment: .leading, spacing: 6) {
                                     ProgressView(value: downloader.progress, total: 1.0)
@@ -145,46 +202,109 @@ public struct SandboxView: View {
                                     }
                                 }
                                 .padding(.top, 4)
-                            } else {
-                                HStack(spacing: 10) {
-                                    Button(action: {
-                                        downloader.startDownload()
-                                    }) {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: "arrow.down.circle.fill")
-                                                .font(.system(size: 12, weight: .bold))
-                                            Text("🚀 온디바이스 AI 모델 자동 다운로드 (1-Click)")
-                                                .font(.system(size: 12, weight: .bold))
-                                        }
-                                        .foregroundColor(.black)
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 7)
-                                        .background(Color(red: 0.22, green: 0.85, blue: 0.65))
-                                        .cornerRadius(6)
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    Button(action: {
-                                        intentEngine.detectAndInitOnDeviceModel()
-                                    }) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "arrow.clockwise")
-                                                .font(.system(size: 10))
-                                            Text("로컬 감지 새로고침")
-                                                .font(.system(size: 11))
-                                        }
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 7)
-                                        .background(Color.white.opacity(0.1))
-                                        .cornerRadius(6)
-                                    }
-                                    .buttonStyle(.plain)
+                            } else if runtimeSetup.isInstalling {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ProgressView()
+                                        .progressViewStyle(.linear)
+                                    Text(runtimeSetup.installProgressMessage)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Color.cyan)
                                 }
-                                .padding(.top, 2)
+                            } else {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        if !runtimeSetup.hasModelFile {
+                                            Button(action: {
+                                                downloader.startDownload()
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "arrow.down.circle.fill")
+                                                        .font(.system(size: 11, weight: .bold))
+                                                    Text("📦 모델 다운로드 (1.6GB)")
+                                                        .font(.system(size: 11, weight: .bold))
+                                                }
+                                                .foregroundColor(.black)
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 6)
+                                                .background(Color(red: 0.22, green: 0.85, blue: 0.65))
+                                                .cornerRadius(6)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+
+                                        if !runtimeSetup.hasRuntimeBinary {
+                                            if runtimeSetup.hasHomebrew {
+                                                Button(action: {
+                                                    runtimeSetup.installLlamaCppViaBrew()
+                                                }) {
+                                                    HStack(spacing: 4) {
+                                                        Image(systemName: "bolt.fill")
+                                                            .font(.system(size: 11, weight: .bold))
+                                                        Text(UiStrings.envInstallRuntimeBtn)
+                                                            .font(.system(size: 11, weight: .bold))
+                                                    }
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 12)
+                                                    .padding(.vertical, 6)
+                                                    .background(Color.blue)
+                                                    .cornerRadius(6)
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+
+                                            Button(action: {
+                                                runtimeSetup.copyBrewInstallCommand()
+                                                showCopiedAlert = true
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                                                    showCopiedAlert = false
+                                                }
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "doc.on.doc")
+                                                        .font(.system(size: 10))
+                                                    Text(showCopiedAlert ? UiStrings.envBrewCmdCopied : UiStrings.envCopyBrewCmd)
+                                                        .font(.system(size: 11))
+                                                }
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 6)
+                                                .background(Color.white.opacity(0.12))
+                                                .cornerRadius(6)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+
+                                        Button(action: {
+                                            Task {
+                                                await runtimeSetup.diagnoseEnvironment()
+                                                intentEngine.detectAndInitOnDeviceModel()
+                                            }
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "arrow.clockwise")
+                                                    .font(.system(size: 10))
+                                                Text(UiStrings.envRefreshDiagnosis)
+                                                    .font(.system(size: 11))
+                                            }
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.white.opacity(0.1))
+                                            .cornerRadius(6)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+
+                                    if !runtimeSetup.hasRuntimeBinary {
+                                        Text(UiStrings.envBrewInstruction)
+                                            .font(.system(size: 10))
+                                            .foregroundColor(Color.cyan.opacity(0.8))
+                                    }
+                                }
+                                .padding(.top, 4)
                             }
 
-                            if let error = downloader.errorMessage {
+                            if let error = downloader.errorMessage ?? runtimeSetup.lastInstallError {
                                 Text(error)
                                     .font(.system(size: 10))
                                     .foregroundColor(.red)

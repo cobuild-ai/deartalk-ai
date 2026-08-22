@@ -11,7 +11,27 @@ print("• 앱 이름: \(UiStrings.appName)")
 print("• 메뉴바 타이틀: \(UiStrings.menuBarTitle)")
 print("• 샌드박스 타이틀: \(UiStrings.sandboxTitle)")
 print("• 단축키 안내: \(UiStrings.applySuggestionShortcut)")
+print("• 설정 탭 이름 (도움말): \(UiStrings.settingsTabAbout)")
+print("• 사용 설명서 타이틀: \(UiStrings.userGuideTitle)")
+print("• 환경 진단 타이틀: \(UiStrings.envDiagnosisTitle)")
+print("• 런타임 설치 안내: \(UiStrings.envInstallRuntimeBtn)")
 assert(!UiStrings.appName.isEmpty, "앱 이름이 비어있으면 안 됩니다.")
+assert(!UiStrings.settingsTabAbout.isEmpty, "설정 탭 이름이 비어있으면 안 됩니다.")
+assert(!UiStrings.userGuideTitle.isEmpty, "사용 설명서 타이틀이 비어있으면 안 됩니다.")
+assert(!UiStrings.envDiagnosisTitle.isEmpty, "환경 진단 타이틀이 비어있으면 안 됩니다.")
+assert(!UiStrings.envInstallRuntimeBtn.isEmpty, "런타임 설치 버튼 텍스트가 비어있으면 안 됩니다.")
+
+// 1-1. RuntimeSetupManager 환경 진단 검증
+print("\n[1-1] RuntimeSetupManager 환경 자동 진단 검증")
+let runtimeSetup = RuntimeSetupManager.shared
+await runtimeSetup.diagnoseEnvironment()
+print("• 모델 파일 존재 여부: \(runtimeSetup.hasModelFile ? "존재 (\(runtimeSetup.modelFileSizeMB) MB)" : "미배치")")
+print("• Homebrew 설치 여부: \(runtimeSetup.hasHomebrew ? "감지됨 (\(runtimeSetup.homebrewPath ?? ""))" : "미감지")")
+print("• llama-server 바이너리 존재 여부: \(runtimeSetup.hasRuntimeBinary ? "존재 (\(runtimeSetup.runtimeBinaryPath ?? ""))" : "미설치")")
+print("• 로컬 데몬 헬스 상태: \(runtimeSetup.isDaemonRunning ? "실행 중" : "대기 중")")
+assert(runtimeSetup.daemonPort == 11435, "기본 데몬 포트는 11435여야 합니다.")
+print("• RuntimeSetupManager 환경 진단: 통과 ✅")
+
 
 // 2. CustomToneManager 검증
 print("\n[2] 톤앤매너 및 번역 타깃 검증")

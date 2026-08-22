@@ -222,6 +222,13 @@ public struct IOSSandboxView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(destination: IOSSettingsView()) {
+                        Image(systemName: "gearshape")
+                    }
+                }
+            }
         }
     }
 
