@@ -17,13 +17,25 @@ class DearTalkIntentEngineTest {
     }
 
     @Test
+    fun `언어_감지_유틸_테스트`() {
+        assertTrue(DearTalkIntentEngine.hasKorean("안녕하세요"))
+        assertTrue(DearTalkIntentEngine.hasKorean("Hello 안녕하세요"))
+        assertFalse(DearTalkIntentEngine.hasKorean("Hello world"))
+        assertFalse(DearTalkIntentEngine.hasKorean("12345!@#$"))
+
+        assertTrue(DearTalkIntentEngine.isEnglish("Hello how are you"))
+        assertTrue(DearTalkIntentEngine.isEnglish("Where is the conference room?"))
+        assertFalse(DearTalkIntentEngine.isEnglish("Hello 안녕하세요"))
+        assertFalse(DearTalkIntentEngine.isEnglish("안녕하세요"))
+    }
+
+    @Test
     fun `모델_미로드시_인위적_왜곡_없이_정직한_원문_보존_테스트`() = runBlocking {
         val input = "내일 아침 10시 약속 만나자고 하는 거를 공산화 툴로 좀 말해 줄래"
         val result = intentEngine.process(input)
         assertTrue(result is IntentResult.Success)
         val text = (result as IntentResult.Success).text
 
-        // 하드코딩으로 "부탁드립니다"가 붙거나 깨지는 기괴한 왜곡이 없어야 함
         assertFalse(text.endsWith("부탁드립니다."))
         assertEquals(input, text)
     }
@@ -50,7 +62,6 @@ class DearTalkIntentEngineTest {
         val input = "안녕하세요 반갑습니다"
         val result = intentEngine.processWithTranslation(input, target)
         assertTrue(result is IntentResult.Success)
-        // 모델 미로드 시 왜곡 없이 원문 반환
         assertEquals(input, (result as IntentResult.Success).text)
     }
 
@@ -83,7 +94,6 @@ class DearTalkIntentEngineTest {
         assertFalse(intentEngine.isModelLoadedFlow.value)
     }
 
-
     @Test
     fun `ModelDownloader_상태_및_다운로드_취소_테스트`() = runBlocking {
         val downloader = ModelDownloader.shared
@@ -91,8 +101,7 @@ class DearTalkIntentEngineTest {
         
         downloader.cancelDownload()
         assertFalse(downloader.isDownloading.value)
-        val expectedStatus = if (java.util.Locale.getDefault().language == "ko") "다운로드 취소됨" else "Download cancelled"
+        val expectedStatus = if (java.util.Locale.getDefault().language == "ko") "다운로드가 취소되었습니다." else "Download cancelled."
         assertEquals(expectedStatus, downloader.statusMessage.value)
     }
 }
-

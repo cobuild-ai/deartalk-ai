@@ -46,7 +46,7 @@ class ModelDownloader private constructor() {
     private var downloadJob: Job? = null
     private val downloadScope = CoroutineScope(Dispatchers.IO)
 
-    // Google Gemma 2B Instruct GPU Int4 모델 (HuggingFace 공식 TFLite 경로)
+    // Google Gemma 2B 온디바이스 TFLite 바이너리 공개 엔드포인트
     val defaultModelUrl = "https://huggingface.co/google/gemma-2b-it-tflite/resolve/main/gemma-2b-it-gpu-int4.bin"
 
     fun startDownload(context: Context, intentEngine: DearTalkIntentEngine, urlString: String = defaultModelUrl) {
@@ -56,21 +56,55 @@ class ModelDownloader private constructor() {
         _isCompleted.value = false
         _errorMessage.value = null
         _progress.value = 0.0f
-        _statusMessage.value = if (Locale.getDefault().language == "ko") "연결 중..." else "Connecting..."
+        _statusMessage.value = if (Locale.getDefault().language == "ko") "서버 연결 및 다운로드 준비 중..." else "Connecting and preparing download..."
 
         downloadJob = downloadScope.launch {
             try {
-                val url = URL(urlString)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 15000
-                connection.readTimeout = 15000
-                connection.connect()
+                var currentUrl = urlString
+                var connection: HttpURLConnection? = null
+                var redirects = 0
+                val maxRedirects = 6
 
-                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                    throw Exception("서버 응답 에러: ${connection.responseCode} ${connection.responseMessage}")
+                // HTTP 301/302/307/308 리다이렉트 자동 추적 루프
+                while (redirects < maxRedirects) {
+                    val url = URL(currentUrl)
+                    connection = (url.openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 20000
+                        readTimeout = 20000
+                        instanceFollowRedirects = true
+                        setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) DearTalkAI/1.0")
+                        setRequestProperty("Accept", "*/*")
+                    }
+                    connection.connect()
+
+                    val status = connection.responseCode
+                    if (status == HttpURLConnection.HTTP_MOVED_TEMP ||
+                        status == HttpURLConnection.HTTP_MOVED_PERM ||
+                        status == HttpURLConnection.HTTP_SEE_OTHER ||
+                        status == 307 || status == 308) {
+                        val newUrl = connection.getHeaderField("Location")
+                        connection.disconnect()
+                        if (!newUrl.isNullOrBlank()) {
+                            currentUrl = newUrl
+                            redirects++
+                            continue
+                        }
+                    }
+                    break
                 }
 
-                val fileLength = connection.contentLengthLong
+                val finalConn = connection ?: throw Exception("네트워크 연결 생성 실패")
+                val responseCode = finalConn.responseCode
+
+                if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED || responseCode == HttpURLConnection.HTTP_FORBIDDEN) {
+                    throw Exception("401 인증 필요: 모델 호스팅 서버 권한이 필요합니다. 로컬 모델 감지를 사용하거나 수동 배치가 가능합니다.")
+                }
+
+                if (responseCode !in 200..299) {
+                    throw Exception("서버 응답 오류 (HTTP $responseCode ${finalConn.responseMessage})")
+                }
+
+                val fileLength = finalConn.contentLengthLong
                 val totalMBVal = if (fileLength > 0) fileLength.toDouble() / (1024 * 1024) else 1350.0
                 _totalSizeMB.value = totalMBVal
 
@@ -83,10 +117,10 @@ class ModelDownloader private constructor() {
                     tempFile.delete()
                 }
 
-                val input = BufferedInputStream(connection.inputStream)
+                val input = BufferedInputStream(finalConn.inputStream)
                 val output = FileOutputStream(tempFile)
 
-                val data = ByteArray(4096)
+                val data = ByteArray(8192)
                 var total: Long = 0
                 var count: Int
                 var lastUpdate = System.currentTimeMillis()
@@ -96,14 +130,15 @@ class ModelDownloader private constructor() {
                     output.write(data, 0, count)
 
                     val now = System.currentTimeMillis()
-                    if (now - lastUpdate > 100 || total == fileLength) {
+                    if (now - lastUpdate > 150 || total == fileLength) {
                         lastUpdate = now
-                        val currentProgress = if (fileLength > 0) total.toFloat() / fileLength else 0.0f
+                        val currentProgress = if (fileLength > 0) (total.toFloat() / fileLength).coerceIn(0f, 1f) else 0.0f
                         val writtenMB = total.toDouble() / (1024 * 1024)
                         _progress.value = currentProgress
                         _downloadedSizeMB.value = writtenMB
                         _statusMessage.value = String.format(
-                            if (Locale.getDefault().language == "ko") "다운로드 중: %.1f MB / %.1f MB (%.1f%%)"
+                            Locale.getDefault(),
+                            if (Locale.getDefault().language == "ko") "다운로드 진행 중: %.1f MB / %.1f MB (%.1f%%)"
                             else "Downloading: %.1f MB / %.1f MB (%.1f%%)",
                             writtenMB, totalMBVal, currentProgress * 100f
                         )
@@ -113,28 +148,29 @@ class ModelDownloader private constructor() {
                 output.flush()
                 output.close()
                 input.close()
+                finalConn.disconnect()
 
                 val targetFile = File(modelsDir, "model.bin")
                 if (targetFile.exists()) {
                     targetFile.delete()
                 }
                 if (!tempFile.renameTo(targetFile)) {
-                    throw Exception("임시 파일을 최종 경로로 이동하는 데 실패했습니다.")
+                    throw Exception("임시 파일을 최종 모델 경로로 이동하는 데 실패했습니다.")
                 }
 
                 _isDownloading.value = false
                 _isCompleted.value = true
                 _progress.value = 1.0f
-                _statusMessage.value = if (Locale.getDefault().language == "ko") "다운로드 완료!" else "Download complete!"
-                
+                _statusMessage.value = if (Locale.getDefault().language == "ko") "✨ 온디바이스 AI 모델 설치 완료!" else "✨ On-Device AI Model Installed!"
+
                 // 엔진에 새 모델 로드 트리거
                 intentEngine.detectAndInitOnDeviceModel()
 
             } catch (e: Exception) {
                 Log.e(TAG, "모델 다운로드 에러: ${e.message}", e)
                 _isDownloading.value = false
-                _errorMessage.value = e.localizedMessage ?: e.message ?: "다운로드 중 에러 발생"
-                _statusMessage.value = if (Locale.getDefault().language == "ko") "다운로드 실패" else "Download failed"
+                _errorMessage.value = e.localizedMessage ?: e.message ?: "다운로드 중 오류가 발생했습니다."
+                _statusMessage.value = if (Locale.getDefault().language == "ko") "다운로드 실패" else "Download Failed"
             }
         }
     }
@@ -142,6 +178,6 @@ class ModelDownloader private constructor() {
     fun cancelDownload() {
         downloadJob?.cancel()
         _isDownloading.value = false
-        _statusMessage.value = if (Locale.getDefault().language == "ko") "다운로드 취소됨" else "Download cancelled"
+        _statusMessage.value = if (Locale.getDefault().language == "ko") "다운로드가 취소되었습니다." else "Download cancelled."
     }
 }

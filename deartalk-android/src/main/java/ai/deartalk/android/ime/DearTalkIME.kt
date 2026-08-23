@@ -306,7 +306,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
 
     private fun handleApplyTone(tone: CustomTone) {
         val currentEditorText = currentInputConnection?.getTextBeforeCursor(2000, 0)?.toString() ?: ""
-        val textToTransform = if (aiTextState.isNotBlank()) aiTextState else if (recognizedTextState.isNotBlank()) recognizedTextState else currentEditorText.trim()
+        // [원문 불변 보존 원칙] 톤 변환은 맥락 오염 방지를 위해 무조건 100% 최초 STT 음성 원문(recognizedTextState)만을 기준으로 수행
+        val textToTransform = if (recognizedTextState.isNotBlank()) recognizedTextState else currentEditorText.trim()
 
         if (textToTransform.isBlank()) {
             statusMessageState = UiStrings.noTextToTransform

@@ -28,13 +28,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import ai.deartalk.android.agent.DearTalkIntentEngine
 import ai.deartalk.android.agent.IntentResult
+import ai.deartalk.android.agent.ModelDownloader
 import ai.deartalk.android.data.pref.DearTalkSettings
 import ai.deartalk.android.data.pref.UiStrings
 import ai.deartalk.android.data.repository.ContextRepository
@@ -93,15 +97,15 @@ class MainActivity : ComponentActivity() {
     private fun handleTestIntent(intent: Intent?) {
         val testPrompt = intent?.getStringExtra("test_prompt")
         if (!testPrompt.isNullOrBlank()) {
-            android.util.Log.d("DearTalkAI", "🧪 [ADB 테스트 프롬프트 수신]: '$testPrompt'")
+            android.util.Log.d("DearTalkAI", "🧪 [테스트 프롬프트 수신]: '$testPrompt'")
             lifecycleScope.launch {
                 val res = intentEngine.process(testPrompt, "", "ai.deartalk.android.adb_test")
                 when (res) {
                     is IntentResult.Success -> {
-                        android.util.Log.d("DearTalkAI", "🎯 [ADB 테스트 Gemma LLM 성공]: '${res.text}' (메시지: ${res.message})")
+                        android.util.Log.d("DearTalkAI", "🎯 [AI 변환 성공]: '${res.text}' (${res.message})")
                     }
                     is IntentResult.Error -> {
-                        android.util.Log.e("DearTalkAI", "⚠️ [ADB 테스트 에러]: ${res.error}")
+                        android.util.Log.e("DearTalkAI", "⚠️ [AI 에러]: ${res.error}")
                     }
                 }
             }
@@ -111,6 +115,32 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         sttManager.destroy()
+    }
+}
+
+/**
+ * Android 14+ (API 34+) SecurityException을 원천 방지하는 공식 InputMethodManager 기반 활성화 검사
+ */
+fun checkIsImeEnabled(context: Context): Boolean {
+    return try {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        val enabledList = imm?.enabledInputMethodList ?: emptyList()
+        enabledList.any { it.packageName == context.packageName }
+    } catch (_: Exception) {
+        false
+    }
+}
+
+/**
+ * 기본 키보드 선택 여부 검사 (SecurityException 안전 방어)
+ */
+fun checkIsImeSelected(context: Context): Boolean {
+    return try {
+        val defaultMethod = Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD) ?: ""
+        defaultMethod.contains(context.packageName)
+    } catch (_: Exception) {
+        // API 34+에서 SecurityException 발생 시 InputMethodManager 활성화 여부로 안전 폴백
+        checkIsImeEnabled(context)
     }
 }
 
@@ -124,21 +154,37 @@ fun MainOnDeviceScreen(
     onSelectIme: () -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
 
+    var isImeEnabled by remember { mutableStateOf(checkIsImeEnabled(context)) }
+    var isImeSelected by remember { mutableStateOf(checkIsImeSelected(context)) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                isImeEnabled = checkIsImeEnabled(context)
+                isImeSelected = checkIsImeSelected(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val isModelLoaded by intentEngine.isModelLoadedFlow.collectAsState(initial = intentEngine.isModelLoaded)
-    val isDownloading by ai.deartalk.android.agent.ModelDownloader.shared.isDownloading.collectAsState(initial = false)
-    val downloadProgress by ai.deartalk.android.agent.ModelDownloader.shared.progress.collectAsState(initial = 0.0f)
-    val statusMessage by ai.deartalk.android.agent.ModelDownloader.shared.statusMessage.collectAsState(initial = "")
-    val downloadErrorMessage by ai.deartalk.android.agent.ModelDownloader.shared.errorMessage.collectAsState(initial = null)
+    val isDownloading by ModelDownloader.shared.isDownloading.collectAsState(initial = false)
+    val downloadProgress by ModelDownloader.shared.progress.collectAsState(initial = 0.0f)
+    val downloadedMB by ModelDownloader.shared.downloadedSizeMB.collectAsState(initial = 0.0)
+    val totalMB by ModelDownloader.shared.totalSizeMB.collectAsState(initial = 0.0)
+    val statusMessage by ModelDownloader.shared.statusMessage.collectAsState(initial = "")
+    val downloadErrorMessage by ModelDownloader.shared.errorMessage.collectAsState(initial = null)
 
-
-    // 설정 상태
     var isAutoLanguage by remember { mutableStateOf(DearTalkSettings.isAutoLanguage(context)) }
     var selectedLanguageCode by remember { mutableStateOf(DearTalkSettings.getSelectedLanguageCode(context)) }
     var languageDisplayTitle by remember { mutableStateOf(DearTalkSettings.getLanguageDisplayTitle(context)) }
 
-    // 음성 인식 & AI 테스트 상태
     var isListening by remember { mutableStateOf(false) }
     var recognizedLiveText by remember { mutableStateOf("") }
     var rawUtteranceText by remember { mutableStateOf("") }
@@ -146,12 +192,10 @@ fun MainOnDeviceScreen(
     var aiProcessingMessage by remember { mutableStateOf("") }
     var testInputText by remember { mutableStateOf("") }
 
-    // 설정 UI 상태
     var silenceTimeoutMs by remember { mutableFloatStateOf(DearTalkSettings.getSilenceTimeoutMillis(context).toFloat()) }
     var showClearHistoryDialog by remember { mutableStateOf(false) }
     var historyClearedMessage by remember { mutableStateOf("") }
 
-    // STT 상태 관찰
     LaunchedEffect(Unit) {
         sttManager.voiceState.collect { state ->
             when (state) {
@@ -168,7 +212,6 @@ fun MainOnDeviceScreen(
                     rawUtteranceText = state.text
                     aiProcessingMessage = UiStrings.settingsAiAnalyzing
 
-                    // 100% 온디바이스 로컬 AI 실행
                     coroutineScope.launch {
                         val result = intentEngine.process(
                             voiceInput = state.text,
@@ -202,7 +245,6 @@ fun MainOnDeviceScreen(
 
     val isKorean = DearTalkSettings.getEffectiveLocale(context).language == "ko"
 
-    // 히스토리 초기화 확인 다이얼로그
     if (showClearHistoryDialog) {
         AlertDialog(
             onDismissRequest = { showClearHistoryDialog = false },
@@ -210,11 +252,11 @@ fun MainOnDeviceScreen(
                 TextButton(onClick = {
                     coroutineScope.launch {
                         contextRepository.clearAllHistory()
-                        historyClearedMessage = if (isKorean) "✅ 히스토리가 초기화되었습니다" else "✅ History cleared"
+                        historyClearedMessage = if (isKorean) "✅ 대화 기록이 모두 초기화되었습니다." else "✅ All conversation history cleared."
                     }
                     showClearHistoryDialog = false
                 }) {
-                    Text(if (isKorean) "삭제" else "Delete", color = Color(0xFFEF4444))
+                    Text(if (isKorean) "기록 삭제" else "Delete History", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -222,8 +264,8 @@ fun MainOnDeviceScreen(
                     Text(if (isKorean) "취소" else "Cancel", color = DearTalkTextDim)
                 }
             },
-            title = { Text(if (isKorean) "🗑️ 히스토리 초기화" else "🗑️ Clear History", fontWeight = FontWeight.Bold) },
-            text = { Text(if (isKorean) "모든 AI 변환 히스토리 데이터가 영구 삭제됩니다.\n이 작업은 되돌릴 수 없습니다." else "All AI transformation history will be permanently deleted.\nThis action cannot be undone.") },
+            title = { Text(if (isKorean) "🗑️ AI 대화 기록 초기화" else "🗑️ Clear AI History", fontWeight = FontWeight.Bold) },
+            text = { Text(if (isKorean) "내 휴대폰에 안전하게 저장된 AI 변환 기록을 모두 삭제합니다.\n삭제된 기록은 다시 복구할 수 없습니다." else "All AI conversation logs stored safely on this phone will be deleted.\nThis cannot be undone.") },
             containerColor = DearTalkSurface,
             titleContentColor = DearTalkText,
             textContentColor = DearTalkTextDim
@@ -233,7 +275,7 @@ fun MainOnDeviceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isKorean) "DearTalkAI 설정 및 안내" else "DearTalkAI Settings & Guide", fontWeight = FontWeight.Bold) },
+                title = { Text(if (isKorean) "DearTalk AI 설정 및 가이드" else "DearTalk AI Settings & Guide", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DearTalkBackground,
                     titleContentColor = DearTalkText
@@ -251,7 +293,151 @@ fun MainOnDeviceScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // ═══════════════════════════════════════════════════
-            // 1. 🔒 100% 온디바이스 보안 배너 & AI 엔진 진단
+            // 🚀 1. 키보드 빠른 시작 안내 카드 (2단계 마법사)
+            // ═══════════════════════════════════════════════════
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (!isImeSelected) Color(0xFF0F172A) else DearTalkSurface
+                ),
+                border = if (!isImeSelected) CardDefaults.outlinedCardBorder().copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(DearTalkSecondary)
+                ) else null
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(DearTalkSecondary.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.RocketLaunch,
+                                contentDescription = null,
+                                tint = DearTalkSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (isKorean) "🚀 1분 키보드 빠른 시작" else "🚀 Quick Keyboard Setup",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DearTalkText
+                            )
+                            Text(
+                                text = if (isImeSelected) {
+                                    if (isKorean) "✅ 기본 키보드로 설정되어 바로 사용할 수 있습니다." else "✅ Ready to use as your default keyboard."
+                                } else {
+                                    if (isKorean) "키보드를 사용하려면 아래 2단계를 완료해 주세요." else "Complete the 2 steps below to use the keyboard."
+                                },
+                                fontSize = 12.sp,
+                                color = if (isImeSelected) Color(0xFF4ADE80) else DearTalkSecondary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 1단계: 키보드 켜기
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isKorean) "1단계: 키보드 켜기 (활성화)" else "Step 1: Enable Keyboard",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isImeEnabled) Color(0xFF4ADE80) else DearTalkText
+                            )
+                            Text(
+                                text = if (isImeEnabled) {
+                                    if (isKorean) "✅ DearTalk AI 키보드가 켜져 있습니다" else "✅ DearTalk AI keyboard is turned on"
+                                } else {
+                                    if (isKorean) "설정 화면에서 DearTalk AI 스위치를 켜주세요" else "Turn on the DearTalk AI switch in settings"
+                                },
+                                fontSize = 11.sp,
+                                color = DearTalkTextDim
+                            )
+                        }
+
+                        Button(
+                            onClick = onEnableIme,
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isImeEnabled) Color(0xFF166534) else DearTalkPrimary
+                            ),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (isImeEnabled) (if (isKorean) "✅ 완료" else "✅ Done") else (if (isKorean) "설정 열기 ➔" else "Open Settings ➔"),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = DearTalkKey.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 2단계: 기본 키보드로 선택
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isKorean) "2단계: 기본 키보드로 선택" else "Step 2: Set as Default Keyboard",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isImeSelected) Color(0xFF4ADE80) else DearTalkText
+                            )
+                            Text(
+                                text = if (isImeSelected) {
+                                    if (isKorean) "✅ 기본 키보드로 지정되어 어디서나 즉시 사용 가능" else "✅ Selected as default keyboard across all apps"
+                                } else {
+                                    if (isKorean) "팝업 창에서 DearTalk AI를 선택해 주세요" else "Select DearTalk AI from the popup list"
+                                },
+                                fontSize = 11.sp,
+                                color = DearTalkTextDim
+                            )
+                        }
+
+                        Button(
+                            onClick = onSelectIme,
+                            enabled = isImeEnabled,
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isImeSelected) Color(0xFF166534) else DearTalkSecondary,
+                                disabledContainerColor = DearTalkKey
+                            ),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (isImeSelected) {
+                                    if (isKorean) "✅ 선택됨" else "✅ Selected"
+                                } else {
+                                    if (isKorean) "키보드 선택 ➔" else "Select Keyboard ➔"
+                                },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isImeSelected) Color.White else Color.Black
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ═══════════════════════════════════════════════════
+            // 2. 🔒 100% 온디바이스 개인정보 보호 & AI 모델
             // ═══════════════════════════════════════════════════
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -277,16 +463,16 @@ fun MainOnDeviceScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = if (isKorean) "🔒 100% 온디바이스 AI 키보드" else "🔒 100% On-Device AI Keyboard",
-                                fontSize = 16.sp,
+                                text = if (isKorean) "🔒 100% 온디바이스 AI 안심 보호" else "🔒 100% On-Device AI Privacy",
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = DearTalkSecondary
                             )
                             Text(
                                 text = if (isModelLoaded) {
-                                    if (isKorean) "✨ 온디바이스 Gemma LLM 가동 중 (외부 통신 0%)" else "✨ On-Device Gemma LLM Running (Zero Network)"
+                                    if (isKorean) "✨ 내 폰 안에서만 작동 중 (외부 유출 0%)" else "✨ Running locally inside your phone (Zero Cloud Leak)"
                                 } else {
-                                    if (isKorean) "ℹ️ 온디바이스 Gemma LLM 모델 준비 중 (STT 원문 모드)" else "ℹ️ Initializing On-Device LLM (STT Raw Mode)"
+                                    if (isKorean) "ℹ️ 오프라인 음성 인식 모드 가동 중" else "ℹ️ Offline Speech Recognition Mode Active"
                                 },
                                 fontSize = 12.sp,
                                 color = if (isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
@@ -296,7 +482,6 @@ fun MainOnDeviceScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 현재 AI 번역/작동 언어 표시 뱃지
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = DearTalkKey.copy(alpha = 0.6f)
@@ -308,7 +493,7 @@ fun MainOnDeviceScreen(
                             Icon(Icons.Default.Language, contentDescription = null, tint = DearTalkSecondary, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isKorean) "🌐 AI 작동 언어: $languageDisplayTitle" else "🌐 AI Target Language: $languageDisplayTitle",
+                                text = if (isKorean) "🌐 AI 인식 언어: $languageDisplayTitle" else "🌐 AI Language: $languageDisplayTitle",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = DearTalkSecondary
@@ -316,7 +501,6 @@ fun MainOnDeviceScreen(
                         }
                     }
 
-                    // 모델 미배치 시 원클릭 인앱 자동 다운로더 카드 노출
                     if (!isModelLoaded) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Box(
@@ -324,12 +508,12 @@ fun MainOnDeviceScreen(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(DearTalkKey.copy(alpha = 0.5f))
-                                .padding(12.dp)
+                                .padding(14.dp)
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = if (isKorean) "📦 Google Gemma 온디바이스 AI 모델 설치" else "📦 Install Google Gemma On-Device AI Model",
+                                        text = if (isKorean) "📦 Google Gemma 온디바이스 AI 모델" else "📦 Google Gemma On-Device AI Model",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = DearTalkText
@@ -340,7 +524,7 @@ fun MainOnDeviceScreen(
                                         color = DearTalkSecondary.copy(alpha = 0.15f)
                                     ) {
                                         Text(
-                                            text = if (isKorean) "오프라인 저장 (~1.3GB)" else "Offline Store (~1.3GB)",
+                                            text = if (isKorean) "휴대폰 저장 (~1.3GB)" else "Phone Storage (~1.3GB)",
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = DearTalkSecondary,
@@ -348,34 +532,69 @@ fun MainOnDeviceScreen(
                                         )
                                     }
                                 }
-                                
+
                                 Text(
-                                    text = if (isKorean) 
-                                        "외부 도구 설치 없이 앱 내부에서 100% 온디바이스 Gemma 신경망을 원클릭으로 다운로드하여 즉시 실시간 글쓰기 교정을 활성화합니다."
-                                    else 
-                                        "Download the 100% on-device Gemma neural network directly inside the app with a single click to instantly activate real-time writing refinement.",
+                                    text = if (isKorean)
+                                        "외부 서버로 대화 내용이 전혀 전송되지 않고, 내 휴대폰 안에서만 안전하게 생각하고 답변하는 구글 Gemma AI 모델입니다. 다운로드 후 인터넷이 안 되는 곳에서도 100% 작동합니다."
+                                    else
+                                        "Google Gemma AI model executing 100% locally on your device without sending any chat data to the cloud. Works completely offline.",
                                     fontSize = 11.sp,
-                                    color = DearTalkTextDim
+                                    color = DearTalkTextDim,
+                                    lineHeight = 16.sp
                                 )
 
                                 if (isDownloading) {
-                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color(0xFF020617))
+                                            .padding(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = if (isKorean) "⏳ AI 모델 다운로드 중..." else "⏳ Downloading AI Model...",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = DearTalkSecondary
+                                            )
+                                            Text(
+                                                text = "${String.format("%.1f", downloadProgress * 100f)}%",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = DearTalkSecondary
+                                            )
+                                        }
+
                                         LinearProgressIndicator(
                                             progress = { downloadProgress },
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(8.dp)
+                                                .clip(RoundedCornerShape(4.dp)),
                                             color = DearTalkSecondary,
                                             trackColor = DearTalkKey
                                         )
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
                                             Text(
-                                                text = statusMessage,
+                                                text = statusMessage.ifBlank {
+                                                    if (isKorean) "다운로드 진행 중..." else "Downloading in progress..."
+                                                },
                                                 fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = DearTalkSecondary
+                                                color = DearTalkTextDim
                                             )
-                                            Spacer(modifier = Modifier.weight(1f))
                                             TextButton(
-                                                onClick = { ai.deartalk.android.agent.ModelDownloader.shared.cancelDownload() },
+                                                onClick = { ModelDownloader.shared.cancelDownload() },
                                                 contentPadding = PaddingValues(0.dp),
                                                 modifier = Modifier.height(24.dp)
                                             ) {
@@ -390,25 +609,25 @@ fun MainOnDeviceScreen(
                                 } else {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Button(
-                                            onClick = { 
-                                                ai.deartalk.android.agent.ModelDownloader.shared.startDownload(context, intentEngine) 
+                                            onClick = {
+                                                ModelDownloader.shared.startDownload(context, intentEngine)
                                             },
                                             shape = RoundedCornerShape(8.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = DearTalkSecondary),
-                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                            modifier = Modifier.height(36.dp)
+                                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                            modifier = Modifier.height(38.dp)
                                         ) {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     imageVector = Icons.Default.ArrowCircleDown,
                                                     contentDescription = null,
-                                                    modifier = Modifier.size(14.dp),
+                                                    modifier = Modifier.size(16.dp),
                                                     tint = Color.Black
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
-                                                    text = if (isKorean) "🚀 온디바이스 AI 모델 다운로드" else "🚀 Download On-Device AI Model",
-                                                    fontSize = 11.sp,
+                                                    text = if (isKorean) "🚀 AI 모델 다운로드" else "🚀 Download AI Model",
+                                                    fontSize = 12.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = Color.Black
                                                 )
@@ -416,25 +635,25 @@ fun MainOnDeviceScreen(
                                         }
 
                                         Button(
-                                            onClick = { 
-                                                intentEngine.detectAndInitOnDeviceModel() 
+                                            onClick = {
+                                                intentEngine.detectAndInitOnDeviceModel()
                                             },
                                             shape = RoundedCornerShape(8.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = DearTalkKey),
-                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                            modifier = Modifier.height(36.dp)
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                                            modifier = Modifier.height(38.dp)
                                         ) {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     imageVector = Icons.Default.Refresh,
                                                     contentDescription = null,
-                                                    modifier = Modifier.size(12.dp),
+                                                    modifier = Modifier.size(14.dp),
                                                     tint = DearTalkText
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
-                                                    text = if (isKorean) "로컬 감지 새로고침" else "Refresh Local Detection",
-                                                    fontSize = 11.sp,
+                                                    text = if (isKorean) "내 폰 모델 다시 찾기" else "Rescan Phone",
+                                                    fontSize = 12.sp,
                                                     color = DearTalkText
                                                 )
                                             }
@@ -443,11 +662,24 @@ fun MainOnDeviceScreen(
                                 }
 
                                 downloadErrorMessage?.let { err ->
-                                    Text(
-                                        text = err,
-                                        fontSize = 10.sp,
-                                        color = Color(0xFFEF4444)
-                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFF7F1D1D).copy(alpha = 0.3f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFF87171), modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = err,
+                                                fontSize = 11.sp,
+                                                color = Color(0xFFFCA5A5)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -457,9 +689,8 @@ fun MainOnDeviceScreen(
                     HorizontalDivider(color = DearTalkKey)
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 🔍 AI 엔진 상태 진단 정보
                     Text(
-                        text = if (isKorean) "🔍 온디바이스 AI 엔진 진단" else "🔍 On-Device AI Engine Diagnostics",
+                        text = if (isKorean) "🔍 AI 엔진 작동 상태" else "🔍 AI Engine Status",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = DearTalkText
@@ -486,30 +717,25 @@ fun MainOnDeviceScreen(
                     val modelFiles = modelFiles1 + modelFiles2
 
                     DiagnosticRow(
-                        label = if (isKorean) "엔진 상태" else "Engine Status",
-                        value = if (isModelLoaded) (if (isKorean) "✅ 정상 가동 중 (온디바이스 LLM)" else "✅ Running (On-Device LLM)") else (if (isKorean) "⏳ 초기화 중 / 미로드" else "⏳ Initializing"),
+                        label = if (isKorean) "AI 엔진 상태" else "Engine Status",
+                        value = if (isModelLoaded) (if (isKorean) "✅ 온디바이스 AI 정상 작동 중" else "✅ On-Device AI Active") else (if (isKorean) "⏳ 오프라인 음성인식 모드 가동" else "⏳ Offline Voice Mode"),
                         valueColor = if (isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "로드된 모델" else "Loaded Model",
-                        value = if (modelFiles.isNotEmpty()) modelFiles.joinToString(", ") { "${it.name} (${it.length() / 1024 / 1024}MB)" } else (if (isKorean) "온디바이스 기본 엔진" else "On-Device Default"),
+                        label = if (isKorean) "설치된 모델" else "Installed Model",
+                        value = if (modelFiles.isNotEmpty()) modelFiles.joinToString(", ") { "${it.name} (${it.length() / 1024 / 1024}MB)" } else (if (isKorean) "기본 내장 엔진" else "Default Engine"),
                         valueColor = if (modelFiles.isNotEmpty()) DearTalkText else Color(0xFFFCA5A5)
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "모델 디렉토리" else "Model Directory",
-                        value = if (modelFiles2.isNotEmpty()) context.filesDir.absolutePath + "/models/" else "/data/local/tmp/llm/",
-                        valueColor = DearTalkTextDim
-                    )
-                    DiagnosticRow(
-                        label = if (isKorean) "프라이버시" else "Privacy",
-                        value = if (isKorean) "🔒 외부 통신 0% (완전 오프라인)" else "🔒 Zero Network (Fully Offline)",
+                        label = if (isKorean) "개인정보 보호" else "Privacy",
+                        value = if (isKorean) "🔒 100% 안전 (외부 서버 통신 0%)" else "🔒 100% Safe (Zero Cloud Traffic)",
                         valueColor = Color(0xFF4ADE80)
                     )
                 }
             }
 
             // ═══════════════════════════════════════════════════
-            // 2. 🎙️ 음성 테스트 샌드박스
+            // 3. 🎙️ 실시간 음성 & AI 체험 샌드박스
             // ═══════════════════════════════════════════════════
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -518,14 +744,14 @@ fun MainOnDeviceScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = if (isKorean) "🎙️ 실시간 음성 & AI 변환 테스트" else "🎙️ Real-time Voice & AI Sandbox",
+                        text = if (isKorean) "🎙️ 실시간 음성 & AI 체험하기" else "🎙️ Real-time Voice & AI Sandbox",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = DearTalkText
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = if (isKorean) "마이크를 누르고 말씀하신 뒤 다시 누르면 실시간 온디바이스 AI 조율 결과를 확인할 수 있습니다." else "Tap mic and speak, tap again to see real-time on-device AI results.",
+                        text = if (isKorean) "마이크를 누르고 말씀하시거나 아래 예시를 터치하여 AI가 문장을 어떻게 다듬는지 바로 확인해 보세요." else "Tap the mic and speak, or tap sample sentences to see how AI polishes them in real time.",
                         fontSize = 11.sp,
                         color = DearTalkTextDim
                     )
@@ -540,7 +766,6 @@ fun MainOnDeviceScreen(
                         label = "pulse"
                     )
 
-                    // 원버튼 마이크 토글: 시작 <-> 종료
                     Button(
                         onClick = {
                             if (isListening) {
@@ -570,9 +795,9 @@ fun MainOnDeviceScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (isListening) {
-                                if (isKorean) "🛑 마이크 종료 (터치하여 AI 변환)" else "🛑 Stop Mic (Refine with AI)"
+                                if (isKorean) "🛑 말씀 끝내기 (터치하여 AI 다듬기)" else "🛑 Finish Speaking (Polish with AI)"
                             } else {
-                                if (isKorean) "🎙️ AI 음성 입력" else "🎙️ AI Voice Input"
+                                if (isKorean) "🎙️ 마이크 켜고 말씀하기" else "🎙️ Tap to Speak"
                             },
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
@@ -589,7 +814,6 @@ fun MainOnDeviceScreen(
                         )
                     }
 
-                    // 변환된 내역 (STT ➔ AI 기준 변경 내역)
                     if (rawUtteranceText.isNotBlank() || recognizedLiveText.isNotBlank()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Box(
@@ -600,7 +824,7 @@ fun MainOnDeviceScreen(
                                 .padding(10.dp)
                         ) {
                             Column {
-                                Text(if (isKorean) "🎤 1. 음성 인식 원본 (STT):" else "🎤 1. Recognized Speech (STT):", fontSize = 11.sp, color = DearTalkTextDim, fontWeight = FontWeight.SemiBold)
+                                Text(if (isKorean) "🎤 1. 내가 말한 내용:" else "🎤 1. What You Said:", fontSize = 11.sp, color = DearTalkTextDim, fontWeight = FontWeight.SemiBold)
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = if (rawUtteranceText.isNotBlank()) rawUtteranceText else recognizedLiveText,
@@ -621,7 +845,7 @@ fun MainOnDeviceScreen(
                                 .padding(10.dp)
                         ) {
                             Column {
-                                Text(if (isKorean) "✨ 2. AI 조율 및 다듬기 결과 (온디바이스 Gemma):" else "✨ 2. AI Refined Result (Gemma On-Device):", fontSize = 11.sp, color = DearTalkSecondary, fontWeight = FontWeight.Bold)
+                                Text(if (isKorean) "✨ 2. AI가 다듬은 문장:" else "✨ 2. AI Polished Result:", fontSize = 11.sp, color = DearTalkSecondary, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(aiTransformedText, fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
                             }
@@ -630,9 +854,8 @@ fun MainOnDeviceScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 시나리오 원클릭 프리셋 칩
                     Text(
-                        text = if (isKorean) "💡 주요 대화 시나리오 원클릭 테스트:" else "💡 One-Click Scenario Tests:",
+                        text = if (isKorean) "💡 예시 문장 눌러서 바로 테스트:" else "💡 Tap sample sentences to test:",
                         fontSize = 11.sp,
                         color = DearTalkTextDim,
                         fontWeight = FontWeight.SemiBold
@@ -646,21 +869,21 @@ fun MainOnDeviceScreen(
                     ) {
                         val presets = if (isKorean) {
                             listOf(
-                                "내일 아침 9시 만나 이것을 좀 공손하게 바꿔 줘",
-                                "지금 출발했어 조금 늦을 것 같아 정중하게 다듬어줘",
-                                "다음 주 화요일 오후 2시 어떠냐고 물어봐줘",
-                                "정리한 파일 보냈으니 확인해봐 공손하게 바꿔줘",
-                                "지금 어디야 정중하게",
-                                "Hello how are you doing today make it polite",
-                                "Where is the meeting room please tell me"
+                                "금요일 제외한 매일 11시에서 11시30분까지는 Privacy 스크럼이니 절대로 잊지마",
+                                "지금 출발했는데 도로가 너무 막혀서 15분 정도 늦을 것 같아",
+                                "방금 수정한 기획안 메일로 보냈으니까 확인해보고 의견 줘",
+                                "내일 점심 같이 먹을 수 있는지 시간 언제가 좋은지 알려줘",
+                                "어제 부탁했던 회의록 정리 다 됐으면 나한테 넘겨줘",
+                                "Hello how are you doing today please confirm",
+                                "Where is the conference room please tell me"
                             )
                         } else {
                             listOf(
-                                "Let's meet tomorrow at 9 AM make it polite",
-                                "I just left, I might be a bit late, please polish it politely",
-                                "Ask if next Tuesday 2 PM works",
-                                "Sent the updated file please review make it polite",
-                                "Where are you now politely"
+                                "Privacy scrum is from 11:00 to 11:30 every day except Friday so never forget",
+                                "I just departed but traffic is heavy so I might be 15 minutes late",
+                                "Sent the updated proposal via email please review and let me know your thoughts",
+                                "Please let me know when works best for lunch tomorrow",
+                                "Where is the conference room please tell me"
                             )
                         }
                         presets.forEach { preset ->
@@ -680,7 +903,7 @@ fun MainOnDeviceScreen(
                                         }
                                     }
                                 },
-                                label = { Text(preset.take(20) + "...", fontSize = 10.sp, color = DearTalkText) },
+                                label = { Text(preset.take(24) + if (preset.length > 24) "..." else "", fontSize = 11.sp, color = DearTalkText) },
                                 colors = SuggestionChipDefaults.suggestionChipColors(
                                     containerColor = Color(0xFF1E293B)
                                 ),
@@ -694,12 +917,11 @@ fun MainOnDeviceScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 실제 키보드로 타이핑해볼 수 있는 입력창
                     OutlinedTextField(
                         value = testInputText,
                         onValueChange = { testInputText = it },
-                        label = { Text(if (isKorean) "키보드로 직접 테스트하기 (터치)" else "Type to test directly (Tap)") },
-                        placeholder = { Text(if (isKorean) "키보드 자판을 띄워 테스트할 수 있습니다" else "Open keyboard to test typing") },
+                        label = { Text(if (isKorean) "키보드로 직접 써보기 (여기를 터치)" else "Type directly to test keyboard (Tap here)") },
+                        placeholder = { Text(if (isKorean) "키보드 자판에서 음성과 말투 변환을 직접 써보세요" else "Test voice and tone directly on keyboard") },
                         trailingIcon = {
                             if (testInputText.isNotBlank()) {
                                 IconButton(onClick = { testInputText = "" }) {
@@ -722,7 +944,7 @@ fun MainOnDeviceScreen(
             }
 
             // ═══════════════════════════════════════════════════
-            // 3. ⚙️ 키보드 설정 (언어, 침묵 타임아웃, 키보드 활성화)
+            // 4. ⚙️ 키보드 환경 설정
             // ═══════════════════════════════════════════════════
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -730,7 +952,6 @@ fun MainOnDeviceScreen(
                 colors = CardDefaults.cardColors(containerColor = DearTalkSurface)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // 언어 자동 감지 토글
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -738,13 +959,13 @@ fun MainOnDeviceScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isKorean) "⚙️ 키보드 AI 언어 설정" else "⚙️ Keyboard AI Language Settings",
+                                text = if (isKorean) "⚙️ 기본 언어 자동 맞춤" else "⚙️ Auto Language Detection",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = DearTalkText
                             )
                             Text(
-                                text = if (isKorean) "안드로이드 설정 기본 언어 자동 사용" else "Use Android System Default Language",
+                                text = if (isKorean) "휴대폰 기본 설정 언어 자동 사용" else "Use phone's default system language",
                                 fontSize = 12.sp,
                                 color = DearTalkTextDim
                             )
@@ -767,7 +988,7 @@ fun MainOnDeviceScreen(
                     if (!isAutoLanguage) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = if (isKorean) "👉 AI가 우선 인식하고 처리할 언어 직접 선택:" else "👉 Select target language for AI:",
+                            text = if (isKorean) "👉 사용할 언어 직접 선택:" else "👉 Select language manually:",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = DearTalkSecondary
@@ -806,15 +1027,14 @@ fun MainOnDeviceScreen(
                     HorizontalDivider(color = DearTalkKey)
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 🎙️ 음성 인식 침묵 타임아웃 슬라이더
                     Text(
-                        text = if (isKorean) "🎙️ 음성 인식 침묵 대기 시간" else "🎙️ Speech Silence Timeout",
+                        text = if (isKorean) "🎙️ 말 끝남 자동 감지 시간" else "🎙️ Speech Pause Wait Time",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = DearTalkText
                     )
                     Text(
-                        text = if (isKorean) "말이 끊긴 후 자동 인식 완료까지의 대기 시간 (${String.format("%.1f", silenceTimeoutMs / 1000f)}초)" else "Wait time after speech pause (${String.format("%.1f", silenceTimeoutMs / 1000f)}s)",
+                        text = if (isKorean) "말씀이 끝난 후 자동으로 입력을 완료할 때까지의 대기 시간 (${String.format("%.1f", silenceTimeoutMs / 1000f)}초)" else "Wait time after you stop speaking (${String.format("%.1f", silenceTimeoutMs / 1000f)}s)",
                         fontSize = 11.sp,
                         color = DearTalkTextDim
                     )
@@ -837,51 +1057,14 @@ fun MainOnDeviceScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("1.5${if (isKorean) "초" else "s"}", fontSize = 10.sp, color = DearTalkTextDim)
-                        Text("8${if (isKorean) "초" else "s"}", fontSize = 10.sp, color = DearTalkTextDim)
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = DearTalkKey)
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // 키보드 활성화 & 시스템 등록
-                    Text(
-                        text = if (isKorean) "키보드 활성화 및 시스템 등록" else "Keyboard Activation & IME Setup",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = DearTalkText
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = onEnableIme,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkKeyActive)
-                        ) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = DearTalkSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isKorean) "키보드 켜짐" else "Keyboard Enabled", fontSize = 12.sp)
-                        }
-
-                        Button(
-                            onClick = onSelectIme,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkKeyActive)
-                        ) {
-                            Icon(Icons.Default.Keyboard, contentDescription = null, tint = DearTalkSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isKorean) "기본 키보드 설정됨" else "Default Selected", fontSize = 12.sp)
-                        }
+                        Text("1.5${if (isKorean) "초 (빠름)" else "s (Fast)"}", fontSize = 10.sp, color = DearTalkTextDim)
+                        Text("8.0${if (isKorean) "초 (여유)" else "s (Relaxed)"}", fontSize = 10.sp, color = DearTalkTextDim)
                     }
                 }
             }
 
             // ═══════════════════════════════════════════════════
-            // 4. 🗄️ 데이터 관리
+            // 5. 🗄️ 대화 기록 관리
             // ═══════════════════════════════════════════════════
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -890,14 +1073,14 @@ fun MainOnDeviceScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = if (isKorean) "🗄️ 데이터 관리" else "🗄️ Data Management",
+                        text = if (isKorean) "🗄️ 대화 기록 관리" else "🗄️ History Management",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = DearTalkText
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = if (isKorean) "AI 변환 히스토리는 앱 내부에만 저장되며 외부 전송되지 않습니다." else "AI transformation history is stored locally only and never transmitted.",
+                        text = if (isKorean) "AI 변환 기록은 오직 내 휴대폰에만 안전하게 보관되며, 외부 서버로 절대 전송되지 않습니다." else "All AI transformation logs are stored securely only on your phone and never sent to cloud servers.",
                         fontSize = 11.sp,
                         color = DearTalkTextDim
                     )
@@ -912,7 +1095,7 @@ fun MainOnDeviceScreen(
                         Icon(Icons.Default.DeleteForever, contentDescription = null, tint = Color(0xFFFCA5A5), modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isKorean) "🗑️ 모든 AI 변환 히스토리 초기화" else "🗑️ Clear All AI History",
+                            text = if (isKorean) "🗑️ AI 변환 기록 모두 지우기" else "🗑️ Clear All AI History",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFCA5A5)
@@ -932,7 +1115,7 @@ fun MainOnDeviceScreen(
             }
 
             // ═══════════════════════════════════════════════════
-            // 5. ℹ️ 앱 정보
+            // 6. ℹ️ 앱 정보
             // ═══════════════════════════════════════════════════
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -955,21 +1138,16 @@ fun MainOnDeviceScreen(
                     val buildTimeStr = packageInfo?.let {
                         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
                         sdf.format(java.util.Date(it.lastUpdateTime))
-                    } ?: "2026-08-22 01:14:24"
+                    } ?: "2026-08-23 21:45:00"
 
                     DiagnosticRow(
                         label = if (isKorean) "앱 이름" else "App Name",
-                        value = "DearTalkAI",
+                        value = "DearTalk AI",
                         valueColor = DearTalkText
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "패키지" else "Package",
-                        value = context.packageName,
-                        valueColor = DearTalkTextDim
-                    )
-                    DiagnosticRow(
                         label = UiStrings.appVersionLabel,
-                        value = "${packageInfo?.versionName ?: "1.0"} (${packageInfo?.longVersionCode ?: 1})",
+                        value = "v${packageInfo?.versionName ?: "1.0.0"} (빌드 ${packageInfo?.longVersionCode ?: 1})",
                         valueColor = DearTalkText
                     )
                     DiagnosticRow(
@@ -978,15 +1156,15 @@ fun MainOnDeviceScreen(
                         valueColor = DearTalkText
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "AI 철학" else "AI Philosophy",
-                        value = if (isKorean) "🔒 100% 온디바이스 · 외부통신 0% · 가짜규칙 0%" else "🔒 100% On-Device · Zero Network · Zero Fake",
+                        label = if (isKorean) "보안 등급" else "Security",
+                        value = if (isKorean) "🔒 100% 온디바이스 (외부 유출 0%)" else "🔒 100% On-Device (Zero Cloud Leak)",
                         valueColor = DearTalkSecondary
                     )
                 }
             }
 
             // ═══════════════════════════════════════════════════
-            // 6. 📖 사용 설명서
+            // 7. 📖 사용 방법 안내
             // ═══════════════════════════════════════════════════
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1017,15 +1195,11 @@ fun MainOnDeviceScreen(
                 }
             }
 
-            // 하단 여백
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-/**
- * 진단 정보를 한 줄로 표시하는 레이아웃 컴포넌트
- */
 @Composable
 private fun DiagnosticRow(
     label: String,
@@ -1044,7 +1218,7 @@ private fun DiagnosticRow(
             fontSize = 11.sp,
             color = DearTalkTextDim,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.width(90.dp)
+            modifier = Modifier.width(100.dp)
         )
         Text(
             text = value,

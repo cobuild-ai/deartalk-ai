@@ -403,14 +403,21 @@ fun DearTalkScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 1. 톤앤매너 칩들 (기본다듬기, 공손하게, 친근하게, 비즈니스)
+                var selectedToneId by remember { mutableStateOf<String?>(null) }
                 val displayTones = if (tones.isNotEmpty()) tones else ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES
                 displayTones.forEach { tone ->
+                    val isSelected = selectedToneId == tone.id
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(DearTalkKey)
-                            .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                            .background(if (isSelected) Color(0xFF4338CA) else DearTalkKey)
+                            .border(
+                                width = if (isSelected) 1.5.dp else 1.dp,
+                                color = if (isSelected) Color(0xFFA5B4FC) else Color(0xFF6366F1).copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
                             .clickable {
+                                selectedToneId = tone.id
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onApplyTone(tone)
                             }
@@ -421,9 +428,9 @@ fun DearTalkScreen(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = tone.name,
-                                color = DearTalkText,
+                                color = if (isSelected) Color.White else DearTalkText,
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
                         }
                     }

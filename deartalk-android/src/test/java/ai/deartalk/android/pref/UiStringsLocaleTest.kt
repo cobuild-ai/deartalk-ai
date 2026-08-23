@@ -17,8 +17,8 @@ class UiStringsLocaleTest {
         assertEquals("Cancel", UiStrings.cancel)
         assertEquals("ℹ️ About & Help", UiStrings.settingsTabAbout)
         assertEquals("App Version", UiStrings.appVersionLabel)
-        assertEquals("Build Timestamp", UiStrings.buildTimestampLabel)
-        assertEquals("📖 DearTalk AI User Guide", UiStrings.userGuideTitle)
+        assertEquals("Last Updated", UiStrings.buildTimestampLabel)
+        assertEquals("📖 DearTalk AI Quick Guide", UiStrings.userGuideTitle)
 
         // 2. 한국어 오버라이드 테스트
         UiStrings.setLocale(Locale.KOREAN)
@@ -26,10 +26,9 @@ class UiStringsLocaleTest {
         assertEquals("공손하게", UiStrings.tonePolite)
         assertEquals("입력", UiStrings.apply)
         assertEquals("취소", UiStrings.cancel)
-        assertEquals("ℹ️ 정보 및 도움말", UiStrings.settingsTabAbout)
+        assertEquals("ℹ️ 앱 정보 및 도움말", UiStrings.settingsTabAbout)
         assertEquals("앱 버전", UiStrings.appVersionLabel)
-        assertEquals("빌드 타임스탬프", UiStrings.buildTimestampLabel)
-        assertEquals("📖 DearTalk AI 사용 설명서", UiStrings.userGuideTitle)
+        assertEquals("업데이트 일시", UiStrings.buildTimestampLabel)
+        assertEquals("📖 DearTalk AI 쉽게 쓰는 법", UiStrings.userGuideTitle)
     }
 }
-
