@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 디버그 전용: 테스트 브로드캐스트 서명 퍼미션 -->
+    <permission
+        android:name="ai.deartalk.android.permission.TEST_INFERENCE"
+        android:protectionLevel="signature" />
+
+    <application>
+        <!-- 디버그 빌드 전용 ADB 테스트 리시버 -->
+        <receiver
+            android:name=".test.DearTalkTestReceiver"
+            android:exported="true"
+            android:permission="ai.deartalk.android.permission.TEST_INFERENCE">
+            <intent-filter>
+                <action android:name="ai.deartalk.android.TEST_INFERENCE" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

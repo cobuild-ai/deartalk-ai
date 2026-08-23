@@ -79,12 +79,15 @@ sequenceDiagram
 - **Role:** Queries focused elements across macOS applications using `AXUIElementCopyAttributeValue` and translates global Top-Left coordinates to Cocoa Bottom-Left space.
 - **Awakening Mechanism:** Emits `AXEnhancedUserInterface = true` to activate lazy accessibility trees in Electron/Chromium apps (VS Code, Antigravity IDE, Slack, Chrome).
 
-### 4. `UiStrings` (Multilingual Engine)
-- **Role:** Automatically determines whether to render Korean (`ko`) or English fallback based on system preferences (`Locale.preferredLanguages` / `Locale.getDefault()`).
+### 5. `DearTalkIME` & `HangulComposer` (Android)
+- **Role:** Android `InputMethodService` implementation providing custom Compose keyboard with real-time on-device tone suggestions.
+- **Hangul Automata:** 2-Bulsik vowel/consonant composition and decomposition engine handling syllable formation and backspace boundaries.
+- **In-App Model Lifecycle:** `ModelDownloader` dynamically loads Gemma `.litertlm` into RAM with GPU acceleration.
 
 ---
 
 ## 📚 Related Documentation
+- [Android Google Play Deployment Guide](ANDROID_DEPLOYMENT_GUIDE.md)
 - [Long-Term Technology Roadmap](ROADMAP.md)
 - [On-Device Model Compatibility Specifications](MODELS.md)
 - [Cross-Platform Testing Specifications](TESTING.md)

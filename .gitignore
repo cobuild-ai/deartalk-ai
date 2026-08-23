@@ -22,12 +22,16 @@ Thumbs.db
 /build/
 **/build/
 local.properties
+keystore.properties
+*.jks
+*.keystore
 .cxx/
 .externalNativeBuild/
 captures/
 *.apk
 *.aab
 *.dex
+*.litertlm
 .kotlin/
 
 # Apple & Swift

@@ -14,20 +14,15 @@
         </intent>
     </queries>
 
-    <!-- 테스트용 브로드캐스트를 같은 서명 앱에서만 허용하는 서명 보호 퍼미션 -->
-    <permission
-        android:name="ai.deartalk.android.permission.TEST_INFERENCE"
-        android:protectionLevel="signature" />
-
     <application
         android:allowBackup="false"
-        android:icon="@android:drawable/sym_def_app_icon"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DearTalk">
 
-        <!-- 메인 설정 및 테스트 액티비티 -->
+        <!-- 메인 설정 및 모델 다운로드 마법사 액티비티 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -39,16 +34,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- 🔒 서명 퍼미션으로 보호 — 같은 서명 앱(ADB 디버그)에서만 테스트 추론 허용 -->
-        <receiver
-            android:name=".test.DearTalkTestReceiver"
-            android:exported="true"
-            android:permission="ai.deartalk.android.permission.TEST_INFERENCE">
-            <intent-filter>
-                <action android:name="ai.deartalk.android.TEST_INFERENCE" />
-            </intent-filter>
-        </receiver>
 
         <!-- DearTalk IME Service (핵심 키보드 서비스) -->
         <service

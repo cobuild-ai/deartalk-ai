@@ -38,7 +38,11 @@ public final class DearTalkIntentEngine: ObservableObject {
 
         var candidatePaths: [String] = []
 
-        // Priority 1: Standalone .app bundle Contents/Resources/models/
+        // Priority 1: SkyBrain Shared Models directory (~/.skybrain/models/)
+        candidatePaths.append("\(homeDir)/.skybrain/models/gemma-4-E4B-it-Q4_K_M.gguf")
+        candidatePaths.append("\(homeDir)/.skybrain/models/gemma-2-2b-it.Q4_K_M.gguf")
+
+        // Priority 2: Standalone .app bundle Contents/Resources/models/
         if let resourcePath = Bundle.main.resourcePath {
             candidatePaths.append("\(resourcePath)/models/model.gguf")
             candidatePaths.append("\(resourcePath)/models/gemma-2b-it.gguf")
@@ -47,20 +51,15 @@ public final class DearTalkIntentEngine: ObservableObject {
             candidatePaths.append("\(resourcePath)/model.gguf")
         }
 
-        // Priority 2: macOS Standard Application Support directory
+        // Priority 3: macOS Standard Application Support directory
         candidatePaths.append("\(homeDir)/Library/Application Support/DearTalk/models/model.gguf")
         candidatePaths.append("\(homeDir)/Library/Application Support/DearTalk/models/gemma-2b-it.gguf")
         candidatePaths.append("\(homeDir)/Library/Application Support/DearTalk/models/model.litertlm")
-        candidatePaths.append("/Library/Application Support/DearTalk/models/model.litertlm")
 
-        // Priority 3: User home .deartalk directory
+        // Priority 4: User home .deartalk directory
         candidatePaths.append("\(homeDir)/.deartalk/models/model.gguf")
         candidatePaths.append("\(homeDir)/.deartalk/models/gemma-2b-it.gguf")
         candidatePaths.append("\(homeDir)/.deartalk/models/model.litertlm")
-        candidatePaths.append("\(homeDir)/.deartalk/models/gemma-2b-it.bin")
-        candidatePaths.append("\(homeDir)/models/gemma-2b-it.litertlm")
-        candidatePaths.append("\(homeDir)/models/model.bin")
-        candidatePaths.append("/data/local/tmp/llm/model.litertlm")
 
         for path in candidatePaths {
             if fileManager.fileExists(atPath: path) {
@@ -70,15 +69,12 @@ public final class DearTalkIntentEngine: ObservableObject {
                     self.isModelLoaded = true
                     let isBundled = path.contains(".app/Contents/Resources")
                     DearTalkLogger.info("✅ \(isBundled ? "앱 내장 독립 번들" : "로컬") 온디바이스 모델 감지 완료: \(path) (\(size / 1024 / 1024) MB)", category: "Engine")
-
-                    // 백그라운드 로컬 Metal 추론 엔진 기동 확인
-                    ensureLocalInferenceServerRunning(modelPath: path)
                     return
                 }
             }
         }
 
-        // 4순위: 로컬 루프백(127.0.0.1:11434 / 11435) 온디바이스 LLM 서비스 탐색
+        // 5순위: 로컬 루프백(127.0.0.1:8000 SkyBrain / 11434 Ollama) 온디바이스 LLM 서비스 탐색
         Task {
             if let detectedModel = await checkLocalLlmService() {
                 await MainActor.run {
@@ -96,42 +92,10 @@ public final class DearTalkIntentEngine: ObservableObject {
         }
     }
 
-    /// 로컬 llama-server 데몬이 11435 포트에서 실행 중인지 확인하고, 아니면 자동 기동
-    private func ensureLocalInferenceServerRunning(modelPath: String) {
-        Task {
-            if await checkPortRunning(port: 11435) {
-                DearTalkLogger.info("⚡ 로컬 Metal GPU 추론 서버(11435) 활성화 확인", category: "Engine")
-                return
-            }
-
-            // llama-server 바이너리 경로 탐색
-            let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
-            let serverBinCandidates = [
-                "/opt/homebrew/bin/llama-server",
-                "/usr/local/bin/llama-server",
-                "\(homeDir)/.local/bin/llama-server",
-                "\(homeDir)/.deartalk/bin/llama-server",
-                Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/llama-server").path
-            ]
-
-            guard let serverBin = serverBinCandidates.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
-                DearTalkLogger.warning("ℹ️ llama-server 바이너리 미설치 또는 탐색 중 (Homebrew brew install llama.cpp 필요)", category: "Engine")
-                return
-            }
-
-            DearTalkLogger.info("🚀 로컬 Metal GPU 추론 서버 자동 시작: \(serverBin)", category: "Engine")
-            let proc = Process()
-            proc.executableURL = URL(fileURLWithPath: serverBin)
-            proc.arguments = ["-m", modelPath, "--port", "11435", "-ngl", "99", "-c", "512", "--log-disable"]
-            try? proc.run()
-            self.localServerProcess = proc
-        }
-    }
-
-    private func checkPortRunning(port: Int) async -> Bool {
-        guard let url = URL(string: "http://127.0.0.1:\(port)/health") else { return false }
+    private func checkPortRunning(port: Int, path: String = "/healthz") async -> Bool {
+        guard let url = URL(string: "http://127.0.0.1:\(port)\(path)") else { return false }
         var request = URLRequest(url: url)
-        request.timeoutInterval = 0.5
+        request.timeoutInterval = 0.8
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
             return (response as? HTTPURLResponse)?.statusCode == 200
@@ -140,12 +104,19 @@ public final class DearTalkIntentEngine: ObservableObject {
         }
     }
 
-    /// 로컬 온디바이스 루프백 서비스(11435 또는 11434) 응답 검사
+    /// 로컬 온디바이스 루프백 서비스 (8000 SkyBrain / 11435 llama-server / 11434 Ollama) 응답 검사
     private func checkLocalLlmService() async -> String? {
-        if await checkPortRunning(port: 11435) {
-            return "gemma-2-2b (Metal GPU)"
+        // 1. SkyBrain Universal Daemon (8000)
+        if await checkPortRunning(port: 8000, path: "/healthz") {
+            return "SkyBrain (Gemma 4 E4B / Metal GPU)"
         }
 
+        // 2. llama-server (11435)
+        if await checkPortRunning(port: 11435, path: "/health") {
+            return "llama-server (Metal GPU)"
+        }
+
+        // 3. Ollama (11434)
         guard let url = URL(string: "http://127.0.0.1:11434/api/tags") else { return nil }
         var request = URLRequest(url: url)
         request.timeoutInterval = 1.0
@@ -248,7 +219,6 @@ public final class DearTalkIntentEngine: ObservableObject {
 
     private func buildRefinePrompt(input: String) -> String {
         return """
-        <start_of_turn>user
         당신은 한국어 '실시간 문장 교정 AI'입니다.
         사용자가 메신저나 문서에 작성 중인 원문의 오탈자와 맞춤법을 정확하게 교정하여 완성형 문장으로 출력하세요.
 
@@ -265,94 +235,33 @@ public final class DearTalkIntentEngine: ObservableObject {
         원문: "내일 3시 만날수있을까?"
         교정: 내일 3시에 만날 수 있을까?
 
-        원문: "안녕하세요 이것은 당신의 감사 표시"
-        교정: 안녕하세요, 이것은 감사의 표시입니다.
-
-        원문: "\(input)"<end_of_turn>
-        <start_of_turn>model
+        원문: "\(input)"
         """
     }
 
     private func buildTonePrompt(input: String, tone: CustomTone) -> String {
-        let examples: String
-        switch tone.id {
-        case "tone_polite", "공손하게", "정중한 존댓말", "정중":
-            examples = """
-            [변환 예시]
-            원문: "식사 같이 하실래요?"
-            변환: 혹시 식사 함께 하실 수 있으실까요?
-
-            원문: "내일 시간 되세요?"
-            변환: 내일 시간 내어주실 수 있으신지 여쭙습니다.
-            """
-        case "tone_casual", "친근하게", "친근하고 따뜻한", "친근":
-            examples = """
-            [변환 예시]
-            원문: "식사 같이 하실래요?"
-            변환: 우리 같이 식사해요! 😊
-
-            원문: "내일 시간 되세요?"
-            변환: 내일 혹시 시간 괜찮아요? 😊
-            """
-        case "tone_business", "비즈니스", "전문적인 비즈니스":
-            examples = """
-            [변환 예시]
-            원문: "식사 같이 하실래요?"
-            변환: 금일 오찬 함께 하실 수 있는지 확인 부탁드립니다.
-
-            원문: "내일 회의 언제 할까요?"
-            변환: 익일 회의 일정 조율 요청드립니다.
-            """
-        case "tone_funny", "재미있게":
-            examples = """
-            [변환 예시]
-            원문: "식사 같이 하실래요?"
-            변환: 밥 먹으러 안 가면 유죄! 같이 맛있는 거 먹으러 가요 🤣
-
-            원문: "내일 시간 되세요?"
-            변환: 내일 저랑 놀아줄 귀한 시간 1초만 기부해 주시죠! 🤣
-            """
-        case "tone_cheeky", "건방지게":
-            examples = """
-            [변환 예시]
-            원문: "식사 같이 하실래요?"
-            변환: 오늘 밥은 내가 같이 먹어주는 거니까 영광인 줄 알아 😼
-
-            원문: "내일 시간 되세요?"
-            변환: 내일 시간 비워둬, 내가 만나줄게 😼
-            """
-        default:
-            examples = ""
-        }
-
         return """
-        <start_of_turn>user
         당신은 한국어 '실시간 톤앤매너 변환 AI'입니다.
         원문의 의미와 단어를 온전히 보존하면서, 어조만 '\(tone.name)'(\(tone.instruction)) 스타일로 자연스럽게 변환하세요.
 
         [핵심 원칙]
-        1. 문장 맨 앞이나 뒤에 불필요한 단어('요, ', '네, ', '답변: ')를 덧붙이지 말고, 원문 문장의 어미와 뉘앙스를 바르게 변환하세요.
+        1. 문장 맨 앞이나 뒤에 불필요한 단어를 덧붙이지 말고, 원문 문장의 어미와 뉘앙스를 바르게 변환하세요.
         2. 챗봇 답변 금지: 원문이 질문이더라도 절대 대답하지 말고, 원문 문장 자체를 해당 톤으로 변환하세요.
         3. 출력 형식: 설명, 인사말, 따옴표 없이 오직 변환된 한 줄의 문장만 출력하세요.
 
-        \(examples)
-
-        변환할 원문: "\(input)"<end_of_turn>
-        <start_of_turn>model
+        변환할 원문: "\(input)"
         """
     }
 
     private func buildTranslationPrompt(input: String, target: TranslationTarget) -> String {
         return """
-        <start_of_turn>user
         Translate the following text into \(target.targetLanguage).
         CRITICAL RULES:
         1. You are a translator. Do NOT answer questions or converse with the user.
         2. Output ONLY the direct translated sentence in the target language.
         3. Do NOT include quotes, explanations, markdown, or greetings.
 
-        Text: "\(input)"<end_of_turn>
-        <start_of_turn>model
+        Text: "\(input)"
         """
     }
 
@@ -368,16 +277,56 @@ public final class DearTalkIntentEngine: ObservableObject {
     }
 
     private nonisolated func runLocalModelInference(prompt: String) async -> String? {
-        // 1. 11435 포트 (로컬 llama-server Metal GPU 추론)
+        // 1. SkyBrain Universal Daemon (8000 / OpenAI Compatible API)
+        if let output = await querySkyBrainChatCompletion(prompt: prompt) {
+            return output
+        }
+
+        // 2. 11435 포트 (로컬 llama-server Metal GPU 추론)
         if let output = await queryLlamaServerCompletion(prompt: prompt) {
             return output
         }
 
-        // 2. 11434 포트 (로컬 Ollama API 추론)
+        // 3. 11434 포트 (로컬 Ollama API 추론)
         if let output = await queryOllamaGenerate(prompt: prompt) {
             return output
         }
 
+        return nil
+    }
+
+    private nonisolated func querySkyBrainChatCompletion(prompt: String) async -> String? {
+        guard let url = URL(string: "http://127.0.0.1:8000/v1/chat/completions") else { return nil }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10.0
+
+        let payload: [String: Any] = [
+            "model": "gemma-4-e4b",
+            "messages": [
+                ["role": "user", "content": prompt]
+            ],
+            "temperature": 0.2,
+            "max_tokens": 512
+        ]
+
+        guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return nil }
+        request.httpBody = body
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResp = response as? HTTPURLResponse, httpResp.statusCode == 200 else { return nil }
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let first = choices.first,
+               let message = first["message"] as? [String: Any],
+               let content = message["content"] as? String {
+                return content
+            }
+        } catch {
+            return nil
+        }
         return nil
     }
 
@@ -418,15 +367,11 @@ public final class DearTalkIntentEngine: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 6.0
 
-        let model = DearTalkIntentEngine.shared.detectedModelName ?? "gemma2:2b"
         let payload: [String: Any] = [
-            "model": model,
+            "model": "gemma2:2b",
             "prompt": prompt,
             "stream": false,
-            "options": [
-                "temperature": 0.2,
-                "num_predict": 64
-            ]
+            "options": ["temperature": 0.2]
         ]
 
         guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return nil }
@@ -446,52 +391,22 @@ public final class DearTalkIntentEngine: ObservableObject {
     }
 
     public nonisolated func cleanLlmOutput(_ raw: String) -> String {
-        var text = raw
-
-        // 1. LLM 제어 태그 제거 (<start_of_turn>, <end_of_turn>, <bos>, <eos> 등)
-        let tagsPattern = try? NSRegularExpression(
-            pattern: "</?(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>",
-            options: .caseInsensitive
-        )
-        if let regex = tagsPattern {
-            let range = NSRange(location: 0, length: text.utf16.count)
-            text = regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
+        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.contains("<start_of_turn>") {
+            text = text.replacingOccurrences(of: "<start_of_turn>model\n", with: "")
+            text = text.replacingOccurrences(of: "<start_of_turn>model", with: "")
+            text = text.replacingOccurrences(of: "<start_of_turn>user\n", with: "")
+            text = text.replacingOccurrences(of: "<start_of_turn>user", with: "")
+            text = text.replacingOccurrences(of: "<end_of_turn>", with: "")
+            text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-
-        // 2. 개별 라인 순회하며 role 헤더(model, user) 및 라벨 접두어 제거
-        let lines = text.components(separatedBy: .newlines).map { line -> String in
-            var l = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if l.lowercased() == "model" || l.lowercased() == "user" {
-                return ""
-            }
-            if l.lowercased().hasPrefix("model:") || l.lowercased().hasPrefix("assistant:") || l.lowercased().hasPrefix("user:") {
-                if let colonIdx = l.firstIndex(of: ":") {
-                    l = String(l[l.index(after: colonIdx)...]).trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-            }
-            let labelPattern = try? NSRegularExpression(
-                pattern: "^(교정|변환\\s*결과|최종\\s*문장|결과|답변|model|assistant|AI|Translation|Translated Text|Output|Correction)\\s*:\\s*",
-                options: .caseInsensitive
-            )
-            if let regex = labelPattern {
-                let range = NSRange(location: 0, length: l.utf16.count)
-                l = regex.stringByReplacingMatches(in: l, options: [], range: range, withTemplate: "")
-            }
-            // 맨 앞의 콜론, 따옴표, 불릿 기호 및 공백 완벽 제거
-            let leadingColonPattern = try? NSRegularExpression(pattern: "^[:\\s\"'`>*\\-]+", options: [])
-            if let regex = leadingColonPattern {
-                let range = NSRange(location: 0, length: l.utf16.count)
-                l = regex.stringByReplacingMatches(in: l, options: [], range: range, withTemplate: "")
-            }
-            // 맨 앞의 잘못 생성된 어미/접두어 ('요, ', '네, ' 등) 제거
-            let leadingFillerPattern = try? NSRegularExpression(pattern: "^(요|네|예)[,\\s]+", options: [])
-            if let regex = leadingFillerPattern {
-                let range = NSRange(location: 0, length: l.utf16.count)
-                l = regex.stringByReplacingMatches(in: l, options: [], range: range, withTemplate: "")
-            }
-            return l.trimmingCharacters(in: CharacterSet(charactersIn: "\"`>-* :"))
-        }.filter { !$0.isEmpty }
-
-        return lines.first ?? ""
+        if text.hasPrefix("\"") && text.hasSuffix("\"") && text.count >= 2 {
+            text = String(text.dropFirst().dropLast())
+        }
+        if text.hasPrefix("최종 문장: ") { text = String(text.dropFirst(7)) }
+        if text.hasPrefix("교정: ") { text = String(text.dropFirst(4)) }
+        if text.hasPrefix("변환: ") { text = String(text.dropFirst(4)) }
+        if text.hasPrefix("출력: ") { text = String(text.dropFirst(4)) }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

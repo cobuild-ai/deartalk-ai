@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,13 +23,36 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                val properties = Properties()
+                keystorePropertiesFile.inputStream().use { properties.load(it) }
+                storeFile = file(properties.getProperty("RELEASE_STORE_FILE") ?: "deartalk.keystore")
+                storePassword = properties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
+                keyAlias = properties.getProperty("RELEASE_KEY_ALIAS") ?: ""
+                keyPassword = properties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val keystorePropertiesFile = file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+        debug {
+            isMinifyEnabled = false
+            applicationIdSuffix = ".debug"
         }
     }
     compileOptions {
