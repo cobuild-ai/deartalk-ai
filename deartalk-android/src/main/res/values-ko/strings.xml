@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">DearTalkAI</string>
+    <string name="ime_name">DearTalkAI 음성 키보드</string>
+    <string name="subtype_ko">한국어 (DearTalkAI)</string>
+    <string name="subtype_en">English (DearTalkAI)</string>
+    <string name="mic_listening">음성 인식 중...</string>
+    <string name="mic_idle">AI 음성 입력</string>
+    <string name="ai_processing">작업 분석 및 AI 처리 중...</string>
+</resources>

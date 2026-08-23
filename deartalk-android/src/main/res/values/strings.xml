@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">DearTalkAI</string>
+    <string name="ime_name">DearTalkAI Voice Keyboard</string>
+    <string name="subtype_ko">Korean (DearTalkAI)</string>
+    <string name="subtype_en">English (DearTalkAI)</string>
+    <string name="mic_listening">Listening…</string>
+    <string name="mic_idle">AI Voice Input</string>
+    <string name="ai_processing">Analyzing and processing with AI…</string>
+</resources>

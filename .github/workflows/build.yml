@@ -1,0 +1,54 @@
+name: DearTalk CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  android-ci:
+    name: 🤖 Android Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Run Unit Tests
+        run: ./gradlew :deartalk-android:testDebugUnitTest
+
+      - name: Build Debug APK
+        run: ./gradlew :deartalk-android:assembleDebug
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DearTalk-Android-Debug-APK
+          path: deartalk-android/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+  macos-ci:
+    name: 🍏 macOS Build & Test Runner
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Swift Package (Release)
+        working-directory: deartalk-apple/DearTalk-macOS
+        run: swift build -c release
+
+      - name: Run Core Verification Runner
+        working-directory: deartalk-apple/DearTalk-macOS
+        run: swift run DearTalkMacRunner
