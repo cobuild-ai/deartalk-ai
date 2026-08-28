@@ -1,6 +1,6 @@
 # 📱 DearTalk AI Android: Google Play Store 상용 배포 가이드라인
 
-이 문서는 `origin/deartalk-ai`의 Android 모듈(`deartalk-android`)을 **Google Play Store에 안정적으로 출시하고 업데이트하기 위한 시니어 앱 개발자 표준 배포 가이드**입니다.
+이 문서는 `deartalk-ai`의 Android 모듈(`deartalk-android`)을 **Google Play Store에 안정적으로 출시하고 업데이트하기 위한 시니어 앱 개발자 표준 배포 가이드**입니다.
 
 ---
 
@@ -8,14 +8,14 @@
 
 | 구분 | 검증 항목 | 점검 기준 | 상태 |
 | :--- | :--- | :--- | :---: |
-| **SDK 버전** | `compileSdk`, `targetSdk` | 최신 Google Play 기준 충족 (`targetSdk = 34`, Android 14) | ✅ Pass |
+| **SDK 버전** | `compileSdk`, `targetSdk` | 최신 Google Play 기준 충족 (`compileSdk = 35`, `targetSdk = 35`, Android 15) | ✅ Pass |
 | **최소 지원 버전** | `minSdk` | Android 8.0 Oreo (`minSdk = 26`) | ✅ Pass |
-| **앱 번들 형식** | 배포 아티팩트 | 반드시 `.aab` (Android App Bundle) 포맷 사용 | ⏳ 진행 중 |
-| **코드 난독화 & 축소** | R8 / Proguard | `isMinifyEnabled = true`, JNI Native Keep 룰 적용 | ⏳ 진행 중 |
-| **앱 서명 (Signing)** | Release Keystore | RSA 2048+ / PKCS12 키 분리 관리 (`keystore.properties`) | ⏳ 진행 중 |
-| **보안 & 테스트 격리** | `DearTalkTestReceiver` | Release 빌드 매니페스트에서 완전 제외 | ⏳ 진행 중 |
-| **앱 아이콘 & 그래픽** | Adaptive Icon | `@mipmap/ic_launcher` 프로덕션 에셋 적용 | ⏳ 준비 |
-| **데이터 안전성** | Play Console Data Safety | 온디바이스 Zero-Network 처리 명시 (오디오/키스트로크) | 📝 정책 수립 |
+| **앱 번들 형식** | 배포 아티팩트 | 반드시 `.aab` (Android App Bundle) 포맷 사용 | ✅ Pass |
+| **코드 난독화 & 축소** | R8 / Proguard | `isMinifyEnabled = true`, JNI Native Keep 룰 적용 | ✅ Pass |
+| **앱 서명 (Signing)** | Release Keystore | RSA 2048+ / PKCS12 키 분리 관리 (`keystore.properties`) | ✅ Pass |
+| **보안 & 테스트 격리** | `DearTalkTestReceiver` | `src/debug/` 디렉토리에 격리되어 Release 빌드에서 자동 제외 | ✅ Pass |
+| **앱 아이콘 & 그래픽** | Adaptive Icon | `@mipmap/ic_launcher` 프로덕션 에셋 적용 | ✅ Pass |
+| **데이터 안전성** | Play Console Data Safety | 온디바이스 Zero-Network 처리 명시 (오디오/키스트로크) | ✅ Pass |
 
 ---
 
@@ -34,6 +34,8 @@ RELEASE_KEY_ALIAS=deartalk_release_key
 RELEASE_KEY_PASSWORD=your_secure_key_password
 ```
 
+오픈소스 기여자를 위해 `deartalk-android/keystore.properties.example` 템플릿이 제공됩니다.
+
 ### B. CI/CD 환경: 환경 변수 주입
 GitHub Actions 또는 CI 빌드 환경에서는 Secret 환경변수를 통해 주입합니다:
 - `DEARTALK_KEYSTORE_BASE64`
@@ -45,7 +47,7 @@ GitHub Actions 또는 CI 빌드 환경에서는 Secret 환경변수를 통해 �
 
 ## 🛡️ 3. R8 / Proguard 최적화 및 C++ JNI Keep 규칙
 
-온디바이스 AI 앱은 C++ 네이티브 바이너리(Google LiteRT, MediaPipe)와 JNI 인터페이스로 통신하므로, R8 난독화 시 네이티브 인터페이스가 삭제(Shrink)되면 런타임 크래시(`UnsatisfiedLinkError`)가 발생합니다.
+온디바이스 AI 앱은 C++ 네이티브 바이너리(Google LiteRT, MediaPipe)와 JNI 인터페이스로 통신하므로, R8 난독화 시 네이티브 인터페이스가 삭제(Shrink)되지 않도록 `proguard-rules.pro`에 등록되어 있습니다.
 
 ### `proguard-rules.pro` 필수 보존 대상:
 1. **Google LiteRT-LM & MediaPipe GenAI**:
@@ -55,7 +57,7 @@ GitHub Actions 또는 CI 빌드 환경에서는 Secret 환경변수를 통해 �
    - Compose 내부 컴파일러 메타데이터 및 상태 클래스
 3. **Room Database / SQLite Entities & DAOs**:
    - `ai.deartalk.android.data.repository.**`
-4. **한글 오토마타 및 모델 데이터 모델**:
+4. **한글 오토마타 및 데이터 모델**:
    - `ai.deartalk.android.ime.HangulComposer`
    - `ai.deartalk.android.data.pref.**`
 
@@ -78,9 +80,9 @@ graph TD
 
 1. **인앱 백그라운드 다운로더 (현재 채택 방식)**:
    - 앱 AAB 크기는 약 25~35MB로 초경량 유지 (빠른 스토어 다운로드 유도).
-   - 앱 최초 실행 시 `ModelDownloader`가 공인 스토리지(CDN/HuggingFace)에서 모델을 다운로드하고 SHA-256 해시를 검증.
-2. **Play Asset Delivery (PAD) 방식 (향후 확장 옵션)**:
-   - `install-time` 또는 `fast-follow` 에셋 팩을 통해 Google Play 인프라에서 직접 번들링 제공.
+   - 앱 최초 실행 시 `ModelDownloader`가 공인 스토리지에서 모델을 다운로드하고 무결성을 검증.
+2. **Play Asset Delivery (PAD) 방식 (확장 지원)**:
+   - `install-time` 또는 `fast-follow` 에셋 팩(`deartalk_model_pack`)을 통해 Google Play 인프라에서 직접 번들링 제공.
 
 ---
 
@@ -99,7 +101,7 @@ DearTalk AI는 **100% On-Device AI**이므로 구글 심사 시 매우 유리한
 - **오디오 데이터(Voice)**:
   - *“사용자의 음성 데이터는 기기 내부(On-device)에서 실시간으로 텍스트로 변환된 후 즉시 메모리에서 소멸되며, 외부 서버로 전송되거나 저장되지 않습니다.”*
 - **개인정보처리방침(Privacy Policy)**:
-  - GitHub Pages 또는 공식 도메인의 Privacy Policy URL을 반드시 Play Console에 등록.
+  - GitHub 저장소의 `PRIVACY_POLICY.md` URL을 Play Console에 등록.
 
 ---
 
@@ -123,9 +125,9 @@ DearTalk AI는 **100% On-Device AI**이므로 구글 심사 시 매우 유리한
 ## 🏷️ 7. 버전닝 및 태그 전략
 
 - `versionCode`: 매 릴리즈마다 `+1` 단조 증가 (예: `1`, `2`, `3` ...)
-- `versionName`: `Semantic Versioning` 준수 (예: `v1.0.0`)
+- `versionName`: `Semantic Versioning` 준수 (예: `v1.4.0`)
 - 배포 완료 시 Git 태그 생성:
   ```bash
-  git tag -a v1.0.0 -m "Release v1.0.0: Initial Google Play Store Production Release"
-  git push origin v1.0.0
+  git tag -a v1.4.0 -m "Release v1.4.0: DearTalk-AI Android Open-Source Production Release"
+  git push origin v1.4.0
   ```
