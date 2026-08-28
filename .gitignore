@@ -1,0 +1,47 @@
+# OS & System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.swp
+*~
+*.iml
+
+# Android & Gradle
+.gradle/
+/build/
+**/build/
+local.properties
+keystore.properties
+*.jks
+*.keystore
+.cxx/
+.externalNativeBuild/
+captures/
+*.apk
+*.aab
+*.dex
+*.litertlm
+.kotlin/
+
+# On-Device AI Models (Large binary files)
+*.bin
+*.tflite
+*.task
+*.onnx
+
+# Logs & Temporary Media
+*.log
+logs/
+.tempmediaStorage/
+.user_uploaded/
