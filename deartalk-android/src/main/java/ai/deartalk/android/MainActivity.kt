@@ -234,9 +234,8 @@ fun MainOnDeviceScreen(
         }
     }
 
-    val currentLang = DearTalkSettings.getEffectiveLocale(context).language.lowercase()
-    val isKorean = currentLang == "ko"
-    val isIndonesian = currentLang == "id" || currentLang == "in"
+    val isKorean = UiStrings.isKo
+    val isIndonesian = UiStrings.isId
 
     Scaffold(
         topBar = {

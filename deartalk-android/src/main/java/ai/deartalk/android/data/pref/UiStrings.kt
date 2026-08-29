@@ -1,29 +1,31 @@
 package ai.deartalk.android.data.pref
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import java.util.Locale
 
 /**
  * 중앙집중식 다국어 UI 문자열 관리 오브젝트
  * - 한국어(ko), 인도네시아어(id/in), 영어(default/en) 완벽 지원
- * - 시스템 Locale 또는 사용자 선택에 따라 즉시 동기화
+ * - Compose Reactive State를 기반으로 하여 언어 변경 시 즉각 전체 UI 리컴포지션 트리거
  */
 object UiStrings {
-    private var overrideLocale: Locale? = null
+    var overrideLocaleState by mutableStateOf<Locale?>(null)
 
     fun setLocale(locale: Locale) {
-        overrideLocale = locale
+        overrideLocaleState = locale
     }
 
-    private val isKo: Boolean
-        get() {
-            val locale = overrideLocale ?: Locale.getDefault()
-            return locale.language == "ko"
-        }
+    val currentLocale: Locale
+        get() = overrideLocaleState ?: Locale.getDefault()
 
-    private val isId: Boolean
+    val isKo: Boolean
+        get() = currentLocale.language == "ko"
+
+    val isId: Boolean
         get() {
-            val locale = overrideLocale ?: Locale.getDefault()
-            val lang = locale.language.lowercase()
+            val lang = currentLocale.language.lowercase()
             return lang == "id" || lang == "in"
         }
 
@@ -80,6 +82,7 @@ object UiStrings {
     val deleteCharContentDesc get() = if (isKo) "한 글자 지우기" else if (isId) "Hapus satu karakter" else "Delete character"
     val deleteSentence get() = if (isKo) "문장삭제" else if (isId) "Hapus Kalimat" else "Del Sent"
     val deleteSentenceContentDesc get() = if (isKo) "방금 입력한 문장 전체 삭제" else if (isId) "Hapus seluruh kalimat sebelumnya" else "Delete current sentence"
+    val space get() = if (isKo) "스페이스" else if (isId) "Spasi" else "Space"
     val enterContentDesc get() = if (isKo) "줄바꿈 또는 전송" else if (isId) "Kirim atau baris baru" else "Enter or send"
 
     // ═══════════════════════════════════════════════════

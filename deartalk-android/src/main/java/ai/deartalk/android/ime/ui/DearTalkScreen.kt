@@ -489,7 +489,7 @@ fun DearTalkScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = DearTalkKey),
                     contentPadding = PaddingValues(horizontal = 2.dp)
                 ) {
-                    Text("Space", color = DearTalkText, fontSize = 12.sp)
+                    Text(UiStrings.space, color = DearTalkText, fontSize = 12.sp)
                 }
 
                 // ↵ 전송 / 줄바꿈(Enter)
