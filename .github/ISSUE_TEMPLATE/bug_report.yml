@@ -1,0 +1,71 @@
+name: 🐛 Bug Report
+description: Report a reproducible problem or crash in DearTalk AI (Android IME)
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please ensure you have tested with the latest release (`v1.0.0+`).
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Problem Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+  - type: dropdown
+    id: android-version
+    attributes:
+      label: 📱 Android OS Version
+      options:
+        - "Android 15 (API 35)"
+        - "Android 14 (API 34)"
+        - "Android 13 (API 33)"
+        - "Android 12 or lower"
+    validations:
+      required: true
+  - type: input
+    id: device-model
+    attributes:
+      label: 📲 Physical Device Model
+      description: e.g. Samsung Galaxy S24 Ultra, Pixel 8 Pro, Galaxy Z Fold 5
+      placeholder: Galaxy S22 Ultra
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: How can maintainers reproduce this issue step-by-step?
+      placeholder: |
+        1. Open keyboard in any chat app (e.g. WhatsApp, Slack)
+        2. Tap mic button and say "..."
+        3. Tap '✨ Refine' tone chip
+        4. See error or crash
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✨ Expected Behavior
+      description: What did you expect to happen instead?
+      placeholder: Expected the refined sentence to appear in the Smart DIFF canvas...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📜 Relevant Logs or Screenshots
+      description: Paste any `adb logcat` output or attach screenshots. (Do NOT include private credentials).
+      render: shell
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 📋 Pre-submission Checklist
+      options:
+        - label: I verified that this bug is reproducible on a real Android device or emulator.
+          required: true
+        - label: I searched existing issues to ensure this is not a duplicate.
+          required: true

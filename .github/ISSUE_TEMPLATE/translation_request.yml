@@ -1,0 +1,39 @@
+name: 🌐 Localization & Prompt Request
+description: Propose a new language translation, prompt improvements, or tone tuning
+title: "[I18N]: "
+labels: ["localization", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We love multilingual contributions! DearTalk AI dynamically generates few-shot prompts across languages.
+  - type: input
+    id: language
+    attributes:
+      label: 🌍 Target Language & Locale
+      description: e.g. Vietnamese (vi), German (de), French (fr), Thai (th), Hindi (hi)
+      placeholder: Spanish (es-ES / es-MX)
+    validations:
+      required: true
+  - type: textarea
+    id: tone-prompts
+    attributes:
+      label: 🎭 Proposed Tone Instructions or Samples
+      description: Provide sample natural sentences for the 6 tone presets (`Refine`, `Polite`, `Casual`, `Business`, `Humorous`, `Cheeky`).
+      placeholder: |
+        - Refine (기본다듬기): ...
+        - Polite (공손하게): ...
+        - Casual (친근하게): ...
+        - Business (비즈니스): ...
+        - Humorous (재미있게): ...
+        - Cheeky (당당하게): ...
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 📋 Contribution Confirmation
+      options:
+        - label: I verified that these expressions sound natural to native speakers.
+          required: true
+        - label: I am willing to add these to `UiStrings.kt` and `DearTalkIntentEngine.kt` via a PR.

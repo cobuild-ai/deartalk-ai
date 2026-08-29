@@ -1,0 +1,49 @@
+name: 💡 Feature Request & Enhancement
+description: Propose a new feature, UI enhancement, or architecture improvement for DearTalk AI
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping us improve DearTalk AI! Please share your ideas clearly.
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🎯 Problem or Motivation
+      description: Is your feature request related to a problem or limitation?
+      placeholder: I am always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: 🚀 Proposed Solution & Expected UX
+      description: Describe the solution, behavior, or UI design you would like to see.
+      placeholder: Add a split-keyboard layout for foldables and tablets...
+    validations:
+      required: true
+  - type: dropdown
+    id: target-component
+    attributes:
+      label: 🧩 Target Component / Layer
+      options:
+        - "Jetpack Compose Keyboard UI (`deartalk-android/ime/ui`)"
+        - "LiteRT / On-Device Gemma Inference Engine (`agent/DearTalkIntentEngine.kt`)"
+        - "Offline Speech-to-Text (`stt/SpeechRecognitionManager.kt`)"
+        - "Testing & Verification Tooling (`verify.sh` / scripts)"
+        - "Documentation & Tutorials (`docs/`)"
+        - "Other / Architectural Proposal"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 Alternative Solutions Considered
+      description: Have you considered any alternative approaches or workarounds?
+  - type: checkboxes
+    id: contributor
+    attributes:
+      label: 🤝 Willingness to Contribute
+      options:
+        - label: I would be willing to submit a Pull Request to implement this feature!

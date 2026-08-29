@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 DearTalk AI Documentation
+    url: https://github.com/cobuild-ai/deartalk-ai/tree/main/docs
+    about: Read our Architecture, Testing, Model, and Deployment guides before opening an issue.
+  - name: 🛡️ Report a Security Vulnerability
+    url: https://github.com/cobuild-ai/deartalk-ai/security/policy
+    about: Please report security vulnerabilities responsibly via our Security Policy.
