@@ -1,0 +1,105 @@
+# ✨ DearTalkAI: Papan Ketik Android AI 100% On-Device (IME)
+
+<div align="center">
+
+<p align="center">
+  <a href="README.md">English</a> |
+  <a href="README.ko.md">한국어</a> |
+  <b>Bahasa Indonesia</b>
+</p>
+
+[![Platform: Android](https://img.shields.io/badge/Platform-Android%2015%20(API%2035)-3DDC84?logo=android&logoColor=white)](#-fitur-utama-papan-ketik-android)
+[![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-prinsip-utama-rekayasa)
+[![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-jaminan-privasi--keamanan-mutlak)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+**DearTalkAI** adalah asisten komunikasi AI sumber terbuka (open-source) yang mengutamakan privasi dan berjalan 100% langsung di dalam perangkat (on-device) tanpa koneksi internet, dibangun sebagai **Papan Ketik Kustom Android (IME)**.
+
+Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesuaian nada bicara secara real-time, koreksi kesalahan ketik, dan terjemahan multibahasa — ditenagai sepenuhnya oleh model neural lokal Google Gemma melalui LiteRT GPU.
+
+[Fitur Utama](#-fitur-utama-papan-ketik-android) • [Contoh Perubahan Nada](#-contoh-transformasi-nada-bicara) • [Arsitektur Sistem](docs/ARCHITECTURE.md) • [Peta Jalan](docs/ROADMAP.md) • [Pengujian](docs/TESTING.md) • [Panduan Kontribusi](CONTRIBUTING.md)
+
+</div>
+
+---
+
+## 📊 Status Rilis Platform
+
+| Komponen | Versi | Target SDK | Status | Fitur Utama |
+| :--- | :---: | :---: | :---: | :--- |
+| 🤖 **DearTalk Android IME** | `v1.0.0` | **Android 15 (API 35)** | **Rilis Perdana Sumber Terbuka (Stabil)** | UI Slate Jetpack Compose, STT Luring, 6 Nada, LiteRT GPU, Standar PAD |
+
+---
+
+## 🌟 Fitur Utama Papan Ketik Android
+
+### 📱 Papan Ketik Android (`deartalk-android`)
+- **Android 15 & Target SDK 35:** Arsitektur UI modular modern berbasis Jetpack Compose yang ringan dan elegan.
+- **Pengenalan Suara Luring (Offline STT):** Dikte suara instan langsung di dalam papan ketik tanpa jaringan internet.
+- **6 Pilihan Nada Bicara:** `✨ Rapikan`, `👔 Sopan`, `😊 Santai`, `💼 Profesional`, `🤣 Lucu`, dan `😼 Percaya Diri`.
+- **Preservasi Suara Asli (Raw STT):** Mengganti nada bicara tetap menjaga teks suara asli tanpa merusaknya.
+- **0ms UI Optimistik & Kartu Peralihan Keyboard:** Umpan balik visual seketika dan peralihan satu ketukan ke keyboard Samsung/Gboard.
+- **UI Kaca Gelap Elegan:** Tema Slate modern, layar pengaturan khusus, lingkungan uji coba (sandbox), dan umpan balik haptic.
+- **Standar Play Asset Delivery (PAD):** Menggunakan standar resmi Google Play tanpa pengunduh in-app HTTP yang rentan.
+- **Dukungan Multibahasa Penuh:** Dukungan lokal Bahasa Indonesia, Korea, Inggris, Jepang, dan Spanyol dengan pembentukan prompt dinamis.
+
+---
+
+## 🎭 Contoh Transformasi Nada Bicara
+
+| Pilihan Nada | Teks Masukan Asli | Saran AI On-Device |
+|---|---|---|
+| **✨ Rapikan (Refine)** | besok pagi jam 9 ketemu | Besok pagi jam 9 kita bertemu ya. |
+| **👔 Sopan (Polite)** | mau makan bareng ga? | Apakah Anda berkenan untuk makan bersama? |
+| **😊 Santai (Casual)** | kamu lagi dimana? | Lagi di mana nih sekarang? 😊 |
+| **💼 Profesional (Business)** | data udah dikirim tolong cek | Dokumen yang diminta sudah kami kirimkan, mohon ditinjau kembali. |
+| **🤣 Lucu (Funny)** | ayo makan siang | Gak makan siang itu melanggar hukum lapar! Yuk makan bareng 🤣 |
+| **😼 Percaya Diri (Cheeky)** | main yuk hari ini | Kosongin jadwalmu hari ini, aku luangkan waktu khusus buatmu 😼 |
+
+---
+
+## 🔒 Jaminan Privasi & Keamanan Mutlak
+
+1. **Tanpa Aturan Palsu (Prinsip Utama):**
+   - Tidak ada manipulasi string `if/else` atau templat buatan. Semua hasil dihasilkan murni oleh model bahasa on-device (Google Gemma).
+2. **Privasi 100% Offline (Zero Network):**
+   - Nol lalu lintas internet. Ketikan keyboard, rekaman suara, dan teks tidak pernah meninggalkan perangkat Anda.
+3. **Transparansi Rekayasa:**
+   - Status yang jujur saat model sedang dimuat tanpa balasan tiruan palsu.
+
+---
+
+## 🚀 Memulai Cepat & Kompilasi
+
+```bash
+# 🚀 1. Jalankan pengujian otomatis lengkap pra-PR (Unit Tests + Uji Stres Perangkat 500 Event)
+make verify            # atau ./verify.sh all
+
+# 🧪 2. Jalankan pengujian unit JVM saja (< 2 detik)
+make test              # atau ./verify.sh unit
+
+# 📱 3. Jalankan audit kestabilan dan kebocoran memori perangkat nyata
+make verify-device     # atau ./verify.sh device
+
+# 🔨 4. Kompilasi dan pasang Debug APK pada perangkat yang terhubung
+make build             # atau ./verify.sh build
+
+# 📦 5. Kompilasi Release App Bundle (AAB) untuk Play Store
+make release           # atau ./verify.sh release
+```
+
+---
+
+## 🤝 Kontribusi & Komunitas
+
+Kami sangat menyambut kontribusi dari komunitas global! Silakan baca:
+- [Panduan Kontribusi](CONTRIBUTING.md)
+- [Arsitektur Sistem](docs/ARCHITECTURE.md)
+- [Panduan Pengujian & Verifikasi](docs/TESTING.md)
+- [Panduan Penerbitan Android](docs/ANDROID_DEPLOYMENT_GUIDE.md)
+- [Kebijakan Keamanan](SECURITY.md)
+
+---
+
+## 📄 Lisensi (License)
+Proyek ini dilisensikan di bawah **Apache 2.0 License** - lihat berkas [LICENSE](LICENSE) untuk rincian lengkap.
