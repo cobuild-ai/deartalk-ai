@@ -389,12 +389,8 @@ fun DearTalkScreen(
             Spacer(modifier = Modifier.height(5.dp))
 
             // ─────────────────────────────────────────────────────────────
-            // [3열] 👔 6대 톤앤매너 & 🌐 다국어 번역 셀렉트박스 (컴팩트 드롭다운)
+            // [3열] 👔 6대 톤앤매너 프리셋 칩 바
             // ─────────────────────────────────────────────────────────────
-            var isTranslationMenuExpanded by remember { mutableStateOf(false) }
-            val translationTargets = ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TRANSLATIONS
-            var selectedTranslationTarget by remember { mutableStateOf(translationTargets.first()) }
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -402,7 +398,7 @@ fun DearTalkScreen(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. 6대 톤앤매너 칩들 (기본다듬기, 공손하게, 친근하게, 비즈니스, 재미있게, 당당하게)
+                // 6대 톤앤매너 칩들 (기본다듬기, 공손하게, 친근하게, 비즈니스, 재미있게, 당당하게)
                 var selectedToneId by remember { mutableStateOf<String?>(null) }
                 val displayTones = if (tones.isNotEmpty()) tones else ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES
                 displayTones.forEach { tone ->
@@ -431,113 +427,6 @@ fun DearTalkScreen(
                                 color = if (isSelected) Color.White else DearTalkText,
                                 fontSize = 11.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    }
-                }
-
-                // 2. 🌐 번역 셀렉트박스 (클릭: 즉시 번역, ▾: 언어 변경 드롭다운)
-                Box {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF064E3B).copy(alpha = 0.45f))
-                            .border(1.dp, Color(0xFF10B981).copy(alpha = 0.7f), RoundedCornerShape(8.dp)),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // (1) 메인 텍스트 영역: 터치 시 현재 선택된 언어로 즉시 번역
-                        Row(
-                            modifier = Modifier
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onApplyAiMode(
-                                        ai.deartalk.android.data.pref.AiModeItem(
-                                            id = selectedTranslationTarget.id,
-                                            name = selectedTranslationTarget.name,
-                                            icon = selectedTranslationTarget.flag,
-                                            type = ai.deartalk.android.data.pref.AiModeType.TRANSLATION,
-                                            translationTarget = selectedTranslationTarget
-                                        )
-                                    )
-                                }
-                                .padding(start = 10.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(selectedTranslationTarget.flag, fontSize = 13.sp)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = UiStrings.translationLabel(selectedTranslationTarget.name),
-                                color = Color(0xFF6EE7B7),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // (2) 드롭다운 화살표 영역: 터치 시 8개국 언어 선택 팝업 오픈
-                        Box(
-                            modifier = Modifier
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    isTranslationMenuExpanded = true
-                                }
-                                .padding(start = 2.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "▾",
-                                color = Color(0xFF6EE7B7),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // 언어 선택 드롭다운 팝업
-                    DropdownMenu(
-                        expanded = isTranslationMenuExpanded,
-                        onDismissRequest = { isTranslationMenuExpanded = false },
-                        modifier = Modifier
-                            .background(Color(0xFF1E293B))
-                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
-                    ) {
-                        Text(
-                            text = UiStrings.selectTranslationTarget,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6EE7B7),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                        HorizontalDivider(color = Color(0xFF334155))
-
-                        translationTargets.forEach { target ->
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(target.flag, fontSize = 14.sp)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = target.name,
-                                            color = if (target.id == selectedTranslationTarget.id) Color(0xFF6EE7B7) else Color.White,
-                                            fontSize = 12.sp,
-                                            fontWeight = if (target.id == selectedTranslationTarget.id) FontWeight.Bold else FontWeight.Normal
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    selectedTranslationTarget = target
-                                    isTranslationMenuExpanded = false
-                                    onApplyAiMode(
-                                        ai.deartalk.android.data.pref.AiModeItem(
-                                            id = target.id,
-                                            name = target.name,
-                                            icon = target.flag,
-                                            type = ai.deartalk.android.data.pref.AiModeType.TRANSLATION,
-                                            translationTarget = target
-                                        )
-                                    )
-                                },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                             )
                         }
                     }
