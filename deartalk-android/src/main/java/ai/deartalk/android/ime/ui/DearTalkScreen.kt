@@ -136,7 +136,7 @@ fun DearTalkScreen(
                             MicUiState.IDLE -> UiStrings.micIdle
                         },
                         color = Color.White,
-                        fontSize = 13.sp,
+                        fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1
                     )

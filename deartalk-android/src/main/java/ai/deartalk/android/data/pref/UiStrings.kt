@@ -30,12 +30,12 @@ object UiStrings {
         }
 
     // ═══════════════════════════════════════════════════
-    // DearTalkScreen.kt — 마이크 버튼 상태
+    // DearTalkScreen.kt — 마이크 버튼 상태 (안 짤리는 컴팩트 레이블)
     // ═══════════════════════════════════════════════════
-    val micPreparing get() = if (isKo) "⏳ 마이크 준비 중..." else if (isId) "⏳ Menyiapkan mikrofon..." else "⏳ Preparing mic..."
-    val micListening get() = if (isKo) "🔴 듣고 있어요 (말씀이 끝나면 터치)" else if (isId) "🔴 Mendengarkan (ketuk saat selesai)" else "🔴 Listening (tap when finished)"
-    val micProcessingAi get() = if (isKo) "🔒 AI가 문장을 다듬는 중..." else if (isId) "🔒 AI sedang merapikan kalimat..." else "🔒 Polishing sentence with AI..."
-    val micIdle get() = if (isKo) "🎙️ AI 음성 입력" else if (isId) "🎙️ Masukan Suara AI" else "🎙️ AI Voice Input"
+    val micPreparing get() = if (isKo) "마이크 준비 중..." else if (isId) "Menyiapkan..." else "Preparing mic..."
+    val micListening get() = if (isKo) "듣는 중 (터치 시 완료)" else if (isId) "Mendengarkan (Ketuk selesai)" else "Listening (Tap to finish)"
+    val micProcessingAi get() = if (isKo) "AI 다듬는 중..." else if (isId) "AI merapikan..." else "AI Polishing..."
+    val micIdle get() = if (isKo) "AI 음성 입력" else if (isId) "Masukan Suara AI" else "AI Voice Input"
 
     // ═══════════════════════════════════════════════════
     // DearTalkScreen.kt — 키보드/설정 버튼
