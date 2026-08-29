@@ -389,7 +389,7 @@ fun DearTalkScreen(
             Spacer(modifier = Modifier.height(5.dp))
 
             // ─────────────────────────────────────────────────────────────
-            // [3열] 👔 4대 톤앤매너 & 🌐 다국어 번역 셀렉트박스 (컴팩트 드롭다운)
+            // [3열] 👔 6대 톤앤매너 & 🌐 다국어 번역 셀렉트박스 (컴팩트 드롭다운)
             // ─────────────────────────────────────────────────────────────
             var isTranslationMenuExpanded by remember { mutableStateOf(false) }
             val translationTargets = ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TRANSLATIONS
@@ -402,7 +402,7 @@ fun DearTalkScreen(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. 톤앤매너 칩들 (기본다듬기, 공손하게, 친근하게, 비즈니스)
+                // 1. 6대 톤앤매너 칩들 (기본다듬기, 공손하게, 친근하게, 비즈니스, 재미있게, 당당하게)
                 var selectedToneId by remember { mutableStateOf<String?>(null) }
                 val displayTones = if (tones.isNotEmpty()) tones else ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES
                 displayTones.forEach { tone ->
