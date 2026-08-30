@@ -48,14 +48,14 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 ## 🎭 Tone Transformation Samples
 
-| Tone Preset | Original Input (원문) | AI Refined Output (AI 제안문) |
+| Tone Preset | Original Input | On-Device AI Refined Output |
 |---|---|---|
-| **✨ Refine (기본다듬기)** | 내일 아침 9시 만나 | 내일 아침 9시에 만나요. |
-| **👔 Polite (공손하게)** | 식사 같이 하실래요? | 혹시 식사 함께 하실 수 있으실까요? |
-| **😊 Casual (친근하게)** | 지금 어디야? | 지금 어디쯤이야? 😊 |
-| **💼 Business (비즈니스)** | 자료 정리해서 보냈어 확인해 | 요청하신 업무 자료 송부해 드렸으니 확인 부탁드립니다. |
-| **🤣 Funny (재미있게)** | 밥 먹으러 가자 | 밥 먹으러 안 가면 유죄! 같이 맛있는 거 먹으러 가요 🤣 |
-| **😼 Cheeky (당당하게)** | 오늘 나랑 놀자 | 오늘 시간 비워둬, 내가 특별히 만나줄 테니까 😼 |
+| **✨ Refine** | meet tomorrow 9am | Let's meet tomorrow at 9:00 AM. |
+| **👔 Polite** | want to have lunch together? | Would you be interested in having lunch together if you have time? |
+| **😊 Casual** | where are you? | Where are you at right now? 😊 |
+| **💼 Business** | sent the files check it | The requested documents have been sent. Please review them at your earliest convenience. |
+| **🤣 Funny** | let's grab food | Skipping lunch is officially illegal! Let's go get something delicious 🤣 |
+| **😼 Cheeky** | hang out today | Clear your schedule today, I've decided to make time for you 😼 |
 
 ---
 
@@ -65,7 +65,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 sequenceDiagram
     autonumber
     actor User as 👤 User
-    participant HostApp as 📱 App (KakaoTalk / Slack / Notes)
+    participant HostApp as 📱 App (Slack / Messaging / Notes)
     participant IME as ⌨️ DearTalkIME (Compose)
     participant Controller as 🎮 ImeActionController
     participant Engine as 🧠 DearTalkIntentEngine
@@ -74,11 +74,11 @@ sequenceDiagram
 
     User->>HostApp: Focuses text field
     HostApp->>IME: Binds InputConnection
-    User->>IME: Types or speaks "내일 아침 9시 만나"
+    User->>IME: Types or speaks "meet tomorrow 9am"
     IME->>Controller: emit(OriginalText)
     Controller->>Engine: processWithTone(text, selectedTone)
     Engine->>LLM: Ingest System Prompt + Few-shots + Dynamic Locale
-    LLM-->>Engine: Returns "내일 오전 9시에 뵙겠습니다."
+    LLM-->>Engine: Returns "Let's meet tomorrow at 9:00 AM."
     Engine->>Diff: computeWordDiff(original, suggested)
     Diff-->>IME: Renders 2-Line Live Diff Suggestions
     User->>IME: Taps suggested chip
