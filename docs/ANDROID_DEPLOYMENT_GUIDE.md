@@ -113,26 +113,26 @@ DearTalk AI는 **100% On-Device AI**이므로 구글 심사 시 매우 강력한
 
 ```bash
 # 1. JVM 단위 테스트 및 실기기 자동화 안정성 감사
-./start.sh test
-./start.sh verify
+make test             # 또는 ./verify.sh unit
+make verify-device    # 또는 ./verify.sh device
 
 # 2. 상용 서명 Release AAB (Android App Bundle) 빌드
-./start.sh release    # 또는 make release
+make release          # 또는 ./verify.sh release
 
 # 3. 생성된 배포 번들 확인
-# -> deartalk-android/build/outputs/bundle/release/deartalk-android-release.aab (약 26MB)
+# -> deartalk-android/build/outputs/bundle/release/deartalk-android-release.aab
 
-# 4. Play Console 내부 테스트(Internal Test) 트랙에 업로드 및 검증
+# 4. Play Console 내부 테스트(Internal Test) / 비공개 테스트 트랙에 업로드 및 14일 검증
 ```
 
 ---
 
 ## 🏷️ 7. 버전닝 및 태그 전략
 
-- `versionCode`: 매 릴리즈마다 `+1` 단조 증가 (예: `1`, `2`, `3`, `4` ...)
-- `versionName`: `Semantic Versioning` 준수 (예: `1.4.0`)
+- `versionCode`: 매 릴리즈마다 `+1` 단조 증가 (예: `1`, `2`, `3` ...)
+- `versionName`: `Semantic Versioning` 준수 (예: `1.0.1`)
 - 배포 완료 시 Git 태그 생성:
   ```bash
-  git tag -a v1.4.0 -m "Release v1.4.0: Target SDK 35, Compose UI modularization, full multilingual support"
-  git push origin v1.4.0
+  git tag -a v1.0.1 -m "Release v1.0.1: Target SDK 35, 16KB page alignment, LiteRT GPU on-device Gemma"
+  git push origin v1.0.1
   ```

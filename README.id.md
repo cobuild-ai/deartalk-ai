@@ -58,6 +58,34 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 ---
 
+## 🔄 Cara Kerja (How It Works)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Pengguna
+    participant HostApp as 📱 Aplikasi (WhatsApp / Slack / Catatan)
+    participant IME as ⌨️ DearTalkIME (Compose)
+    participant Controller as 🎮 ImeActionController
+    participant Engine as 🧠 DearTalkIntentEngine
+    participant LLM as ⚡ LiteRT GPU (Gemma 2B)
+    participant Diff as 📊 DiffEngine (LCS)
+
+    User->>HostApp: Memfokuskan kolom input teks
+    HostApp->>IME: Menghubungkan InputConnection
+    User->>IME: Mengetik atau berbicara "besok pagi jam 9 ketemu"
+    IME->>Controller: emit(OriginalText)
+    Controller->>Engine: processWithTone(text, selectedTone)
+    Engine->>LLM: Injeksi System Prompt + Few-shots + Lokal Bahasa Indonesia
+    LLM-->>Engine: Mengembalikan saran "Besok pagi jam 9 kita bertemu ya."
+    Engine->>Diff: computeWordDiff(teks_asli, teks_saran)
+    Diff-->>IME: Menampilkan 2-baris Live Diff chip rekomendasi
+    User->>IME: Mengetuk chip AI pilihan
+    IME->>HostApp: Memasukkan teks yang telah diperbaiki via InputConnection
+```
+
+---
+
 ## 🔒 Jaminan Privasi & Keamanan Mutlak
 
 1. **Tanpa Aturan Palsu (Prinsip Utama):**

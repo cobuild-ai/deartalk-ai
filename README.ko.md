@@ -58,6 +58,34 @@
 
 ---
 
+## 🔄 작동 원리 (How It Works)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 사용자
+    participant HostApp as 📱 앱 (카카오톡 / 슬랙 / 메모장)
+    participant IME as ⌨️ DearTalkIME (Compose)
+    participant Controller as 🎮 ImeActionController
+    participant Engine as 🧠 DearTalkIntentEngine
+    participant LLM as ⚡ LiteRT GPU (Gemma 2B)
+    participant Diff as 📊 DiffEngine (LCS)
+
+    User->>HostApp: 텍스트 입력창 터치 포커스
+    HostApp->>IME: InputConnection 바인딩
+    User->>IME: "내일 아침 9시 만나" 입력 또는 음성(STT)
+    IME->>Controller: emit(OriginalText)
+    Controller->>Engine: processWithTone(text, selectedTone)
+    Engine->>LLM: 시스템 프롬프트 + Few-shots + 한국어 로케일 주입
+    LLM-->>Engine: "내일 아침 9시에 만나요." 추론 완료 반환
+    Engine->>Diff: computeWordDiff(원문, 제안문) 단어 단위 차이 계산
+    Diff-->>IME: 2줄 실시간 단어 단위 Live Diff 추천 칩 렌더링
+    User->>IME: 마음에 드는 AI 제안 칩 탭
+    IME->>HostApp: InputConnection을 통해 앱에 정제 텍스트 자동 삽입
+```
+
+---
+
 ## 🔒 완벽한 개인정보 보호 보증
 
 1. **Zero Fake Hardcoding (제1원칙):**
