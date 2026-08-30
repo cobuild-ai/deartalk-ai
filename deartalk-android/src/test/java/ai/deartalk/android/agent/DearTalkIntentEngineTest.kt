@@ -25,8 +25,17 @@ class DearTalkIntentEngineTest {
 
         assertTrue(DearTalkIntentEngine.isEnglish("Hello how are you"))
         assertTrue(DearTalkIntentEngine.isEnglish("Where is the conference room?"))
-        assertFalse(DearTalkIntentEngine.isEnglish("Hello 안녕하세요"))
-        assertFalse(DearTalkIntentEngine.isEnglish("안녕하세요"))
+        assertTrue(DearTalkIntentEngine.hasKorean("나는 AI를 이용해서 생성했어요"))
+        assertFalse(DearTalkIntentEngine.isEnglish("나는 AI를 이용해서 생성했어요"))
+    }
+
+    @Test
+    fun `영한_혼용_입력_및_모델미로드_무왜곡_원문보존_테스트`() = runBlocking {
+        val mixedInput = "나는 AI를 이용해서 생성했어요"
+        val result = intentEngine.process(mixedInput)
+        assertTrue(result is IntentResult.Success)
+        val text = (result as IntentResult.Success).text
+        assertEquals(mixedInput, text)
     }
 
     @Test

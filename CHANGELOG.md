@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-08-30
+
+### Fixed
+- **Contextual Punctuation & Question Mark (`?`) Completion**: Enhanced on-device SLM Korean prompt instructions and few-shot examples to intelligently attach question marks (`?`), exclamation marks (`!`), and periods (`.`) based on speech context (e.g., schedule inquiry, opinion checking, gratitude) without artificial string manipulation (`Zero Fake Rules` compliant).
+
+---
+
+## [1.0.2] - 2026-08-30
+
+### Fixed
+- **Multilingual STT Code-Switching**: Removed `EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE` and enabled `en-US` as an auxiliary language in `SpeechRecognitionManager.kt`, resolving the issue where English words (e.g., "AI", "PPT", "API") in Korean mixed speech were distorted into Korean phonetic transliterations.
+- **Proper Noun & Acronym LLM Principles**: Updated on-device SLM prompt instructions to strictly follow standard terminology and proper noun formatting rules without artificial string replacement hacks (`Zero Fake Rules` compliant).
+
+### Added
+- **Mixed-Language Detection & Fallback Unit Tests**: Added automated regression unit tests in `DearTalkIntentEngineTest.kt` verifying language classification and raw input preservation.
+
+---
+
 ## [1.0.1] - 2026-08-29
 
 ### Fixed

@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 상태 | 주요 지원 기능 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.1` | **Android 15 (API 35)** | **UI/UX 정밀 고도화 및 실시간 다국어 완성 (Stable)** | Jetpack Compose Slate UI, 오프라인 STT, 6종 어조, LiteRT GPU 가속, PAD 표준 |
+| 🤖 **DearTalk Android IME** | `v1.0.3` | **Android 15 (API 35)** | **문맥 기반 물음표/문장 부호 자동 완성 및 다국어 STT (Stable)** | Jetpack Compose Slate UI, 다국어 STT, 문맥 문장 부호, 6종 어조, LiteRT GPU 가속, PAD 표준 |
 
 ---
 

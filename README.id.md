@@ -27,7 +27,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.1` | **Android 15 (API 35)** | **Penyempurnaan UI/UX & Bahasa Reaktif (Stabil)** | Jetpack Compose Slate UI, STT Offline, 6 Nada Bicara, Akselerasi GPU LiteRT, Standar PAD |
+| 🤖 **DearTalk Android IME** | `v1.0.3` | **Android 15 (API 35)** | **Penyempurnaan Tanda Baca Kontekstual & STT Multibahasa (Stabil)** | Jetpack Compose Slate UI, STT Multibahasa, Tanda Baca Otomatis, 6 Nada Bicara, Akselerasi GPU LiteRT, Standar PAD |
 
 ---
 
