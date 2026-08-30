@@ -22,7 +22,7 @@ graph TD
 
     subgraph Hardware Accelerated On-Device AI
         C --> F[Google LiteRT GPU Delegate]
-        F --> G[(Google Gemma 2 2B Quantized .litertlm)]
+        F --> G[(Google Gemma 2B Quantized .litertlm)]
         H[Google Play Asset Delivery PAD / Local ADB] -.-> G
     end
 
