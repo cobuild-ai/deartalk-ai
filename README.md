@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.1` | **Android 15 (API 35)** | **Production Stable** | Jetpack Compose Slate UI, Offline STT, 6 Unified Tones, LiteRT GPU, PAD Standard |
+| 🤖 **DearTalk Android IME** | `v1.0.3` | **Android 15 (API 35)** | **Production Stable** | Jetpack Compose Slate UI, Multilingual STT, Contextual Punctuation, 6 Unified Tones, LiteRT GPU, PAD Standard |
 
 ---
 
