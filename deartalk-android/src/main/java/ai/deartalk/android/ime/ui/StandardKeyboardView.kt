@@ -38,7 +38,9 @@ fun StandardKeyboardView(
     onSwitchToAiModeClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    var layoutType by remember { mutableStateOf(KeyboardLayoutType.HANGUL) }
+    val isKorean = UiStrings.isKo
+    val initialLayout = if (isKorean) KeyboardLayoutType.HANGUL else KeyboardLayoutType.ENGLISH
+    var layoutType by remember { mutableStateOf(initialLayout) }
     var isShiftActive by remember { mutableStateOf(false) }
 
     Surface(
@@ -146,18 +148,26 @@ fun StandardKeyboardView(
             ) {
                 // !#1 기호/숫자 전환
                 KeyBox(
-                    text = if (layoutType == KeyboardLayoutType.SYMBOLS) "가/A" else "!#1",
+                    text = if (layoutType == KeyboardLayoutType.SYMBOLS) (if (isKorean) "한글" else "ABC") else "!#1",
                     modifier = Modifier.weight(1.2f),
                     bgColor = DearTalkKeyActive,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        layoutType = if (layoutType == KeyboardLayoutType.SYMBOLS) KeyboardLayoutType.HANGUL else KeyboardLayoutType.SYMBOLS
+                        layoutType = if (layoutType == KeyboardLayoutType.SYMBOLS) {
+                            if (isKorean) KeyboardLayoutType.HANGUL else KeyboardLayoutType.ENGLISH
+                        } else {
+                            KeyboardLayoutType.SYMBOLS
+                        }
                     }
                 )
 
                 // 한/영 전환
                 KeyBox(
-                    text = if (layoutType == KeyboardLayoutType.HANGUL) UiStrings.korEngToggle else "ENG",
+                    text = if (isKorean) {
+                        if (layoutType == KeyboardLayoutType.HANGUL) UiStrings.korEngToggle else "ENG"
+                    } else {
+                        if (layoutType == KeyboardLayoutType.ENGLISH) "KOR" else "ENG"
+                    },
                     modifier = Modifier.weight(1.2f),
                     bgColor = DearTalkKeyActive,
                     onClick = {
