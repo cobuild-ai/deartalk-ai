@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.6] - 2026-09-02
+
+### Changed
+- **Target SDK 36 (Android 16) Full Compliance**:
+  - Upgraded `compileSdk` and `targetSdk` to API 36 to meet Google Play 2026 platform security and performance requirements.
+
+---
+
+## [1.0.5] - 2026-09-02
+
+### Added
+- **1-Tap Partner Language Pair UX (`TargetLanguageSelectorRow`)**:
+  - Replaced legacy 2-way input/output dropdowns with a minimalist single-tap partner language selector.
+  - Automatically binds primary language to device/app system locale and forms bi-directional conversation pairs (`🇰🇷 한국어 ⇄ 🇺🇸 English`).
+- **Smart Bi-Directional Auto-Swap (`LanguageLocaleHelper.detectLanguageCode`)**:
+  - Automatically identifies script types (Hangul, Latin/English, Japanese Kana, Chinese Hanzi, Thai) in voice speech and dynamically swaps interpretation direction without requiring manual button presses.
+- **Script-Aware Multi-language TTS Engine**:
+  - Dynamically binds the synthesized voice engine to match the actual script of the generated translation text for pristine vocal accuracy.
+- **Unified High-Performance Qwen Sharing & Adaptive AI Tiers (`ActiveAiTier`)**:
+  - Shared downloaded Qwen 1.7B Instruct model across Keyboard IME and Voice Studio.
+  - Added 3-tier intelligence state machine (`HIGH_QWEN`, `BASE_GEMMA`, `STT_ONLY`) with zero-failure pure STT support on budget devices.
+
+### Fixed
+- **Multilingual Tone Instructions & Pipeline Error Localization**:
+  - Converted tone instructions and pipeline exception messages into localized `UiStrings` properties across EN, KO, and ID.
+
+---
+
+## [1.0.4] - 2026-09-01
+
+### Added
+- **On-Device AI Voice Studio & Real-time Interpretation (`VoiceStudioActivity`)**:
+  - Independent full-screen activity isolating memory-intensive STT/LLM/TTS operations from IME keyboard process.
+  - **2-Way Language Selector & 1-Tap Swap**: `[ 🗣️ Spoken Input ] ⇄ [ 🌐 Target Output ]` architecture with one-touch reverse conversation direction.
+  - **Zero Hardcoding Dynamic Prompt Engine**: Context-driven simultaneous interpreter prompt supporting real-time translation across 12 languages.
+  - **Acoustic Model Language Binding**: Dynamically passes target `Locale` to `SpeechRecognitionManager` to eliminate acoustic recognition crosstalk.
+  - **Voice Customizer & Pitch Control**: Female/Male voice selector and 4-tier pitch controls (`Normal`, `Deep Low`, `Warm Mid`, `Bright High`).
+  - **Zero-Latency Audio Replay (`speakDirectly`)**: Direct TTS replay without LLM re-inference on speaker tap.
+- **Hardware & RAM Diagnostic System (`SystemDiagnosticManager`)**:
+  - Pre-flight 3-tier RAM & storage evaluation (🟢 Optimal 8GB+, 🟡 Caution/Sequential 6GB, 🔴 Constrained <=4GB).
+- **Play Asset Delivery (PAD) On-Demand Model Lifecycle (`ModelLifecycleManager`)**:
+  - Google Play standard On-Demand asset state machine with live progress tracking and 1-click package purge.
+
+### Fixed
+- **Locale-Aware Standard Keyboard Default Layout**: Dynamically selects standard keyboard layout based on active locale in `StandardKeyboardView.kt` (Hangul 2-set for Korean, standard Latin QWERTY for non-Korean locales).
+- **Adaptive Key Labels**: Updated symbol return buttons (`ABC` vs `한글`) and language toggle chips (`ENG` vs `KOR`) to reactively match the active locale.
+- **Speech Recognizer Keep-Alive**: Prevents premature voice cancellation during continuous speaking with RMS volume separation.
+
+---
+
 ## [1.0.3] - 2026-08-30
 
 ### Fixed

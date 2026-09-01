@@ -8,7 +8,7 @@
   <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
-[![Platform: Android](https://img.shields.io/badge/Platform-Android%2015%20(API%2035)-3DDC84?logo=android&logoColor=white)](#-key-platform-features)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-key-platform-features)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-core-principles)
 [![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-privacy--security-guarantee)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -28,20 +28,28 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.3` | **Android 15 (API 35)** | **Production Stable** | Jetpack Compose Slate UI, Multilingual STT, Contextual Punctuation, 6 Unified Tones, LiteRT GPU, PAD Standard |
+| 🤖 **DearTalk Android IME** | `v1.0.6` | **Android 16 (API 36)** | **Production Stable** | Target SDK 36, 1-Tap Partner Language Pair UX, Smart Bi-directional Auto-Swap, Script-Aware TTS, Voice Studio & Live Interpreter |
 
 ---
 
 ## 🌟 Key Platform Features
 
+### 🎙️ AI Voice Studio & Live Interpreter (`VoiceStudioActivity`)
+- **Memory-Isolated Full-Screen Studio:** Independent activity executing sequential STT ➔ LLM ➔ TTS pipelines safely away from the IME memory space.
+- **2-Way Language Selector & 1-Tap Reverse:** `[ 🗣️ Spoken Input ] ⇄ [ 🌐 Target Output ]` architecture with instant conversation swap.
+- **Zero-Hardcoding Dynamic Translation:** Context-aware simultaneous interpreter engine supporting 12 languages with custom acoustic model bindings.
+- **Voice Customizer & Pitch Control:** Female/Male vocal selector and 4-tier pitch calibration (`Normal`, `Deep Low`, `Warm Mid`, `Bright High`).
+- **Zero-Latency Audio Replay:** Instant audio replay on speaker tap bypassing LLM re-computation.
+
 ### 📱 Android Custom Keyboard (`deartalk-android`)
 - **Android 15 & Target SDK 35 Ready:** Built on modern modular Jetpack Compose UI architecture.
+- **Locale-Aware Adaptive Keyboard:** Dynamic standard layout selection (Hangul 2-set for Korean, Latin QWERTY for other locales).
 - **Offline Speech-to-Text (STT):** Instant offline voice recognition directly inside the keyboard without cloud dependencies.
 - **6 Unified Tone Presets:** `✨ Refine`, `👔 Polite`, `😊 Casual`, `💼 Business`, `🤣 Humorous`, and `😼 Cheeky`.
 - **Raw STT Preservation:** Switching between tone chips preserves the original voice transcription while dynamically updating AI suggestions.
 - **0ms Optimistic UI & Keyboard Switcher:** Instant visual feedback and quick one-tap switching to Samsung/Gboard keyboards.
 - **Compose Modular Slate UI:** Elegant dark glassmorphism keyboard, dedicated settings, interactive sandbox, and haptic feedback.
-- **Play Asset Delivery (PAD) & Local SLM:** 100% on-device Google Gemma LiteRT execution using official Google Play asset standards.
+- **Play Asset Delivery (PAD) & Hardware Diagnostics:** 3-tier RAM safety evaluation and Google Play On-Demand asset management with 1-click package purge.
 - **Full Multilingual Localization:** Seamless Korean, English, Indonesian, Japanese, and Spanish locale support with dynamic prompt generation.
 
 ---

@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "ai.deartalk.android"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ai.deartalk.android"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 6
-        versionName = "1.0.3"
+        targetSdk = 36
+        versionCode = 9
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

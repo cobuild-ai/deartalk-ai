@@ -99,14 +99,30 @@ class DearTalkIntentEngine(
             return
         }
 
-        val candidatePaths = mutableListOf(
-            "/data/local/tmp/llm/model.litertlm",
-            "/data/local/tmp/llm/gemma-2b-it.litertlm",
-            "/data/local/tmp/llm/model.bin",
-            "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
-            "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
-            File(appContext.filesDir, "models/model.litertlm").absolutePath,
-            File(appContext.filesDir, "models/model.bin").absolutePath
+        val qwenManager = ai.deartalk.android.data.ModelLifecycleManager(appContext)
+        val qwenPaths = qwenManager.resolveModelPaths()
+        val qwenLlmPath = qwenPaths[ai.deartalk.android.data.ModelLifecycleManager.KEY_LLM]
+
+        val candidatePaths = mutableListOf<String>()
+
+        // 🌟 1순위: 다운로드/설치된 Qwen 고성능 1.7B LLM 모델 우선 바인딩
+        if (!qwenLlmPath.isNullOrBlank()) {
+            candidatePaths.add(qwenLlmPath)
+        }
+        candidatePaths.add(File(appContext.filesDir, "models/qwen/qwen3-1.7b-it.bin").absolutePath)
+        candidatePaths.add("/data/local/tmp/llm/qwen3-1.7b-it.bin")
+
+        // 🌟 2순위: 기본 Gemma 2B LiteRT 및 로컬 모델
+        candidatePaths.addAll(
+            listOf(
+                "/data/local/tmp/llm/model.litertlm",
+                "/data/local/tmp/llm/gemma-2b-it.litertlm",
+                "/data/local/tmp/llm/model.bin",
+                "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
+                "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
+                File(appContext.filesDir, "models/model.litertlm").absolutePath,
+                File(appContext.filesDir, "models/model.bin").absolutePath
+            )
         )
 
         val llmDir = File("/data/local/tmp/llm/")
@@ -162,6 +178,25 @@ class DearTalkIntentEngine(
                         _isModelLoadedFlow.value = true
                         return@withLock
                     }
+                    sharedLoaded = false
+                    _isModelLoadedFlow.value = false
+                    initOnDeviceModel(context.applicationContext)
+                }
+            }
+        }
+    }
+
+    /**
+     * 🔄 모델 핫 리로드: Qwen 패키지 다운로드 완료 또는 삭제 시 새 모델 경로 즉시 재바인딩
+     */
+    fun reloadModel() {
+        if (context == null) return
+        synchronized(DearTalkIntentEngine::class.java) {
+            sharedInitJob = initScope.launch {
+                initMutex.withLock {
+                    try {
+                        sharedLiteRtEngine = null
+                    } catch (_: Throwable) {}
                     sharedLoaded = false
                     _isModelLoadedFlow.value = false
                     initOnDeviceModel(context.applicationContext)
@@ -500,7 +535,7 @@ class DearTalkIntentEngine(
         }
 
         text = text
-            .replace(Regex("""^(최종\s*문장|수정된\s*문장|다듬은\s*문장|변환된\s*문장|결과|답변|제안|답|문장|Output|Result|Sentence|model|assistant|AI|Translation|Translated Text)\s*[:：]\s*""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""^(최종\s*문장|수정된\s*문장|다듬은\s*문장|변환된\s*문장|결과|답변|제안|답|문장|Output|Result|Sentence|model|assistant|AI|Translation|Translated Text|Japanese|English|Chinese|Spanish|French|German|Indonesian|Vietnamese|Thai|Tagalog|Malay|日本語|英語|中国語)\s*[:：]\s*""", RegexOption.IGNORE_CASE), "")
             .trim()
             .removePrefix(">")
             .removePrefix("-")
@@ -511,5 +546,120 @@ class DearTalkIntentEngine(
             .trim()
 
         return text.trim()
+    }
+
+    suspend fun processIntent(voiceInput: String): IntentResult = process(voiceInput)
+
+    suspend fun applyTone(voiceInput: String, toneName: String): IntentResult {
+        val tone = CustomTone(
+            id = toneName,
+            name = toneName,
+            instruction = toneName,
+            icon = "✨"
+        )
+        return processWithTone(voiceInput, tone)
+    }
+
+    /**
+     * 🌐 12개 글로벌/동남아 다국어 특화 실시간 동적 통역 엔진 (Zero Hardcoding)
+     */
+    suspend fun translate(
+        voiceInput: String,
+        targetLangCode: String,
+        sourceLangCode: String = "KO",
+        tone: String? = null
+    ): String = withContext(Dispatchers.IO) {
+        val trimmed = voiceInput.trim()
+        if (trimmed.isBlank()) return@withContext ""
+
+        if (!isModelLoaded && sharedInitJob?.isActive == true) {
+            try { sharedInitJob?.join() } catch (_: Throwable) {}
+        }
+
+        val targetLangName = when (targetLangCode.uppercase()) {
+            "EN" -> "English"
+            "ES" -> "Spanish (Español)"
+            "FR" -> "French (Français)"
+            "DE" -> "German (Deutsch)"
+            "JA" -> "Japanese (日本語)"
+            "ZH" -> "Simplified Chinese (简体中文)"
+            "KO" -> "Korean (한국어)"
+            "ID" -> "Indonesian (Bahasa Indonesia)"
+            "VI" -> "Vietnamese (Tiếng Việt)"
+            "TL", "FIL" -> "Filipino/Tagalog (Wikang Filipino)"
+            "TH" -> "Thai (ภาษาไทย)"
+            "MS" -> "Malay (Bahasa Melayu)"
+            else -> targetLangCode
+        }
+
+        val sourceLangName = when (sourceLangCode.uppercase()) {
+            "EN" -> "English"
+            "ES" -> "Spanish"
+            "FR" -> "French"
+            "DE" -> "German"
+            "JA" -> "Japanese"
+            "ZH" -> "Chinese"
+            "KO" -> "Korean"
+            "ID" -> "Indonesian"
+            "VI" -> "Vietnamese"
+            "TL", "FIL" -> "Filipino"
+            "TH" -> "Thai"
+            "MS" -> "Malay"
+            else -> sourceLangCode
+        }
+
+        val toneInstruction = if (!tone.isNullOrBlank()) " Adapt the translated sentence to have a '$tone' tone." else ""
+
+        if (isModelLoaded) {
+            try {
+                val prompt = "<start_of_turn>user\n" +
+                        "You are an expert real-time simultaneous interpreter.\n" +
+                        "Translate the spoken speech from $sourceLangName into natural, accurate $targetLangName.$toneInstruction\n" +
+                        "CRITICAL INSTRUCTIONS:\n" +
+                        "1. Output ONLY the single-line translated sentence in $targetLangName.\n" +
+                        "2. Do NOT add notes, explanations, romanization, conversational fillers, or quotes.\n\n" +
+                        "Input text: \"$trimmed\"<end_of_turn>\n" +
+                        "<start_of_turn>model\n"
+
+                var output = ""
+                sharedLiteRtEngine?.let { engine ->
+                    val session = engine.createSession()
+                    val response = session.generateContent(listOf(InputData.Text(prompt))).trim()
+                    try { session.close() } catch (_: Throwable) {}
+                    output = cleanLlmOutput(response)
+                }
+
+                if (output.isNotBlank()) {
+                    Log.d(TAG, "✨ [온디바이스 번역 성공] '$trimmed' ($sourceLangName) ➔ '$output' ($targetLangName)")
+                    return@withContext output
+                }
+            } catch (e: Throwable) {
+                Log.e(TAG, "❌ translate 오류: ${e.message}")
+            }
+        }
+
+        return@withContext trimmed
+    }
+
+    suspend fun processCustomPrompt(promptText: String): String = withContext(Dispatchers.IO) {
+        if (!isModelLoaded && sharedInitJob?.isActive == true) {
+            try { sharedInitJob?.join() } catch (_: Throwable) {}
+        }
+        if (isModelLoaded) {
+            try {
+                val formatted = "<start_of_turn>user\n$promptText<end_of_turn>\n<start_of_turn>model\n"
+                var output = ""
+                sharedLiteRtEngine?.let { engine ->
+                    val session = engine.createSession()
+                    val response = session.generateContent(listOf(InputData.Text(formatted))).trim()
+                    try { session.close() } catch (_: Throwable) {}
+                    output = cleanLlmOutput(response)
+                }
+                if (output.isNotBlank()) return@withContext output
+            } catch (e: Throwable) {
+                Log.e(TAG, "❌ processCustomPrompt 오류: ${e.message}")
+            }
+        }
+        return@withContext ""
     }
 }

@@ -409,6 +409,72 @@ fun MainOnDeviceScreen(
             }
 
             // ═══════════════════════════════════════════════════
+            // 🌟 🎙️ 온디바이스 AI 대면 통역 & 보이스 스튜디오
+            // ═══════════════════════════════════════════════════
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = DearTalkSurface),
+                border = CardDefaults.outlinedCardBorder().copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(DearTalkPrimary)
+                )
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(DearTalkPrimary.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Translate,
+                                    contentDescription = null,
+                                    tint = DearTalkSecondary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = if (isKorean) "🎙️ Voice Studio (대면 통역 & 고운말)" else if (isIndonesian) "🎙️ Voice Studio (Penerjemah & Suara)" else "🎙️ Voice Studio (Live Interpreter)",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DearTalkText
+                                )
+                                Text(
+                                    text = if (isKorean) "Qwen 기반 다국어 실시간 통역 & 고운말 톤 스피킹" else if (isIndonesian) "Terjemahan langsung multibahasa & penyesuaian nada berbasis Qwen" else "Qwen-powered live multilingual translation & tone speaking",
+                                    fontSize = 11.sp,
+                                    color = DearTalkSecondary
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                val intent = android.content.Intent(context, VoiceStudioActivity::class.java)
+                                context.startActivity(intent)
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (isKorean) "열기 ➔" else if (isIndonesian) "Buka ➔" else "Open ➔",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ═══════════════════════════════════════════════════
             // 2. 🔒 100% 온디바이스 개인정보 보호 & AI 모델
             // ═══════════════════════════════════════════════════
             Card(

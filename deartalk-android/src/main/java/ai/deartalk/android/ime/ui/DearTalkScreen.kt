@@ -39,6 +39,7 @@ enum class MicUiState {
 @Composable
 fun DearTalkScreen(
     micUiState: MicUiState = MicUiState.IDLE,
+    activeTier: ai.deartalk.android.data.ActiveAiTier = ai.deartalk.android.data.ActiveAiTier.STT_ONLY,
     recognizedText: String,
     statusMessage: String,
     aiText: String,
@@ -54,7 +55,8 @@ fun DearTalkScreen(
     onSpaceClick: () -> Unit,
     onEnterClick: () -> Unit,
     onSwitchToKeyboardClick: () -> Unit,
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onVoiceStudioClick: () -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -162,6 +164,29 @@ fun DearTalkScreen(
                     }
                 }
 
+                // 🎙️ 보이스 스튜디오 / 실시간 대면 통역 바로가기 아이콘 (눈에 띄는 비비드 네온 그라데이션)
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onVoiceStudioClick()
+                    },
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            androidx.compose.ui.graphics.Brush.linearGradient(
+                                listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
+                            )
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Translate,
+                        contentDescription = "Voice Studio",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
                 // ⚙️ 설정 아이콘 (DearTalk 설정 화면으로 진입)
                 IconButton(
                     onClick = {
@@ -182,7 +207,59 @@ fun DearTalkScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // 🌟 실시간 온디바이스 지능 등급 (AI Tier) 인디케이터 바
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(
+                        when (activeTier) {
+                            ai.deartalk.android.data.ActiveAiTier.HIGH_QWEN -> Color(0xFF064E3B).copy(alpha = 0.6f)
+                            ai.deartalk.android.data.ActiveAiTier.BASE_GEMMA -> Color(0xFF1E293B)
+                            ai.deartalk.android.data.ActiveAiTier.STT_ONLY -> Color(0xFF78350F).copy(alpha = 0.5f)
+                        }
+                    )
+                    .clickable { onVoiceStudioClick() }
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = when (activeTier) {
+                            ai.deartalk.android.data.ActiveAiTier.HIGH_QWEN -> UiStrings.tierBadgeHigh
+                            ai.deartalk.android.data.ActiveAiTier.BASE_GEMMA -> UiStrings.tierBadgeBase
+                            ai.deartalk.android.data.ActiveAiTier.STT_ONLY -> UiStrings.tierBadgeSttOnly
+                        },
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = when (activeTier) {
+                            ai.deartalk.android.data.ActiveAiTier.HIGH_QWEN -> Color(0xFF34D399)
+                            ai.deartalk.android.data.ActiveAiTier.BASE_GEMMA -> Color(0xFF60A5FA)
+                            ai.deartalk.android.data.ActiveAiTier.STT_ONLY -> Color(0xFFFBBF24)
+                        }
+                    )
+                }
+
+                if (activeTier == ai.deartalk.android.data.ActiveAiTier.STT_ONLY) {
+                    Text(
+                        text = "📥 ${UiStrings.tierDownloadAction} ›",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFBBF24)
+                    )
+                } else {
+                    Text(
+                        text = "100% On-Device",
+                        fontSize = 10.sp,
+                        color = DearTalkTextDim
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             // ─────────────────────────────────────────────────────────────
             // [2열] ✨ 스마트 DIFF 작업 캔버스 (STT 원문 ➔ AI 다듬기 비교) + 우측 [📥 입력] / [✕ 취소]

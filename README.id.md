@@ -27,20 +27,28 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.3` | **Android 15 (API 35)** | **Penyempurnaan Tanda Baca Kontekstual & STT Multibahasa (Stabil)** | Jetpack Compose Slate UI, STT Multibahasa, Tanda Baca Otomatis, 6 Nada Bicara, Akselerasi GPU LiteRT, Standar PAD |
+| 🤖 **DearTalk Android IME** | `v1.0.6` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Target SDK 36, UX Pasangan Bahasa 1-Ketuk, Pembalikan Otomatis Cerdas 2-Arah (Auto-Swap), Mesin TTS Sesuai Aksara, Voice Studio & Penerjemah Langsung |
 
 ---
 
 ## 🌟 Fitur Utama Papan Ketik Android
 
+### 🎙️ AI Voice Studio & Penerjemah Langsung (`VoiceStudioActivity`)
+- **Studio Layar Penuh Terisolasi Memori:** Aktivitas mandiri yang menjalankan alur kerja STT ➔ LLM ➔ TTS secara berurutan tanpa membebani memori keyboard IME.
+- **Pemilih Bahasa 2-Arah & Tukar 1-Ketuk:** Arsitektur `[ 🗣️ Bahasa Bicara ] ⇄ [ 🌐 Bahasa Terjemahan ]` dengan pembalikan arah percakapan instan.
+- **Mesin Terjemahan Dinamis Tanpa Hardcoding:** Prompt penerjemah simultan peka konteks untuk 12 bahasa dengan integrasi model akustik lokal.
+- **Kustomisasi Suara & Kontrol Nada:** Pilihan vokal Wanita/Pria dan 4 tingkat nada (`Normal`, `Bass Dalam`, `Sedang Hangat`, `Tinggi Cerah`).
+- **Pemutaran Ulang Audio 0ms:** Putar ulang audio instan saat mengetuk ikon speaker tanpa inferensi ulang LLM (`speakDirectly`).
+
 ### 📱 Papan Ketik Android (`deartalk-android`)
 - **Android 15 & Target SDK 35:** Arsitektur UI modular modern berbasis Jetpack Compose yang ringan dan elegan.
+- **Papan Ketik Standar Responsif Bahasa:** Pemilihan tata letak otomatis berdasarkan bahasa aktif (Hangul 2-set untuk Korea, Latin QWERTY untuk bahasa lain).
 - **Pengenalan Suara Luring (Offline STT):** Dikte suara instan langsung di dalam papan ketik tanpa jaringan internet.
 - **6 Pilihan Nada Bicara:** `✨ Rapikan`, `👔 Sopan`, `😊 Santai`, `💼 Profesional`, `🤣 Lucu`, dan `😼 Percaya Diri`.
 - **Preservasi Suara Asli (Raw STT):** Mengganti nada bicara tetap menjaga teks suara asli tanpa merusaknya.
 - **0ms UI Optimistik & Kartu Peralihan Keyboard:** Umpan balik visual seketika dan peralihan satu ketukan ke keyboard Samsung/Gboard.
 - **UI Kaca Gelap Elegan:** Tema Slate modern, layar pengaturan khusus, lingkungan uji coba (sandbox), dan umpan balik haptic.
-- **Standar Play Asset Delivery (PAD):** Menggunakan standar resmi Google Play tanpa pengunduh in-app HTTP yang rentan.
+- **Standar Play Asset Delivery (PAD) & Diagnosis Perangkat:** Evaluasi keamanan RAM 3 tingkat dan pengelolaan aset On-Demand Google Play (fitur hapus paket 1-ketuk).
 - **Dukungan Multibahasa Penuh:** Dukungan lokal Bahasa Indonesia, Korea, Inggris, Jepang, dan Spanyol dengan pembentukan prompt dinamis.
 
 ---
