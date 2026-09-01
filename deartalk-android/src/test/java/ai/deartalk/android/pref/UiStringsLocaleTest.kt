@@ -26,6 +26,9 @@ class UiStringsLocaleTest {
         assertEquals("👨 Male Voice", UiStrings.voiceMale)
         assertEquals("What You Said (STT)", UiStrings.rawSttTitle)
         assertEquals("✨ AI Refined & Translated", UiStrings.aiResultTitle)
+        assertEquals("🌟 Qwen 1.7B Pro", UiStrings.tierBadgeHigh)
+        assertEquals("🟢 Gemma 2B Base", UiStrings.tierBadgeBase)
+        assertEquals("⚡ STT Only (Needs AI Pack)", UiStrings.tierBadgeSttOnly)
 
         // 2. 한국어 오버라이드 테스트
         UiStrings.setLocale(Locale.KOREAN)
@@ -44,6 +47,9 @@ class UiStringsLocaleTest {
         assertEquals("👨 남성 음성", UiStrings.voiceMale)
         assertEquals("내가 말한 내용 (STT)", UiStrings.rawSttTitle)
         assertEquals("✨ AI 조율 및 번역 결과", UiStrings.aiResultTitle)
+        assertEquals("🌟 Qwen 1.7B Pro", UiStrings.tierBadgeHigh)
+        assertEquals("🟢 Gemma 2B Base", UiStrings.tierBadgeBase)
+        assertEquals("⚡ STT 모드 (AI팩 필요)", UiStrings.tierBadgeSttOnly)
 
         // 3. 인도네시아어 오버라이드 테스트
         UiStrings.setLocale(Locale("id", "ID"))
@@ -56,5 +62,8 @@ class UiStringsLocaleTest {
         assertEquals("👨 Suara Pria", UiStrings.voiceMale)
         assertEquals("Yang Anda Katakan (STT)", UiStrings.rawSttTitle)
         assertEquals("✨ Hasil AI & Terjemahan", UiStrings.aiResultTitle)
+        assertEquals("🌟 Qwen 1.7B Pro", UiStrings.tierBadgeHigh)
+        assertEquals("🟢 Gemma 2B Base", UiStrings.tierBadgeBase)
+        assertEquals("⚡ Mode STT (Perlu Paket AI)", UiStrings.tierBadgeSttOnly)
     }
 }

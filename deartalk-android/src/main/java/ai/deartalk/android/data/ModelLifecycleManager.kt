@@ -20,6 +20,15 @@ sealed class ModelPackState {
 }
 
 /**
+ * 🌟 현재 활성화된 온디바이스 지능 등급
+ */
+enum class ActiveAiTier {
+    HIGH_QWEN,   // 🌟 Qwen3-1.7B Full Suite (PAD 고성능 올인원 엔진)
+    BASE_GEMMA,  // 🟢 Gemma 2B LiteRT (기본 내장 경량 엔진)
+    STT_ONLY     // ⚡ 순수 음성인식 (LLM 미탑재 기기: STT 정상 동작 + 1-Tap PAD 다운로드 대기)
+}
+
+/**
  * 📦 Qwen 고품질 보이스/번역 모델 패키지(STT + LLM + TTS) 생명주기 관리자
  * Play Asset Delivery (PAD) on-demand 표준 및 로컬 ADB 경로(/data/local/tmp/llm/)와 호환
  */
@@ -40,6 +49,9 @@ class ModelLifecycleManager(private val context: Context) {
 
     private val _packState = MutableStateFlow<ModelPackState>(ModelPackState.NotInstalled)
     val packState: StateFlow<ModelPackState> = _packState.asStateFlow()
+
+    private val _activeTier = MutableStateFlow<ActiveAiTier>(ActiveAiTier.STT_ONLY)
+    val activeTier: StateFlow<ActiveAiTier> = _activeTier.asStateFlow()
 
     init {
         refreshState()
@@ -62,10 +74,29 @@ class ModelLifecycleManager(private val context: Context) {
         val paths = resolveModelPaths()
         if (paths.isNotEmpty()) {
             _packState.value = ModelPackState.Installed(paths)
+            _activeTier.value = ActiveAiTier.HIGH_QWEN
         } else {
             if (_packState.value !is ModelPackState.Downloading) {
                 _packState.value = ModelPackState.NotInstalled
             }
+            // Gemma 기본 모델 존재 여부 확인
+            val hasGemma = hasGemmaBaseModel()
+            _activeTier.value = if (hasGemma) ActiveAiTier.BASE_GEMMA else ActiveAiTier.STT_ONLY
+        }
+    }
+
+    private fun hasGemmaBaseModel(): Boolean {
+        val gemmaCandidates = listOf(
+            "/data/local/tmp/llm/model.litertlm",
+            "/data/local/tmp/llm/gemma-2b-it.litertlm",
+            "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
+            "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
+            File(context.filesDir, "models/model.litertlm").absolutePath,
+            File(context.filesDir, "models/model.bin").absolutePath
+        )
+        return gemmaCandidates.any { path ->
+            val f = File(path)
+            f.exists() && f.length() > 0
         }
     }
 
@@ -136,6 +167,7 @@ class ModelLifecycleManager(private val context: Context) {
 
                 val paths = resolveModelPaths()
                 _packState.value = ModelPackState.Installed(paths)
+                _activeTier.value = ActiveAiTier.HIGH_QWEN
                 Log.d(TAG, "🎉 Qwen 고성능 모델 패키지 설치 완료!")
                 onSuccess?.invoke()
             } catch (e: Exception) {
@@ -149,7 +181,7 @@ class ModelLifecycleManager(private val context: Context) {
     fun cancelDownload() {
         downloadJob?.cancel()
         downloadJob = null
-        _packState.value = ModelPackState.NotInstalled
+        refreshState()
     }
 
     /**
@@ -168,7 +200,7 @@ class ModelLifecycleManager(private val context: Context) {
             modelDir.delete()
         }
 
-        _packState.value = ModelPackState.NotInstalled
+        refreshState()
         Log.d(TAG, "🧹 Qwen 모델 패키지 삭제 완료 (환원된 용량: ${freedBytes / (1024 * 1024)}MB)")
         return freedBytes
     }

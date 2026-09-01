@@ -48,9 +48,11 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private lateinit var sttManager: SpeechRecognitionManager
     private lateinit var intentEngine: DearTalkIntentEngine
     private lateinit var ttsManager: TextToSpeechManager
+    private lateinit var modelLifecycleManager: ai.deartalk.android.data.ModelLifecycleManager
 
     private var currentPackageName by mutableStateOf("")
     private var micUiState by mutableStateOf(MicUiState.IDLE)
+    private var activeTierState by mutableStateOf(ai.deartalk.android.data.ActiveAiTier.STT_ONLY)
     private var recognizedTextState by mutableStateOf("")
     private var statusMessageState by mutableStateOf("")
     private var aiTextState by mutableStateOf("")
@@ -66,6 +68,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
 
         UiStrings.setLocale(ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this))
 
+        modelLifecycleManager = ai.deartalk.android.data.ModelLifecycleManager(this)
+        activeTierState = modelLifecycleManager.activeTier.value
         intentEngine = DearTalkIntentEngine(this)
         sttManager = SpeechRecognitionManager(this)
         ttsManager = TextToSpeechManager(this)
@@ -74,6 +78,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         aiModesState = CustomToneManager.getAllAiModes(this)
 
         observeStt()
+        observeTier()
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -84,8 +89,18 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
 
         UiStrings.setLocale(ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this))
 
+        modelLifecycleManager.refreshState()
+        activeTierState = modelLifecycleManager.activeTier.value
         tonesState = CustomToneManager.getTones(this)
         aiModesState = CustomToneManager.getAllAiModes(this)
+    }
+
+    private fun observeTier() {
+        serviceScope.launch {
+            modelLifecycleManager.activeTier.collect { tier ->
+                activeTierState = tier
+            }
+        }
     }
 
     override fun onCreateInputView(): View {
@@ -131,6 +146,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                     } else {
                         DearTalkScreen(
                             micUiState = micUiState,
+                            activeTier = activeTierState,
                             recognizedText = recognizedTextState,
                             statusMessage = statusMessageState,
                             aiText = aiTextState,

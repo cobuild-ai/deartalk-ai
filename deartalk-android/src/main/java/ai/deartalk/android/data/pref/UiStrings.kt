@@ -280,4 +280,12 @@ object UiStrings {
             "How much is this item?"
         )
     }
+
+    // 9. 온디바이스 AI 지능 등급 뱃지 & 안내
+    val tierBadgeHigh get() = if (isKo) "🌟 Qwen 1.7B Pro" else if (isId) "🌟 Qwen 1.7B Pro" else "🌟 Qwen 1.7B Pro"
+    val tierBadgeBase get() = if (isKo) "🟢 Gemma 2B Base" else if (isId) "🟢 Gemma 2B Base" else "🟢 Gemma 2B Base"
+    val tierBadgeSttOnly get() = if (isKo) "⚡ STT 모드 (AI팩 필요)" else if (isId) "⚡ Mode STT (Perlu Paket AI)" else "⚡ STT Only (Needs AI Pack)"
+
+    val tierBannerSttOnlyPrompt get() = if (isKo) "💡 AI 모델을 다운로드하면 문맥 정제 및 톤 변환이 활성화됩니다." else if (isId) "💡 Unduh model AI untuk mengaktifkan pemurnian & nada bicara." else "💡 Download AI model to enable context refinement & tone styles."
+    val tierDownloadAction get() = if (isKo) "AI 팩 다운로드" else if (isId) "Unduh Paket AI" else "Download AI Pack"
 }
