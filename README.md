@@ -28,20 +28,28 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.3` | **Android 15 (API 35)** | **Production Stable** | Jetpack Compose Slate UI, Multilingual STT, Contextual Punctuation, 6 Unified Tones, LiteRT GPU, PAD Standard |
+| 🤖 **DearTalk Android IME** | `v1.0.4` | **Android 15 (API 35)** | **Production Stable** | Voice Studio & Real-time Live Interpreter, 2-Way Language Swap, On-Demand PAD Lifecycle, RAM Diagnostics, Locale-Aware Keyboard, LiteRT GPU |
 
 ---
 
 ## 🌟 Key Platform Features
 
+### 🎙️ AI Voice Studio & Live Interpreter (`VoiceStudioActivity`)
+- **Memory-Isolated Full-Screen Studio:** Independent activity executing sequential STT ➔ LLM ➔ TTS pipelines safely away from the IME memory space.
+- **2-Way Language Selector & 1-Tap Reverse:** `[ 🗣️ Spoken Input ] ⇄ [ 🌐 Target Output ]` architecture with instant conversation swap.
+- **Zero-Hardcoding Dynamic Translation:** Context-aware simultaneous interpreter engine supporting 12 languages with custom acoustic model bindings.
+- **Voice Customizer & Pitch Control:** Female/Male vocal selector and 4-tier pitch calibration (`Normal`, `Deep Low`, `Warm Mid`, `Bright High`).
+- **Zero-Latency Audio Replay:** Instant audio replay on speaker tap bypassing LLM re-computation.
+
 ### 📱 Android Custom Keyboard (`deartalk-android`)
 - **Android 15 & Target SDK 35 Ready:** Built on modern modular Jetpack Compose UI architecture.
+- **Locale-Aware Adaptive Keyboard:** Dynamic standard layout selection (Hangul 2-set for Korean, Latin QWERTY for other locales).
 - **Offline Speech-to-Text (STT):** Instant offline voice recognition directly inside the keyboard without cloud dependencies.
 - **6 Unified Tone Presets:** `✨ Refine`, `👔 Polite`, `😊 Casual`, `💼 Business`, `🤣 Humorous`, and `😼 Cheeky`.
 - **Raw STT Preservation:** Switching between tone chips preserves the original voice transcription while dynamically updating AI suggestions.
 - **0ms Optimistic UI & Keyboard Switcher:** Instant visual feedback and quick one-tap switching to Samsung/Gboard keyboards.
 - **Compose Modular Slate UI:** Elegant dark glassmorphism keyboard, dedicated settings, interactive sandbox, and haptic feedback.
-- **Play Asset Delivery (PAD) & Local SLM:** 100% on-device Google Gemma LiteRT execution using official Google Play asset standards.
+- **Play Asset Delivery (PAD) & Hardware Diagnostics:** 3-tier RAM safety evaluation and Google Play On-Demand asset management with 1-click package purge.
 - **Full Multilingual Localization:** Seamless Korean, English, Indonesian, Japanese, and Spanish locale support with dynamic prompt generation.
 
 ---

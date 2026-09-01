@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-09-01
+
+### Added
+- **On-Device AI Voice Studio & Real-time Interpretation (`VoiceStudioActivity`)**:
+  - Independent full-screen activity isolating memory-intensive STT/LLM/TTS operations from IME keyboard process.
+  - **2-Way Language Selector & 1-Tap Swap**: `[ 🗣️ Spoken Input ] ⇄ [ 🌐 Target Output ]` architecture with one-touch reverse conversation direction.
+  - **Zero Hardcoding Dynamic Prompt Engine**: Context-driven simultaneous interpreter prompt supporting real-time translation across 12 languages.
+  - **Acoustic Model Language Binding**: Dynamically passes target `Locale` to `SpeechRecognitionManager` to eliminate acoustic recognition crosstalk.
+  - **Voice Customizer & Pitch Control**: Female/Male voice selector and 4-tier pitch controls (`Normal`, `Deep Low`, `Warm Mid`, `Bright High`).
+  - **Zero-Latency Audio Replay (`speakDirectly`)**: Direct TTS replay without LLM re-inference on speaker tap.
+- **Hardware & RAM Diagnostic System (`SystemDiagnosticManager`)**:
+  - Pre-flight 3-tier RAM & storage evaluation (🟢 Optimal 8GB+, 🟡 Caution/Sequential 6GB, 🔴 Constrained <=4GB).
+- **Play Asset Delivery (PAD) On-Demand Model Lifecycle (`ModelLifecycleManager`)**:
+  - Google Play standard On-Demand asset state machine with live progress tracking and 1-click package purge.
+
+### Fixed
+- **Locale-Aware Standard Keyboard Default Layout**: Dynamically selects standard keyboard layout based on active locale in `StandardKeyboardView.kt` (Hangul 2-set for Korean, standard Latin QWERTY for non-Korean locales).
+- **Adaptive Key Labels**: Updated symbol return buttons (`ABC` vs `한글`) and language toggle chips (`ENG` vs `KOR`) to reactively match the active locale.
+- **Speech Recognizer Keep-Alive**: Prevents premature voice cancellation during continuous speaking with RMS volume separation.
+
+---
+
 ## [1.0.3] - 2026-08-30
 
 ### Fixed

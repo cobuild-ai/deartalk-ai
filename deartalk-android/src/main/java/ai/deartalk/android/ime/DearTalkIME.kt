@@ -155,6 +155,12 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                                     addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 startActivity(intent)
+                            },
+                            onVoiceStudioClick = {
+                                val intent = android.content.Intent(this@DearTalkIME, ai.deartalk.android.VoiceStudioActivity::class.java).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
                             }
                         )
                     }

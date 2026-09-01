@@ -26,7 +26,7 @@ sealed interface VoiceState {
 
 /**
  * 안드로이드 표준 SpeechRecognizer 음성 인식 관리자
- * - 단일 인스턴스 유지 및 메인 루퍼 동기화로 오디오 락 및 NO_MATCH(7) 레이스 컨디션 방지
+ * - 단일 인스턴스 유지 및 무음 타임아웃 자동 재연결(Keep-Alive)로 녹음 끊김 방지
  */
 class SpeechRecognitionManager(private val context: Context) {
 
@@ -38,6 +38,13 @@ class SpeechRecognitionManager(private val context: Context) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val _voiceState = MutableStateFlow<VoiceState>(VoiceState.Idle)
     val voiceState: StateFlow<VoiceState> = _voiceState.asStateFlow()
+
+    private val _rmsDb = MutableStateFlow(0f)
+    val rmsDb: StateFlow<Float> = _rmsDb.asStateFlow()
+
+    private var isUserIntentionallyListening = false
+    private var currentListeningLocale: Locale = Locale.KOREAN
+    private var lastRecognizedText: String = ""
 
     private val isRecognitionAvailable: Boolean
         get() = SpeechRecognizer.isRecognitionAvailable(context)
@@ -74,24 +81,39 @@ class SpeechRecognitionManager(private val context: Context) {
             }
 
             override fun onRmsChanged(rmsdB: Float) {
-                _voiceState.value = VoiceState.RmsChanged(rmsdB)
+                _rmsDb.value = rmsdB
             }
 
             override fun onBufferReceived(buffer: ByteArray?) {}
 
             override fun onEndOfSpeech() {
-                Log.d(TAG, "🤫 음성 감지 종료 ➔ 인식 처리 중...")
+                Log.d(TAG, "🤫 음성 감지 일시 정지 ➔ 처리 중")
             }
 
             override fun onError(error: Int) {
-                Log.e(TAG, "⚠️ STT 에러 발생 (코드: $error)")
+                Log.w(TAG, "⚠️ STT 에러/타임아웃 감지 (코드: $error, 사용자 청취 의도: $isUserIntentionallyListening)")
+                
+                // 사용자가 마이크를 켜둔 상태에서 짧은 침묵(NO_MATCH=7, TIMEOUT=6)이 발생한 경우 마이크 유지
+                if (isUserIntentionallyListening && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
+                    Log.d(TAG, "🔄 침묵 타임아웃 감지 ➔ 마이크 세션 자동 재연결(Keep-Alive)")
+                    mainHandler.postDelayed({
+                        if (isUserIntentionallyListening) {
+                            startListeningInternal(currentListeningLocale)
+                        }
+                    }, 100)
+                    return
+                }
+
                 _voiceState.value = VoiceState.Error(error)
+                isUserIntentionallyListening = false
             }
 
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                val recognizedText = matches?.firstOrNull() ?: ""
+                val recognizedText = matches?.firstOrNull() ?: lastRecognizedText
                 Log.d(TAG, "✅ STT 최종 결과 수신: '$recognizedText'")
+
+                isUserIntentionallyListening = false
                 if (recognizedText.isNotBlank()) {
                     _voiceState.value = VoiceState.FinalResult(recognizedText)
                 } else {
@@ -103,6 +125,7 @@ class SpeechRecognitionManager(private val context: Context) {
                 val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val text = matches?.firstOrNull() ?: ""
                 if (text.isNotBlank()) {
+                    lastRecognizedText = text
                     Log.d(TAG, "💬 STT 중간 결과: '$text'")
                     _voiceState.value = VoiceState.PartialResult(text)
                 }
@@ -113,64 +136,80 @@ class SpeechRecognitionManager(private val context: Context) {
     }
 
     fun startListening(locale: Locale = ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(context)) {
+        currentListeningLocale = locale
+        isUserIntentionallyListening = true
+        lastRecognizedText = ""
         mainHandler.post {
-            if (!isRecognitionAvailable) {
-                Log.e(TAG, "❌ SpeechRecognizer 사용 불가")
-                _voiceState.value = VoiceState.Error(SpeechRecognizer.ERROR_CLIENT)
-                return@post
+            startListeningInternal(locale)
+        }
+    }
+
+    private fun startListeningInternal(locale: Locale) {
+        if (!isRecognitionAvailable) {
+            Log.e(TAG, "❌ SpeechRecognizer 사용 불가")
+            _voiceState.value = VoiceState.Error(SpeechRecognizer.ERROR_CLIENT)
+            isUserIntentionallyListening = false
+            return
+        }
+
+        _voiceState.value = VoiceState.Preparing
+
+        ensureRecognizerInitialized()
+
+        try {
+            speechRecognizer?.cancel()
+
+            val langTag = when (locale.language) {
+                "ko" -> "ko-KR"
+                "en" -> "en-US"
+                "ja" -> "ja-JP"
+                "zh" -> if (locale.country == "TW") "zh-TW" else "zh-CN"
+                "id" -> "id-ID"
+                "es" -> "es-ES"
+                "fr" -> "fr-FR"
+                "de" -> "de-DE"
+                "vi" -> "vi-VN"
+                else -> locale.toLanguageTag().ifBlank { "ko-KR" }
             }
 
-            _voiceState.value = VoiceState.Preparing
-
-            ensureRecognizerInitialized()
-
-            try {
-                // 이전 세션 취소하여 깔끔한 상태로 시작
-                speechRecognizer?.cancel()
-
-                val langTag = when (locale.language) {
-                    "ko" -> "ko-KR"
-                    "en" -> "en-US"
-                    "ja" -> "ja-JP"
-                    "zh" -> if (locale.country == "TW") "zh-TW" else "zh-CN"
-                    "id" -> "id-ID"
-                    "es" -> "es-ES"
-                    "fr" -> "fr-FR"
-                    "de" -> "de-DE"
-                    "vi" -> "vi-VN"
-                    else -> locale.toLanguageTag().ifBlank { "ko-KR" }
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, langTag)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langTag)
+                if (langTag != "en-US") {
+                    putExtra("android.speech.extra.ADDITIONAL_LANGUAGES", arrayOf("en-US"))
                 }
-
-                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, langTag)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langTag)
-                    if (langTag != "en-US") {
-                        putExtra("android.speech.extra.ADDITIONAL_LANGUAGES", arrayOf("en-US"))
-                    }
-                    putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
-                    putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                    putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
-                }
-
-                Log.d(TAG, "🚀 startListening 호출 (언어: $langTag)")
-                speechRecognizer?.startListening(intent)
-            } catch (e: Throwable) {
-                Log.e(TAG, "❌ startListening 실행 실패: ${e.message}")
-                _voiceState.value = VoiceState.Error(SpeechRecognizer.ERROR_CLIENT)
+                putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 4000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500L)
             }
+
+            Log.d(TAG, "🚀 startListening 실행 (언어: $langTag)")
+            speechRecognizer?.startListening(intent)
+        } catch (e: Throwable) {
+            Log.e(TAG, "❌ startListening 실행 실패: ${e.message}")
+            _voiceState.value = VoiceState.Error(SpeechRecognizer.ERROR_CLIENT)
+            isUserIntentionallyListening = false
         }
     }
 
     fun stopListening() {
+        isUserIntentionallyListening = false
         mainHandler.post {
             try {
+                if (lastRecognizedText.isNotBlank()) {
+                    _voiceState.value = VoiceState.FinalResult(lastRecognizedText)
+                }
                 speechRecognizer?.stopListening()
             } catch (_: Throwable) {}
         }
     }
 
     fun cancelListening() {
+        isUserIntentionallyListening = false
         mainHandler.post {
             try {
                 speechRecognizer?.cancel()
@@ -180,6 +219,7 @@ class SpeechRecognitionManager(private val context: Context) {
     }
 
     fun destroy() {
+        isUserIntentionallyListening = false
         mainHandler.post {
             try {
                 speechRecognizer?.cancel()
@@ -191,6 +231,7 @@ class SpeechRecognitionManager(private val context: Context) {
     }
 
     fun resetState() {
+        isUserIntentionallyListening = false
         _voiceState.value = VoiceState.Idle
     }
 }

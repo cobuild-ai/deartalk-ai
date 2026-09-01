@@ -54,7 +54,8 @@ fun DearTalkScreen(
     onSpaceClick: () -> Unit,
     onEnterClick: () -> Unit,
     onSwitchToKeyboardClick: () -> Unit,
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onVoiceStudioClick: () -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -160,6 +161,29 @@ fun DearTalkScreen(
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(UiStrings.keyboard, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
+                }
+
+                // 🎙️ 보이스 스튜디오 / 실시간 대면 통역 바로가기 아이콘 (눈에 띄는 비비드 네온 그라데이션)
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onVoiceStudioClick()
+                    },
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            androidx.compose.ui.graphics.Brush.linearGradient(
+                                listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
+                            )
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Translate,
+                        contentDescription = "Voice Studio",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
 
                 // ⚙️ 설정 아이콘 (DearTalk 설정 화면으로 진입)

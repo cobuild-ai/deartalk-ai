@@ -35,6 +35,14 @@
             </intent-filter>
         </activity>
 
+        <!-- 🎙️ 온디바이스 AI 대면 통역 & 보이스 스튜디오 액티비티 -->
+        <activity
+            android:name=".VoiceStudioActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:label="Voice Studio"
+            android:theme="@style/Theme.DearTalk" />
+
         <!-- DearTalk IME Service (핵심 키보드 서비스) -->
         <service
             android:name=".ime.DearTalkIME"
