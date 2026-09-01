@@ -102,6 +102,13 @@ object UiStrings {
     val toneFunny get() = if (isKo) "재미있게" else if (isId) "Lucu" else "Humorous"
     val toneCheeky get() = if (isKo) "당당하게" else if (isId) "Percaya Diri" else "Cheeky"
 
+    val instRefine get() = if (isKo) "문맥을 살려 중복과 어색한 끊김 없이 자연스럽고 유려한 완성형 문장으로 다듬어 작성하세요." else if (isId) "Rapikan menjadi satu kalimat lengkap yang alami dan lancar tanpa pengulangan kata yang janggal." else "Polish into a natural, fluent, and well-structured complete sentence preserving original intent."
+    val instPolite get() = if (isKo) "상대방에게 정중하고 예의 바른 비즈니스 경어체로 다듬어 완성형 문장 하나로 작성하세요." else if (isId) "Ubah menjadi satu kalimat lengkap dengan gaya bahasa yang sopan, santun, dan formal." else "Refine into a polite, respectful, and courteous complete sentence suitable for professional communication."
+    val instCasual get() = if (isKo) "친구에게 대화하듯 부드럽고 친근한 톤으로 자연스러운 완성형 문장 하나로 작성하세요." else if (isId) "Ubah menjadi kalimat santai, hangat, dan ramah seperti mengobrol dengan teman dekat." else "Transform into a friendly, casual, and conversational complete sentence like talking to a friend."
+    val instBusiness get() = if (isKo) "격식 있는 이메일/업무 메신저에 어울리는 명확하고 신뢰감 있는 문장으로 작성하세요." else if (isId) "Tuliskan dalam gaya bisnis yang jelas, ringkas, dan profesional untuk pesan kerja/email." else "Write in a clear, professional, and concise tone ideal for business messaging and email."
+    val instFunny get() = if (isKo) "재치 있고 위트와 유머가 넘치며 빵 터지는 센스 있는 유쾌한 어조로 작성하세요." else if (isId) "Tuliskan dengan gaya yang ceria, penuh humor, lucu, dan menyenangkan." else "Add witty humor and playful charm to create an entertaining and fun sentence."
+    val instCheeky get() = if (isKo) "자신만만하고 쿨하며 살짝 얄밉고 거만하지만 밉지 않은 도도한 반말 어조로 작성하세요." else if (isId) "Tuliskan dengan gaya percaya diri, keren, sedikit nakal tapi tetap memikat." else "Write in a confident, cheeky, and cool attitude that is delightfully bold."
+
     // ═══════════════════════════════════════════════════
     // CustomToneManager.kt — 언어 이름
     // ═══════════════════════════════════════════════════

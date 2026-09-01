@@ -71,7 +71,7 @@ class SequentialVoicePipeline(
         currentJob = pipelineScope.launch {
             try {
                 if (simulatedVoiceText.isBlank()) {
-                    _stage.value = VoicePipelineStage.Error("음성이 감지되지 않았습니다.")
+                    _stage.value = VoicePipelineStage.Error(ai.deartalk.android.data.pref.UiStrings.noSpeechDetected)
                     return@launch
                 }
 
@@ -117,7 +117,7 @@ class SequentialVoicePipeline(
 
             } catch (e: Exception) {
                 Log.e(TAG, "❌ 파이프라인 오류", e)
-                _stage.value = VoicePipelineStage.Error(e.message ?: "음성 처리 중 오류가 발생했습니다.")
+                _stage.value = VoicePipelineStage.Error(e.message ?: ai.deartalk.android.data.pref.UiStrings.errorOccurred)
             }
         }
     }
