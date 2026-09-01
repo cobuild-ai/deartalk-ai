@@ -51,6 +51,8 @@ fun DualCardDisplay(
     aiText: String,
     isListening: Boolean,
     pipelineStage: VoicePipelineStage,
+    sourceLangLabel: String? = null,
+    targetLangLabel: String? = null,
     onReplayClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -61,20 +63,35 @@ fun DualCardDisplay(
             colors = CardDefaults.cardColors(containerColor = DearTalkSurface)
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (isListening) Icons.Default.GraphicEq else Icons.Default.Mic,
-                        contentDescription = null,
-                        tint = if (isListening) Color(0xFFEF4444) else DearTalkSecondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (isListening) UiStrings.rawSttListening else UiStrings.rawSttTitle,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isListening) Color(0xFFEF4444) else DearTalkSecondary
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isListening) Icons.Default.GraphicEq else Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = if (isListening) Color(0xFFEF4444) else DearTalkSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isListening) UiStrings.rawSttListening else UiStrings.rawSttTitle,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isListening) Color(0xFFEF4444) else DearTalkSecondary
+                        )
+                    }
+
+                    if (!sourceLangLabel.isNullOrBlank()) {
+                        Text(
+                            text = sourceLangLabel,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DearTalkSecondary
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -104,6 +121,10 @@ fun DualCardDisplay(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(UiStrings.aiResultTitle, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkPrimary)
+                        if (!targetLangLabel.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("($targetLangLabel)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DearTalkPrimary)
+                        }
                     }
                     IconButton(onClick = onReplayClick, modifier = Modifier.size(28.dp)) {
                         Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = UiStrings.replayButtonDesc, tint = DearTalkSecondary, modifier = Modifier.size(18.dp))

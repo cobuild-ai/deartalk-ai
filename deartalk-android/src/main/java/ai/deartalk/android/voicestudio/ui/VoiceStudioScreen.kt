@@ -317,11 +317,35 @@ fun VoiceStudioScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // 📋 5. Dual-Card 화면 (원문 STT + AI 조율 텍스트)
+            val srcLabel = if (selectedMode == 1) {
+                when (sourceLanguage) {
+                    "KO" -> "🇰🇷 한국어"
+                    "EN" -> "🇺🇸 English"
+                    "JA" -> "🇯🇵 日本語"
+                    "ZH" -> "🇨🇳 中文"
+                    "ID" -> "🇮🇩 Indonesia"
+                    else -> sourceLanguage
+                }
+            } else null
+
+            val tgtLabel = if (selectedMode == 1) {
+                when (targetLanguage) {
+                    "KO" -> "🇰🇷 한국어"
+                    "EN" -> "🇺🇸 English"
+                    "JA" -> "🇯🇵 日本語"
+                    "ZH" -> "🇨🇳 中文"
+                    "ID" -> "🇮🇩 Indonesia"
+                    else -> targetLanguage
+                }
+            } else null
+
             DualCardDisplay(
                 rawText = if (rawTextDisplay.isBlank()) UiStrings.initialRawPrompt else rawTextDisplay,
                 aiText = if (aiTextDisplay.isBlank()) UiStrings.initialAiPrompt else aiTextDisplay,
                 isListening = isListening,
                 pipelineStage = pipelineStage,
+                sourceLangLabel = srcLabel,
+                targetLangLabel = tgtLabel,
                 onReplayClick = { executeDirectSpeech(aiTextDisplay) }
             )
 

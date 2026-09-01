@@ -76,41 +76,60 @@ class SequentialVoicePipeline(
                 }
 
                 val isQwen = modelLifecycleManager.isInstalled()
-                Log.d(TAG, "🎙️ [1단계: STT 음성인식 완료] 원문: '$simulatedVoiceText' (입력언어: $sourceLang, 출력언어: $targetLang, Qwen: $isQwen)")
+
+                // 🌟 2-Way 통역 지능형 언어 감지 및 자동 반전(Auto-Swap)
+                val detectedLang = ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(simulatedVoiceText, fallback = sourceLang)
+                var effectiveSourceLang = sourceLang
+                var effectiveTargetLang = targetLang
+
+                if (tone == null && !sourceLang.equals(targetLang, ignoreCase = true)) {
+                    // 통역 모드: 사용자가 실제로 말한 언어가 targetLang과 일치하면 자동으로 통역 방향 반전
+                    if (detectedLang.equals(targetLang, ignoreCase = true)) {
+                        effectiveSourceLang = targetLang
+                        effectiveTargetLang = sourceLang
+                        Log.d(TAG, "🔄 [2-Way 통역 자동 반전 감지]: 실제 발화 언어($detectedLang)에 맞춰 $effectiveSourceLang ➔ $effectiveTargetLang 으로 자동 스왑")
+                    } else if (detectedLang.equals(sourceLang, ignoreCase = true)) {
+                        effectiveSourceLang = sourceLang
+                        effectiveTargetLang = targetLang
+                    }
+                }
+
+                Log.d(TAG, "🎙️ [1단계: STT 음성인식 완료] 원문: '$simulatedVoiceText' (감지언어: $detectedLang, 통역방향: $effectiveSourceLang ➔ $effectiveTargetLang, Qwen: $isQwen)")
                 _stage.value = VoicePipelineStage.ProcessingSTT(1.0f)
                 delay(80) // UI 반응용 마이크로 딜레이
 
                 // 2단계: LLM 문맥 정제 또는 다국어 번역
-                Log.d(TAG, "🧠 [2단계: LLM 문맥/번역 시작] $sourceLang ➔ $targetLang (톤: $tone)")
+                Log.d(TAG, "🧠 [2단계: LLM 문맥/번역 시작] $effectiveSourceLang ➔ $effectiveTargetLang (톤: $tone)")
                 _stage.value = VoicePipelineStage.RefiningLLM(simulatedVoiceText)
 
-                val refinedText = if (targetLang.equals("KO", ignoreCase = true) && tone == null && sourceLang.equals("KO", ignoreCase = true)) {
+                val refinedText = if (effectiveTargetLang.equals(effectiveSourceLang, ignoreCase = true) && tone == null) {
                     when (val res = intentEngine.processIntent(simulatedVoiceText)) {
                         is IntentResult.Success -> res.text
                         is IntentResult.Error -> res.fallbackText
                     }
-                } else if (tone != null && targetLang.equals("KO", ignoreCase = true) && sourceLang.equals("KO", ignoreCase = true)) {
+                } else if (tone != null && effectiveTargetLang.equals(effectiveSourceLang, ignoreCase = true)) {
                     when (val res = intentEngine.applyTone(simulatedVoiceText, tone)) {
                         is IntentResult.Success -> res.text
                         is IntentResult.Error -> res.fallbackText
                     }
                 } else {
-                    val translated = intentEngine.translate(simulatedVoiceText, targetLang, sourceLang, tone)
+                    val translated = intentEngine.translate(simulatedVoiceText, effectiveTargetLang, effectiveSourceLang, tone)
                     if (translated.isNotBlank()) translated else simulatedVoiceText
                 }
 
-                // 3단계: TTS 음성 합성
-                Log.d(TAG, "🔊 [3단계: TTS 음성합성 시작] 결과: '$refinedText' (성별: $gender, 피치: $pitch)")
+                // 3단계: TTS 음성 합성 (번역 결과 텍스트의 언어에 맞춰 TTS 엔진 완벽 매칭)
+                val ttsLangCode = ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(refinedText, fallback = effectiveTargetLang)
+                Log.d(TAG, "🔊 [3단계: TTS 음성합성 시작] 결과: '$refinedText' (TTS언어: $ttsLangCode, 성별: $gender, 피치: $pitch)")
                 _stage.value = VoicePipelineStage.SynthesizingTTS(refinedText)
 
                 if (autoSpeak) {
-                    ttsManager.speak(refinedText, targetLang, gender, pitch)
+                    ttsManager.speak(refinedText, ttsLangCode, gender, pitch)
                 }
 
                 _stage.value = VoicePipelineStage.Completed(
                     rawText = simulatedVoiceText,
                     aiText = refinedText,
-                    targetLang = targetLang,
+                    targetLang = effectiveTargetLang,
                     isQwenEngine = isQwen
                 )
                 Log.d(TAG, "🎉 [파이프라인 완결] 성공")
