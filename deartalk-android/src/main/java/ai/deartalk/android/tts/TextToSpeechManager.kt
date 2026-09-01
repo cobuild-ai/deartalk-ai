@@ -18,6 +18,7 @@ class TextToSpeechManager(context: Context) {
 
     private var tts: TextToSpeech? = null
     private var isInitialized = false
+    private var activeLocale: Locale = Locale.getDefault()
     private var currentGender = VoiceGender.FEMALE
     private var currentPitch = 1.0f
     private var currentRate = 1.0f
@@ -28,7 +29,10 @@ class TextToSpeechManager(context: Context) {
                 val defaultLocale = Locale.getDefault()
                 val res = tts?.setLanguage(defaultLocale)
                 if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    tts?.language = Locale.KOREAN
+                    tts?.setLanguage(Locale.KOREAN)
+                    activeLocale = Locale.KOREAN
+                } else {
+                    activeLocale = defaultLocale
                 }
                 isInitialized = true
                 applyVoiceConfig()
@@ -55,7 +59,7 @@ class TextToSpeechManager(context: Context) {
     private fun applyVoiceConfig(targetLocale: Locale? = null) {
         if (!isInitialized || tts == null) return
 
-        val loc = targetLocale ?: tts?.language ?: Locale.KOREAN
+        val loc = targetLocale ?: activeLocale
         val availableVoices = tts?.voices ?: emptySet()
 
         // 1. 해당 언어의 여성/남성 음성 탐색
@@ -101,20 +105,7 @@ class TextToSpeechManager(context: Context) {
             currentGender = gender
             currentPitch = pitch
 
-            val targetLocale = when (targetLangCode.uppercase()) {
-                "EN" -> Locale.US
-                "ES" -> Locale("es", "ES")
-                "FR" -> Locale.FRANCE
-                "DE" -> Locale.GERMANY
-                "JA" -> Locale.JAPAN
-                "ZH" -> Locale.CHINESE
-                "ID" -> Locale("id", "ID")
-                "VI" -> Locale("vi", "VN")
-                "TL", "FIL" -> Locale("fil", "PH")
-                "TH" -> Locale("th", "TH")
-                "MS" -> Locale("ms", "MY")
-                else -> Locale.KOREAN
-            }
+            val targetLocale = ai.deartalk.android.util.LanguageLocaleHelper.getLocaleForCode(targetLangCode)
 
             try {
                 tts?.setLanguage(targetLocale)

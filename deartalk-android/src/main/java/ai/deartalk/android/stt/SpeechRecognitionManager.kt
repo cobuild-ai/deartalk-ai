@@ -159,18 +159,7 @@ class SpeechRecognitionManager(private val context: Context) {
         try {
             speechRecognizer?.cancel()
 
-            val langTag = when (locale.language) {
-                "ko" -> "ko-KR"
-                "en" -> "en-US"
-                "ja" -> "ja-JP"
-                "zh" -> if (locale.country == "TW") "zh-TW" else "zh-CN"
-                "id" -> "id-ID"
-                "es" -> "es-ES"
-                "fr" -> "fr-FR"
-                "de" -> "de-DE"
-                "vi" -> "vi-VN"
-                else -> locale.toLanguageTag().ifBlank { "ko-KR" }
-            }
+            val langTag = ai.deartalk.android.util.LanguageLocaleHelper.getLanguageTag(locale)
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
