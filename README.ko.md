@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.4` | **Android 15 (API 35)** | **상용 안정화 버전 (Production Stable)** | 온디바이스 Voice Studio & 실시간 대면 통역기, 2-Way 언어 맞바꾸기, PAD On-Demand 생명주기, RAM 사전 진단, 로케일 반응형 쿼티 자판, LiteRT GPU |
+| 🤖 **DearTalk Android IME** | `v1.0.5` | **Android 15 (API 35)** | **상용 안정화 버전 (Production Stable)** | 1-Tap 대화 파트너 언어 선택 UX, 지능형 양방향 자동 반전(Auto-Swap), 스크립트 일치 TTS 엔진, Voice Studio & 실시간 대면 통역기, LiteRT GPU |
 
 ---
 

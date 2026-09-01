@@ -27,7 +27,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.4` | **Android 15 (API 35)** | **Produksi Stabil (Production Stable)** | Voice Studio & Penerjemah Langsung On-Device, Pertukaran Bahasa 2-Arah, Siklus PAD On-Demand, Diagnosis RAM, Papan Ketik Responsif Bahasa, Akselerasi GPU LiteRT |
+| 🤖 **DearTalk Android IME** | `v1.0.5` | **Android 15 (API 35)** | **Produksi Stabil (Production Stable)** | UX Pasangan Bahasa 1-Ketuk, Pembalikan Otomatis Cerdas 2-Arah (Auto-Swap), Mesin TTS Sesuai Aksara, Voice Studio & Penerjemah Langsung, Akselerasi GPU LiteRT |
 
 ---
 

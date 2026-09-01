@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.5] - 2026-09-02
+
+### Added
+- **1-Tap Partner Language Pair UX (`TargetLanguageSelectorRow`)**:
+  - Replaced legacy 2-way input/output dropdowns with a minimalist single-tap partner language selector.
+  - Automatically binds primary language to device/app system locale and forms bi-directional conversation pairs (`🇰🇷 한국어 ⇄ 🇺🇸 English`).
+- **Smart Bi-Directional Auto-Swap (`LanguageLocaleHelper.detectLanguageCode`)**:
+  - Automatically identifies script types (Hangul, Latin/English, Japanese Kana, Chinese Hanzi, Thai) in voice speech and dynamically swaps interpretation direction without requiring manual button presses.
+- **Script-Aware Multi-language TTS Engine**:
+  - Dynamically binds the synthesized voice engine to match the actual script of the generated translation text for pristine vocal accuracy.
+- **Unified High-Performance Qwen Sharing & Adaptive AI Tiers (`ActiveAiTier`)**:
+  - Shared downloaded Qwen 1.7B Instruct model across Keyboard IME and Voice Studio.
+  - Added 3-tier intelligence state machine (`HIGH_QWEN`, `BASE_GEMMA`, `STT_ONLY`) with zero-failure pure STT support on budget devices.
+
+### Fixed
+- **Multilingual Tone Instructions & Pipeline Error Localization**:
+  - Converted tone instructions and pipeline exception messages into localized `UiStrings` properties across EN, KO, and ID.
+
+---
+
 ## [1.0.4] - 2026-09-01
 
 ### Added
