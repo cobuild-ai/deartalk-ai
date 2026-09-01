@@ -19,6 +19,13 @@ class UiStringsLocaleTest {
         assertEquals("App Version", UiStrings.appVersionLabel)
         assertEquals("Last Updated", UiStrings.buildTimestampLabel)
         assertEquals("📖 DearTalk AI Quick Guide", UiStrings.userGuideTitle)
+        assertEquals("🎙️ DearTalk Voice Studio", UiStrings.voiceStudioTitle)
+        assertEquals("✨ Tone Transformation", UiStrings.modeToneTransform)
+        assertEquals("🌐 Live Interpretation", UiStrings.modeLiveTranslation)
+        assertEquals("👩 Female Voice", UiStrings.voiceFemale)
+        assertEquals("👨 Male Voice", UiStrings.voiceMale)
+        assertEquals("What You Said (STT)", UiStrings.rawSttTitle)
+        assertEquals("✨ AI Refined & Translated", UiStrings.aiResultTitle)
 
         // 2. 한국어 오버라이드 테스트
         UiStrings.setLocale(Locale.KOREAN)
@@ -30,5 +37,24 @@ class UiStringsLocaleTest {
         assertEquals("앱 버전", UiStrings.appVersionLabel)
         assertEquals("업데이트 일시", UiStrings.buildTimestampLabel)
         assertEquals("📖 DearTalk AI 쉽게 쓰는 법", UiStrings.userGuideTitle)
+        assertEquals("🎙️ DearTalk 보이스 스튜디오", UiStrings.voiceStudioTitle)
+        assertEquals("✨ 고운말 톤 변환", UiStrings.modeToneTransform)
+        assertEquals("🌐 실시간 다국어 통역", UiStrings.modeLiveTranslation)
+        assertEquals("👩 여성 음성", UiStrings.voiceFemale)
+        assertEquals("👨 남성 음성", UiStrings.voiceMale)
+        assertEquals("내가 말한 내용 (STT)", UiStrings.rawSttTitle)
+        assertEquals("✨ AI 조율 및 번역 결과", UiStrings.aiResultTitle)
+
+        // 3. 인도네시아어 오버라이드 테스트
+        UiStrings.setLocale(Locale("id", "ID"))
+        assertEquals("Rapikan", UiStrings.toneRefine)
+        assertEquals("Sopan", UiStrings.tonePolite)
+        assertEquals("🎙️ Studio Suara DearTalk", UiStrings.voiceStudioTitle)
+        assertEquals("✨ Transformasi Gaya Bicara", UiStrings.modeToneTransform)
+        assertEquals("🌐 Penerjemah Langsung", UiStrings.modeLiveTranslation)
+        assertEquals("👩 Suara Wanita", UiStrings.voiceFemale)
+        assertEquals("👨 Suara Pria", UiStrings.voiceMale)
+        assertEquals("Yang Anda Katakan (STT)", UiStrings.rawSttTitle)
+        assertEquals("✨ Hasil AI & Terjemahan", UiStrings.aiResultTitle)
     }
 }

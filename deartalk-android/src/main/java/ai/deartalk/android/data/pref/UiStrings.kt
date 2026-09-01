@@ -179,4 +179,105 @@ object UiStrings {
         "4. Tap tone chips like [Polite], [Casual], or [Business] to polish your style.\n" +
         "5. Check the refined sentence and tap [Apply 📥] to insert it instantly."
     }
+    // ═══════════════════════════════════════════════════
+    // VoiceStudioActivity.kt — 온디바이스 보이스 스튜디오 & 실시간 통역기
+    // ═══════════════════════════════════════════════════
+    val voiceStudioTitle get() = if (isKo) "🎙️ DearTalk 보이스 스튜디오" else if (isId) "🎙️ Studio Suara DearTalk" else "🎙️ DearTalk Voice Studio"
+    val backButtonContentDesc get() = if (isKo) "뒤로가기" else if (isId) "Kembali" else "Back"
+
+    // 1. 하드웨어 진단 및 모델 상태
+    fun diagOptimal(ram: String, storage: String) = if (isKo) "🟢 최적 사양 (RAM ${ram}GB / 여유 ${storage}GB)" else if (isId) "🟢 Spesifikasi Optimal (RAM ${ram}GB / Bebas ${storage}GB)" else "🟢 Optimal Spec (RAM ${ram}GB / Free ${storage}GB)"
+    fun diagCaution(ram: String) = if (isKo) "🟡 주의 사양 (RAM ${ram}GB - 순차 파이프라인 구동)" else if (isId) "🟡 Perhatian (RAM ${ram}GB - Alur Kerja Sekuensial)" else "🟡 Caution (RAM ${ram}GB - Sequential Pipeline)"
+    fun diagRestricted(ram: String) = if (isKo) "🔴 사양 제한 (RAM ${ram}GB - 기본 엔진 권장)" else if (isId) "🔴 Terbatas (RAM ${ram}GB - Disarankan Mesin Standar)" else "🔴 Restricted (RAM ${ram}GB - Standard Engine Recommended)"
+    
+    val diagModelTitle get() = if (isKo) "Qwen 고품질 온디바이스 패키지" else if (isId) "Paket AI Kualitas Tinggi Qwen" else "Qwen High-Quality AI Package"
+    val diagModelSubtitle get() = if (isKo) "STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB" else if (isId) "STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB" else "STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB"
+    val diagDownloadBtn get() = if (isKo) "다운로드" else if (isId) "Unduh" else "Download"
+    val diagDownloadingLabel get() = if (isKo) "고품질 패키지 다운로드 중..." else if (isId) "Mengunduh paket kualitas tinggi..." else "Downloading High-Quality Package..."
+    val diagActiveLabel get() = if (isKo) "Qwen 고성능 엔진 활성화됨" else if (isId) "Mesin Qwen Performa Tinggi Aktif" else "Qwen Neural Engine Active"
+    val diagPurgeContentDesc get() = if (isKo) "모델 패키지 삭제" else if (isId) "Hapus paket model" else "Purge model package"
+    fun diagErrorLabel(msg: String) = if (isKo) "⚠️ 다운로드 오류: $msg" else if (isId) "⚠️ Kesalahan unduhan: $msg" else "⚠️ Download error: $msg"
+
+    // 2. 모드 탭
+    val modeToneTransform get() = if (isKo) "✨ 고운말 톤 변환" else if (isId) "✨ Transformasi Gaya Bicara" else "✨ Tone Transformation"
+    val modeLiveTranslation get() = if (isKo) "🌐 실시간 다국어 통역" else if (isId) "🌐 Penerjemah Langsung" else "🌐 Live Interpretation"
+
+    // 3. 2-Way 통역 언어 바
+    val inputHeaderLabel get() = if (isKo) "🗣️ 입력: " else if (isId) "🗣️ Masukan: " else "🗣️ Input: "
+    val outputHeaderLabel get() = if (isKo) "🌐 번역: " else if (isId) "🌐 Terjemahan: " else "🌐 Output: "
+    val swapLangContentDesc get() = if (isKo) "입력/출력 언어 맞바꾸기" else if (isId) "Tukar bahasa masukan/keluaran" else "Swap input and output languages"
+    val step1SpokenLang get() = if (isKo) "1️⃣ 내가 말할 언어 (마이크 입력):" else if (isId) "1️⃣ Bahasa yang diucapkan (Masukan):" else "1️⃣ Spoken Language (Mic Input):"
+    val step2TargetLang get() = if (isKo) "2️⃣ AI가 번역할 언어 (스피커 출력):" else if (isId) "2️⃣ Bahasa terjemahan AI (Keluaran):" else "2️⃣ Target Language (Speaker Output):"
+
+    // 4. 언어 표시명 (국기 + 현지화 이름)
+    fun getLangDisplayName(code: String): String = when (code.uppercase()) {
+        "KO" -> if (isKo) "🇰🇷 한국어" else if (isId) "🇰🇷 Bahasa Korea" else "🇰🇷 Korean"
+        "EN" -> if (isKo) "🇺🇸 영어" else if (isId) "🇺🇸 Bahasa Inggris" else "🇺🇸 English"
+        "JA" -> if (isKo) "🇯🇵 일본어" else if (isId) "🇯🇵 Bahasa Jepang" else "🇯🇵 Japanese"
+        "ZH" -> if (isKo) "🇨🇳 중국어" else if (isId) "🇨🇳 Bahasa Mandarin" else "🇨🇳 Chinese"
+        "ES" -> if (isKo) "🇪🇸 스페인어" else if (isId) "🇪🇸 Bahasa Spanyol" else "🇪🇸 Spanish"
+        "FR" -> if (isKo) "🇫🇷 프랑스어" else if (isId) "🇫🇷 Bahasa Prancis" else "🇫🇷 French"
+        "DE" -> if (isKo) "🇩🇪 독일어" else if (isId) "🇩🇪 Bahasa Jerman" else "🇩🇪 German"
+        "ID" -> if (isKo) "🇮🇩 인도네시아어" else if (isId) "🇮🇩 Bahasa Indonesia" else "🇮🇩 Indonesian"
+        "VI" -> if (isKo) "🇻🇳 베트남어" else if (isId) "🇻🇳 Bahasa Vietnam" else "🇻🇳 Vietnamese"
+        "TL", "FIL" -> if (isKo) "🇵🇭 필리핀어" else if (isId) "🇵🇭 Bahasa Filipino" else "🇵🇭 Tagalog"
+        "TH" -> if (isKo) "🇹🇭 태국어" else if (isId) "🇹🇭 Bahasa Thai" else "🇹🇭 Thai"
+        "MS" -> if (isKo) "🇲🇾 말레이어" else if (isId) "🇲🇾 Bahasa Melayu" else "🇲🇾 Malay"
+        else -> code
+    }
+
+    // 5. 음성 커스터마이저
+    val voiceToneCustomizerTitle get() = if (isKo) "🎙️ 발화 음색" else if (isId) "🎙️ Karakter Suara" else "🎙️ Vocal Timbre"
+    val voiceFemale get() = if (isKo) "👩 여성 음성" else if (isId) "👩 Suara Wanita" else "👩 Female Voice"
+    val voiceMale get() = if (isKo) "👨 남성 음성" else if (isId) "👨 Suara Pria" else "👨 Male Voice"
+    val pitchMatchingLabel get() = if (isKo) "🎚️ 톤 매칭:" else if (isId) "🎚️ Nada Suara:" else "🎚️ Pitch Match:"
+    val pitchNormal get() = if (isKo) "보통" else if (isId) "Normal" else "Normal"
+    val pitchDeepLow get() = if (isKo) "중후한 저음" else if (isId) "Bass Dalam" else "Deep Low"
+    val pitchWarmMid get() = if (isKo) "부드러운 중음" else if (isId) "Sedang Hangat" else "Warm Mid"
+    val pitchBrightHigh get() = if (isKo) "밝은 고음" else if (isId) "Tinggi Cerah" else "Bright High"
+
+    // 6. 결과 표시 카드
+    val rawSttTitle get() = if (isKo) "내가 말한 내용 (STT)" else if (isId) "Yang Anda Katakan (STT)" else "What You Said (STT)"
+    val rawSttListening get() = if (isKo) "음성 인식 중..." else if (isId) "Mendengarkan..." else "Listening..."
+    val aiResultTitle get() = if (isKo) "✨ AI 조율 및 번역 결과" else if (isId) "✨ Hasil AI & Terjemahan" else "✨ AI Refined & Translated"
+    val replayButtonDesc get() = if (isKo) "다시 듣기" else if (isId) "Putar Ulang" else "Listen Again"
+    val initialRawPrompt get() = if (isKo) "하단의 마이크 버튼을 누르고 말씀해 보세요." else if (isId) "Ketuk tombol mikrofon di bawah dan bicaralah." else "Tap the mic button below and start speaking."
+    val initialAiPrompt get() = if (isKo) "AI가 정제한 결과가 이곳에 표시됩니다." else if (isId) "Hasil yang dirapikan AI akan muncul di sini." else "AI refined output will appear here."
+    val noSpeechDetected get() = if (isKo) "음성이 감지되지 않았습니다. 다시 탭하고 말씀해 보세요." else if (isId) "Suara tidak terdeteksi. Silakan ketuk lagi dan bicara." else "No speech detected. Please tap again and speak."
+    val micPermissionNeeded get() = if (isKo) "음성 인식을 위해 마이크 권한이 필요합니다." else if (isId) "Izin mikrofon diperlukan untuk pengenalan suara." else "Microphone permission is required for speech recognition."
+
+    // 7. 메인 마이크 버튼
+    val micBtnPreparing get() = if (isKo) "⏳ 마이크 준비 중..." else if (isId) "⏳ Menyiapkan mikrofon..." else "⏳ Preparing mic..."
+    val micBtnListening get() = if (isKo) "🔴 녹음 중... (탭하여 완료)" else if (isId) "🔴 Merekam... (Ketuk untuk selesai)" else "🔴 Recording... (Tap to finish)"
+    val micBtnProcessing get() = if (isKo) "✨ AI 정제 및 번역 중..." else if (isId) "✨ AI sedang merapikan & menerjemahkan..." else "✨ AI Refining & Translating..."
+    val micBtnIdle get() = if (isKo) "탭하여 마이크로 말하기" else if (isId) "Ketuk untuk berbicara" else "Tap to speak"
+
+    val contentDescPreparing get() = if (isKo) "준비 중" else if (isId) "Menyiapkan" else "Preparing"
+    val contentDescStop get() = if (isKo) "녹음 중지" else if (isId) "Hentikan perekaman" else "Stop recording"
+    val contentDescSpeak get() = if (isKo) "말하기" else if (isId) "Bicara" else "Speak"
+
+    // 8. 빠른 테스트 문장 (로케일 맞춤형)
+    val quickTestTitle get() = if (isKo) "💡 빠른 테스트 문장" else if (isId) "💡 Contoh Kalimat Cepat" else "💡 Quick Test Sentences"
+    val quickSamples: List<String> get() = if (isKo) {
+        listOf(
+            "오늘 밥 같이 먹을래?",
+            "차 막혀서 늦을 것 같아 미안해",
+            "자료 검토 후 회신 부탁드립니다",
+            "이 제품 가격이 어떻게 되나요?"
+        )
+    } else if (isId) {
+        listOf(
+            "Mau makan bareng hari ini?",
+            "Maaf sepertinya saya terlambat karena macet",
+            "Mohon balas setelah meninjau dokumen",
+            "Berapa harga produk ini?"
+        )
+    } else {
+        listOf(
+            "Do you want to grab lunch today?",
+            "Sorry, I might be late due to traffic",
+            "Please reply after reviewing the documents",
+            "How much is this item?"
+        )
+    }
 }

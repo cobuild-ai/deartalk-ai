@@ -86,6 +86,8 @@ import ai.deartalk.android.data.DeviceTierRating
 import ai.deartalk.android.data.ModelLifecycleManager
 import ai.deartalk.android.data.ModelPackState
 import ai.deartalk.android.data.SystemDiagnosticManager
+import ai.deartalk.android.data.pref.DearTalkSettings
+import ai.deartalk.android.data.pref.UiStrings
 import ai.deartalk.android.ime.ui.MicUiState
 import ai.deartalk.android.ime.ui.theme.DearTalkBackground
 import ai.deartalk.android.ime.ui.theme.DearTalkKey
@@ -111,6 +113,9 @@ class VoiceStudioActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 사용자 설정 언어로 다국어 리소스 동기화
+        UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
 
         diagnosticManager = SystemDiagnosticManager(this)
         modelLifecycleManager = ModelLifecycleManager(this)
@@ -139,8 +144,9 @@ class VoiceStudioActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        sttManager.destroy()
         voicePipeline.releaseMemory()
+        sttManager.destroy()
+        ttsManager.shutdown()
     }
 }
 
@@ -161,14 +167,17 @@ fun VoiceStudioScreen(
 
     var systemMetrics by remember { mutableStateOf(diagnosticManager.diagnose()) }
     var selectedMode by remember { mutableStateOf(0) } // 0: 고운말 톤 변환, 1: 실시간 다국어 통역
-    var selectedTone by remember { mutableStateOf("공손하게") }
-    var sourceLanguage by remember { mutableStateOf("KO") } // 🗣️ 내가 말할 언어 (STT 입력)
-    var targetLanguage by remember { mutableStateOf("JA") } // 🌐 번역할 목표 언어 (TTS 출력)
+    var selectedTone by remember { mutableStateOf(UiStrings.tonePolite) }
+    var sourceLanguage by remember { mutableStateOf(if (UiStrings.isKo) "KO" else if (UiStrings.isId) "ID" else "EN") }
+    var targetLanguage by remember { mutableStateOf(if (UiStrings.isKo) "JA" else "KO") }
     var selectedGender by remember { mutableStateOf(ai.deartalk.android.tts.VoiceGender.FEMALE) }
     var selectedPitch by remember { mutableStateOf(1.0f) }
     var micUiState by remember { mutableStateOf(MicUiState.IDLE) }
-    var rawTextDisplay by remember { mutableStateOf("하단의 마이크 버튼을 누르고 말씀해 보세요.") }
-    var aiTextDisplay by remember { mutableStateOf("AI가 정제한 결과가 이곳에 표시됩니다.") }
+    
+    // 명확한 상태 관리: 원문 및 AI 결과 텍스트 (문자열 startsWith 파싱 제거)
+    var rawTextDisplay by remember { mutableStateOf("") }
+    var aiTextDisplay by remember { mutableStateOf("") }
+    var hasValidResult by remember { mutableStateOf(false) }
 
     val isListening = micUiState == MicUiState.LISTENING
 
@@ -192,10 +201,10 @@ fun VoiceStudioScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val targetLocale = getLocaleForCode(if (selectedMode == 1) sourceLanguage else "KO")
+            val targetLocale = getLocaleForCode(if (selectedMode == 1) sourceLanguage else if (UiStrings.isKo) "KO" else "EN")
             sttManager.startListening(targetLocale)
         } else {
-            Toast.makeText(context, "음성 인식을 위해 마이크 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, UiStrings.micPermissionNeeded, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -208,24 +217,24 @@ fun VoiceStudioScreen(
         when (val state = sttVoiceState) {
             is VoiceState.Preparing -> {
                 micUiState = MicUiState.PREPARING
-                rawTextDisplay = "마이크 준비 중..."
             }
             is VoiceState.Listening -> {
                 micUiState = MicUiState.LISTENING
-                rawTextDisplay = "🎤 듣고 있습니다... 말씀해 주세요."
             }
             is VoiceState.PartialResult -> {
                 micUiState = MicUiState.LISTENING
                 rawTextDisplay = state.text
+                hasValidResult = true
             }
             is VoiceState.FinalResult -> {
                 micUiState = MicUiState.PROCESSING_AI
                 rawTextDisplay = state.text
+                hasValidResult = true
                 if (state.text.isNotBlank()) {
                     voicePipeline.processVoiceInput(
                         simulatedVoiceText = state.text,
-                        targetLang = if (selectedMode == 1) targetLanguage else "KO",
-                        sourceLang = if (selectedMode == 1) sourceLanguage else "KO",
+                        targetLang = if (selectedMode == 1) targetLanguage else if (UiStrings.isKo) "KO" else "EN",
+                        sourceLang = if (selectedMode == 1) sourceLanguage else if (UiStrings.isKo) "KO" else "EN",
                         tone = if (selectedMode == 0) selectedTone else null,
                         gender = selectedGender,
                         pitch = selectedPitch
@@ -234,8 +243,8 @@ fun VoiceStudioScreen(
             }
             is VoiceState.Error -> {
                 micUiState = MicUiState.IDLE
-                if (rawTextDisplay.startsWith("🎤") || rawTextDisplay.startsWith("마이크")) {
-                    rawTextDisplay = "음성이 감지되지 않았습니다. 다시 탭하고 말씀해 보세요."
+                if (!hasValidResult) {
+                    rawTextDisplay = UiStrings.noSpeechDetected
                 }
             }
             is VoiceState.Idle -> {
@@ -252,7 +261,7 @@ fun VoiceStudioScreen(
             is VoicePipelineStage.RefiningLLM -> {
                 micUiState = MicUiState.PROCESSING_AI
                 rawTextDisplay = stage.rawText
-                aiTextDisplay = "✨ AI가 문맥과 언어를 정제하고 있습니다..."
+                hasValidResult = true
             }
             is VoicePipelineStage.SynthesizingTTS -> {
                 micUiState = MicUiState.PROCESSING_AI
@@ -262,6 +271,7 @@ fun VoiceStudioScreen(
                 micUiState = MicUiState.IDLE
                 rawTextDisplay = stage.rawText
                 aiTextDisplay = stage.aiText
+                hasValidResult = true
             }
             is VoicePipelineStage.Error -> {
                 micUiState = MicUiState.IDLE
@@ -277,7 +287,7 @@ fun VoiceStudioScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "🎙️ DearTalk Voice Studio",
+                            text = UiStrings.voiceStudioTitle,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = DearTalkText
@@ -286,7 +296,7 @@ fun VoiceStudioScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기", tint = DearTalkText)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = UiStrings.backButtonContentDesc, tint = DearTalkText)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DearTalkBackground)
@@ -322,12 +332,12 @@ fun VoiceStudioScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 ModeTabButton(
-                    title = "✨ 고운말 톤 변환",
+                    title = UiStrings.modeToneTransform,
                     isSelected = selectedMode == 0,
                     onClick = { selectedMode = 0 }
                 )
                 ModeTabButton(
-                    title = "🌐 실시간 다국어 통역",
+                    title = UiStrings.modeLiveTranslation,
                     isSelected = selectedMode == 1,
                     onClick = { selectedMode = 1 }
                 )
@@ -341,11 +351,11 @@ fun VoiceStudioScreen(
                     selectedTone = selectedTone,
                     onToneSelected = { newTone ->
                         selectedTone = newTone
-                        if (rawTextDisplay.isNotBlank() && !rawTextDisplay.startsWith("하단의") && !rawTextDisplay.startsWith("🎤") && !rawTextDisplay.startsWith("음성")) {
+                        if (hasValidResult && rawTextDisplay.isNotBlank()) {
                             voicePipeline.processVoiceInput(
                                 simulatedVoiceText = rawTextDisplay,
-                                targetLang = "KO",
-                                sourceLang = "KO",
+                                targetLang = if (UiStrings.isKo) "KO" else "EN",
+                                sourceLang = if (UiStrings.isKo) "KO" else "EN",
                                 tone = newTone,
                                 gender = selectedGender,
                                 pitch = selectedPitch
@@ -358,7 +368,7 @@ fun VoiceStudioScreen(
                     sourceLang = sourceLanguage,
                     onSourceLangSelected = { newSource ->
                         sourceLanguage = newSource
-                        if (rawTextDisplay.isNotBlank() && !rawTextDisplay.startsWith("하단의") && !rawTextDisplay.startsWith("🎤") && !rawTextDisplay.startsWith("음성")) {
+                        if (hasValidResult && rawTextDisplay.isNotBlank()) {
                             voicePipeline.processVoiceInput(
                                 simulatedVoiceText = rawTextDisplay,
                                 targetLang = targetLanguage,
@@ -372,7 +382,7 @@ fun VoiceStudioScreen(
                     targetLang = targetLanguage,
                     onTargetLangSelected = { newTarget ->
                         targetLanguage = newTarget
-                        if (rawTextDisplay.isNotBlank() && !rawTextDisplay.startsWith("하단의") && !rawTextDisplay.startsWith("🎤") && !rawTextDisplay.startsWith("음성")) {
+                        if (hasValidResult && rawTextDisplay.isNotBlank()) {
                             voicePipeline.processVoiceInput(
                                 simulatedVoiceText = rawTextDisplay,
                                 targetLang = newTarget,
@@ -387,7 +397,7 @@ fun VoiceStudioScreen(
                         val temp = sourceLanguage
                         sourceLanguage = targetLanguage
                         targetLanguage = temp
-                        if (rawTextDisplay.isNotBlank() && !rawTextDisplay.startsWith("하단의") && !rawTextDisplay.startsWith("🎤") && !rawTextDisplay.startsWith("음성")) {
+                        if (hasValidResult && rawTextDisplay.isNotBlank()) {
                             voicePipeline.processVoiceInput(
                                 simulatedVoiceText = rawTextDisplay,
                                 targetLang = temp,
@@ -403,15 +413,15 @@ fun VoiceStudioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🎙️ 4. 음성 성별(여성/남성) & 내 목소리 톤(피치) 조절 바 (변경 즉시 현재 텍스트 프리뷰 발화)
+            // 🎙️ 4. 음성 성별(여성/남성) & 내 목소리 톤(피치) 조절 바
             VoiceCustomizerRow(
                 selectedGender = selectedGender,
                 onGenderSelected = { newGender ->
                     selectedGender = newGender
-                    if (aiTextDisplay.isNotBlank() && !aiTextDisplay.startsWith("✨") && !aiTextDisplay.startsWith("AI가")) {
+                    if (aiTextDisplay.isNotBlank()) {
                         voicePipeline.speakDirectly(
                             text = aiTextDisplay,
-                            targetLang = if (selectedMode == 1) targetLanguage else "KO",
+                            targetLang = if (selectedMode == 1) targetLanguage else if (UiStrings.isKo) "KO" else "EN",
                             gender = newGender,
                             pitch = selectedPitch
                         )
@@ -420,10 +430,10 @@ fun VoiceStudioScreen(
                 selectedPitch = selectedPitch,
                 onPitchSelected = { newPitch ->
                     selectedPitch = newPitch
-                    if (aiTextDisplay.isNotBlank() && !aiTextDisplay.startsWith("✨") && !aiTextDisplay.startsWith("AI가")) {
+                    if (aiTextDisplay.isNotBlank()) {
                         voicePipeline.speakDirectly(
                             text = aiTextDisplay,
-                            targetLang = if (selectedMode == 1) targetLanguage else "KO",
+                            targetLang = if (selectedMode == 1) targetLanguage else if (UiStrings.isKo) "KO" else "EN",
                             gender = selectedGender,
                             pitch = newPitch
                         )
@@ -435,15 +445,15 @@ fun VoiceStudioScreen(
 
             // 📋 5. Dual-Card 화면 (원문 STT + AI 조율 텍스트)
             DualCardDisplay(
-                rawText = rawTextDisplay,
-                aiText = aiTextDisplay,
+                rawText = if (rawTextDisplay.isBlank()) UiStrings.initialRawPrompt else rawTextDisplay,
+                aiText = if (aiTextDisplay.isBlank()) UiStrings.initialAiPrompt else aiTextDisplay,
                 isListening = isListening,
                 pipelineStage = pipelineStage,
                 onReplayClick = {
-                    if (aiTextDisplay.isNotBlank() && !aiTextDisplay.startsWith("✨") && !aiTextDisplay.startsWith("AI가")) {
+                    if (aiTextDisplay.isNotBlank()) {
                         voicePipeline.speakDirectly(
                             text = aiTextDisplay,
-                            targetLang = if (selectedMode == 1) targetLanguage else "KO",
+                            targetLang = if (selectedMode == 1) targetLanguage else if (UiStrings.isKo) "KO" else "EN",
                             gender = selectedGender,
                             pitch = selectedPitch
                         )
@@ -451,16 +461,17 @@ fun VoiceStudioScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // 💡 6. 빠른 테스트 샘플 칩
+            // 💡 6. 빠른 테스트 문장 칩
             QuickSampleChips(
                 onSampleSelected = { sample ->
                     rawTextDisplay = sample
+                    hasValidResult = true
                     voicePipeline.processVoiceInput(
                         simulatedVoiceText = sample,
-                        targetLang = if (selectedMode == 1) targetLanguage else "KO",
-                        sourceLang = if (selectedMode == 1) sourceLanguage else "KO",
+                        targetLang = if (selectedMode == 1) targetLanguage else if (UiStrings.isKo) "KO" else "EN",
+                        sourceLang = if (selectedMode == 1) sourceLanguage else if (UiStrings.isKo) "KO" else "EN",
                         tone = if (selectedMode == 0) selectedTone else null,
                         gender = selectedGender,
                         pitch = selectedPitch
@@ -470,29 +481,25 @@ fun VoiceStudioScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 🎤 7. 대형 마이크 실시간 녹음 버튼 (STT 완벽 연동 & 키보드와 동일한 토글 UX)
+            // 🔴 7. 메인 마이크 발화 & 녹음 제어 버튼
             MainRecordButton(
                 micUiState = micUiState,
                 rmsDb = rmsDb,
                 onClick = {
-                    when (micUiState) {
-                        MicUiState.LISTENING -> {
-                            sttManager.stopListening()
-                        }
-                        MicUiState.IDLE -> {
-                            val hasAudioPerm = ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.RECORD_AUDIO
-                            ) == PackageManager.PERMISSION_GRANTED
+                    if (isListening) {
+                        sttManager.stopListening()
+                    } else {
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.RECORD_AUDIO
+                        ) == PackageManager.PERMISSION_GRANTED
 
-                            if (hasAudioPerm) {
-                                val targetLocale = getLocaleForCode(if (selectedMode == 1) sourceLanguage else "KO")
-                                sttManager.startListening(targetLocale)
-                            } else {
-                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            }
+                        if (hasPermission) {
+                            val targetLocale = getLocaleForCode(if (selectedMode == 1) sourceLanguage else if (UiStrings.isKo) "KO" else "EN")
+                            sttManager.startListening(targetLocale)
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                         }
-                        MicUiState.PREPARING, MicUiState.PROCESSING_AI -> {}
                     }
                 }
             )
@@ -515,10 +522,13 @@ fun HardwareDiagnosticCard(
         DeviceTierRating.RESTRICTED -> Color(0xFFEF4444)
     }
 
+    val ramFormatted = String.format(Locale.US, "%.1f", metrics.totalRamGb)
+    val storageFormatted = String.format(Locale.US, "%.1f", metrics.availableStorageGb)
+
     val tierText = when (metrics.tierRating) {
-        DeviceTierRating.OPTIMAL -> "🟢 최적 사양 (RAM ${String.format("%.1f", metrics.totalRamGb)}GB / 여유 ${String.format("%.1f", metrics.availableStorageGb)}GB)"
-        DeviceTierRating.CAUTION -> "🟡 주의 사양 (RAM ${String.format("%.1f", metrics.totalRamGb)}GB - 순차 파이프라인 안전 구동)"
-        DeviceTierRating.RESTRICTED -> "🔴 사양 제한 (RAM ${String.format("%.1f", metrics.totalRamGb)}GB - 기본 모델 권장)"
+        DeviceTierRating.OPTIMAL -> UiStrings.diagOptimal(ramFormatted, storageFormatted)
+        DeviceTierRating.CAUTION -> UiStrings.diagCaution(ramFormatted)
+        DeviceTierRating.RESTRICTED -> UiStrings.diagRestricted(ramFormatted)
     }
 
     Card(
@@ -553,8 +563,8 @@ fun HardwareDiagnosticCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Qwen 고품질 보이스 모델", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
-                            Text("STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB", fontSize = 11.sp, color = DearTalkTextDim)
+                            Text(UiStrings.diagModelTitle, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                            Text(UiStrings.diagModelSubtitle, fontSize = 11.sp, color = DearTalkTextDim)
                         }
                         Button(
                             onClick = onDownloadClick,
@@ -563,14 +573,14 @@ fun HardwareDiagnosticCard(
                         ) {
                             Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("다운로드", fontSize = 12.sp)
+                            Text(UiStrings.diagDownloadBtn, fontSize = 12.sp)
                         }
                     }
                 }
                 is ModelPackState.Downloading -> {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("고품질 패키지 다운로드 중...", fontSize = 13.sp, color = DearTalkSecondary)
+                            Text(UiStrings.diagDownloadingLabel, fontSize = 13.sp, color = DearTalkSecondary)
                             Text("${packState.progressPercent}%", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DearTalkSecondary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -591,15 +601,15 @@ fun HardwareDiagnosticCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Qwen 고성능 엔진 활성화됨", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                            Text(UiStrings.diagActiveLabel, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
                         }
                         IconButton(onClick = onPurgeClick) {
-                            Icon(Icons.Default.Delete, contentDescription = "모델 삭제", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Delete, contentDescription = UiStrings.diagPurgeContentDesc, tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
                 is ModelPackState.Error -> {
-                    Text("⚠️ 다운로드 오류: ${packState.message}", fontSize = 12.sp, color = Color(0xFFEF4444))
+                    Text(UiStrings.diagErrorLabel(packState.message), fontSize = 12.sp, color = Color(0xFFEF4444))
                 }
             }
         }
@@ -627,7 +637,14 @@ fun ModeTabButton(title: String, isSelected: Boolean, onClick: () -> Unit) {
 
 @Composable
 fun ToneSelectorRow(selectedTone: String, onToneSelected: (String) -> Unit) {
-    val tones = listOf("공손하게", "친근하게", "다정하게", "비즈니스", "당당하게", "재미있게")
+    val tones = listOf(
+        UiStrings.toneRefine,
+        UiStrings.tonePolite,
+        UiStrings.toneCasual,
+        UiStrings.toneBusiness,
+        UiStrings.toneCheeky,
+        UiStrings.toneFunny
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -662,23 +679,10 @@ fun TwoWayLanguageSelectorRow(
     onTargetLangSelected: (String) -> Unit,
     onSwap: () -> Unit
 ) {
-    val languages = listOf(
-        "KO" to "🇰🇷 한국어",
-        "EN" to "🇺🇸 영어",
-        "JA" to "🇯🇵 일본어",
-        "ZH" to "🇨🇳 중국어",
-        "ES" to "🇪🇸 스페인어",
-        "FR" to "🇫🇷 프랑스어",
-        "DE" to "🇩🇪 독일어",
-        "ID" to "🇮🇩 인도네시아어",
-        "VI" to "🇻🇳 베트남어",
-        "TL" to "🇵🇭 필리핀어",
-        "TH" to "🇹🇭 태국어",
-        "MS" to "🇲🇾 말레이어"
-    )
+    val langCodes = listOf("KO", "EN", "JA", "ZH", "ES", "FR", "DE", "ID", "VI", "TL", "TH", "MS")
 
-    val sourceLabel = languages.find { it.first == sourceLang }?.second ?: sourceLang
-    val targetLabel = languages.find { it.first == targetLang }?.second ?: targetLang
+    val sourceLabel = UiStrings.getLangDisplayName(sourceLang)
+    val targetLabel = UiStrings.getLangDisplayName(targetLang)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -693,7 +697,7 @@ fun TwoWayLanguageSelectorRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🗣️ 입력: ", fontSize = 11.sp, color = DearTalkTextDim)
+                    Text(UiStrings.inputHeaderLabel, fontSize = 11.sp, color = DearTalkTextDim)
                     Text(sourceLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkSecondary)
                 }
 
@@ -707,14 +711,14 @@ fun TwoWayLanguageSelectorRow(
                 ) {
                     Icon(
                         Icons.Default.SyncAlt,
-                        contentDescription = "입력/출력 언어 맞바꾸기",
+                        contentDescription = UiStrings.swapLangContentDesc,
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🌐 번역: ", fontSize = 11.sp, color = DearTalkTextDim)
+                    Text(UiStrings.outputHeaderLabel, fontSize = 11.sp, color = DearTalkTextDim)
                     Text(targetLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkPrimary)
                 }
             }
@@ -722,7 +726,7 @@ fun TwoWayLanguageSelectorRow(
             Spacer(modifier = Modifier.height(8.dp))
 
             // 1. 내가 말할 언어 (마이크 STT 입력)
-            Text("1️⃣ 내가 말할 언어 (마이크 입력):", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = DearTalkTextDim)
+            Text(UiStrings.step1SpokenLang, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = DearTalkTextDim)
             Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier
@@ -730,8 +734,9 @@ fun TwoWayLanguageSelectorRow(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                languages.forEach { (code, label) ->
-                    val isSelected = sourceLang == code
+                langCodes.forEach { code ->
+                    val isSelected = sourceLang.equals(code, ignoreCase = true)
+                    val label = UiStrings.getLangDisplayName(code)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
@@ -752,7 +757,7 @@ fun TwoWayLanguageSelectorRow(
             Spacer(modifier = Modifier.height(8.dp))
 
             // 2. AI가 번역할 언어 (스피커 TTS 출력)
-            Text("2️⃣ AI가 번역할 언어 (스피커 출력):", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = DearTalkTextDim)
+            Text(UiStrings.step2TargetLang, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = DearTalkTextDim)
             Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier
@@ -760,8 +765,9 @@ fun TwoWayLanguageSelectorRow(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                languages.forEach { (code, label) ->
-                    val isSelected = targetLang == code
+                langCodes.forEach { code ->
+                    val isSelected = targetLang.equals(code, ignoreCase = true)
+                    val label = UiStrings.getLangDisplayName(code)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
@@ -807,7 +813,7 @@ fun DualCardDisplay(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isListening) "음성 인식 중..." else "내가 말한 내용 (STT)",
+                        text = if (isListening) UiStrings.rawSttListening else UiStrings.rawSttTitle,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isListening) Color(0xFFEF4444) else DearTalkSecondary
@@ -840,10 +846,10 @@ fun DualCardDisplay(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("✨ AI 조율 및 번역 결과", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkPrimary)
+                        Text(UiStrings.aiResultTitle, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkPrimary)
                     }
                     IconButton(onClick = onReplayClick, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "다시 듣기", tint = DearTalkSecondary, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = UiStrings.replayButtonDesc, tint = DearTalkSecondary, modifier = Modifier.size(18.dp))
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -892,14 +898,9 @@ fun WaveformVisualizer() {
 
 @Composable
 fun QuickSampleChips(onSampleSelected: (String) -> Unit) {
-    val samples = listOf(
-        "오늘 밥 같이 먹을래?",
-        "차 막혀서 늦을 것 같아 미안해",
-        "자료 검토 후 회신 부탁드립니다",
-        "이 제품 가격이 어떻게 되나요?"
-    )
+    val samples = UiStrings.quickSamples
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text("💡 빠른 테스트 문장", fontSize = 12.sp, color = DearTalkTextDim)
+        Text(UiStrings.quickTestTitle, fontSize = 12.sp, color = DearTalkTextDim)
         Spacer(modifier = Modifier.height(6.dp))
         Row(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -968,7 +969,7 @@ fun MainRecordButton(
                 MicUiState.PREPARING -> {
                     Icon(
                         Icons.Default.HourglassTop,
-                        contentDescription = "준비 중",
+                        contentDescription = UiStrings.contentDescPreparing,
                         tint = Color.White,
                         modifier = Modifier.size(36.dp)
                     )
@@ -976,7 +977,7 @@ fun MainRecordButton(
                 MicUiState.LISTENING -> {
                     Icon(
                         Icons.Default.StopCircle,
-                        contentDescription = "녹음 중지",
+                        contentDescription = UiStrings.contentDescStop,
                         tint = Color.White,
                         modifier = Modifier.size(44.dp)
                     )
@@ -984,7 +985,7 @@ fun MainRecordButton(
                 MicUiState.IDLE -> {
                     Icon(
                         Icons.Default.Mic,
-                        contentDescription = "말하기",
+                        contentDescription = UiStrings.contentDescSpeak,
                         tint = Color.White,
                         modifier = Modifier.size(38.dp)
                     )
@@ -994,10 +995,10 @@ fun MainRecordButton(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = when (micUiState) {
-                MicUiState.PREPARING -> "⏳ 마이크 준비 중..."
-                MicUiState.LISTENING -> "🔴 녹음 중... (탭하여 완료)"
-                MicUiState.PROCESSING_AI -> "✨ AI 정제 및 번역 중..."
-                MicUiState.IDLE -> "탭하여 마이크로 말하기"
+                MicUiState.PREPARING -> UiStrings.micBtnPreparing
+                MicUiState.LISTENING -> UiStrings.micBtnListening
+                MicUiState.PROCESSING_AI -> UiStrings.micBtnProcessing
+                MicUiState.IDLE -> UiStrings.micBtnIdle
             },
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
@@ -1030,7 +1031,7 @@ fun VoiceCustomizerRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🎙️ 발화 음색", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                Text(UiStrings.voiceToneCustomizerTitle, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -1045,7 +1046,7 @@ fun VoiceCustomizerRow(
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            "👩 여성 음성",
+                            UiStrings.voiceFemale,
                             fontSize = 11.sp,
                             fontWeight = if (selectedGender == ai.deartalk.android.tts.VoiceGender.FEMALE) FontWeight.Bold else FontWeight.Normal,
                             color = if (selectedGender == ai.deartalk.android.tts.VoiceGender.FEMALE) Color.White else DearTalkTextDim
@@ -1059,7 +1060,7 @@ fun VoiceCustomizerRow(
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            "👨 남성 음성",
+                            UiStrings.voiceMale,
                             fontSize = 11.sp,
                             fontWeight = if (selectedGender == ai.deartalk.android.tts.VoiceGender.MALE) FontWeight.Bold else FontWeight.Normal,
                             color = if (selectedGender == ai.deartalk.android.tts.VoiceGender.MALE) Color.White else DearTalkTextDim
@@ -1078,12 +1079,12 @@ fun VoiceCustomizerRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🎚️ 톤 매칭:", fontSize = 11.sp, color = DearTalkTextDim)
+                Text(UiStrings.pitchMatchingLabel, fontSize = 11.sp, color = DearTalkTextDim)
                 listOf(
-                    "보통" to 1.0f,
-                    "중후한 저음" to 0.85f,
-                    "부드러운 중음" to 0.95f,
-                    "밝은 고음" to 1.15f
+                    UiStrings.pitchNormal to 1.0f,
+                    UiStrings.pitchDeepLow to 0.85f,
+                    UiStrings.pitchWarmMid to 0.95f,
+                    UiStrings.pitchBrightHigh to 1.15f
                 ).forEach { (label, pitch) ->
                     val isSelected = kotlin.math.abs(selectedPitch - pitch) < 0.04f
                     Box(
@@ -1105,4 +1106,3 @@ fun VoiceCustomizerRow(
         }
     }
 }
-
