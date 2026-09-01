@@ -8,7 +8,7 @@
   <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
-[![Platform: Android](https://img.shields.io/badge/Platform-Android%2015%20(API%2035)-3DDC84?logo=android&logoColor=white)](#-key-platform-features)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-key-platform-features)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-core-principles)
 [![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-privacy--security-guarantee)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.5` | **Android 15 (API 35)** | **Production Stable** | 1-Tap Partner Language Pair UX, Smart Bi-directional Auto-Swap, Script-Aware TTS, Voice Studio & Live Interpreter, LiteRT GPU |
+| 🤖 **DearTalk Android IME** | `v1.0.5` | **Android 16 (API 36)** | **Production Stable** | 1-Tap Partner Language Pair UX, Smart Bi-directional Auto-Swap, Script-Aware TTS, Voice Studio & Live Interpreter, LiteRT GPU |
 
 ---
 

@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "ai.deartalk.android"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ai.deartalk.android"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 8
         versionName = "1.0.5"
 
