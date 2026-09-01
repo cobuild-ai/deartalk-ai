@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.6] - 2026-09-02
+
+### Changed
+- **Target SDK 36 (Android 16) Full Compliance**:
+  - Upgraded `compileSdk` and `targetSdk` to API 36 to meet Google Play 2026 platform security and performance requirements.
+
+---
+
 ## [1.0.5] - 2026-09-02
 
 ### Added

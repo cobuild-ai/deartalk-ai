@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.5` | **Android 16 (API 36)** | **Production Stable** | 1-Tap Partner Language Pair UX, Smart Bi-directional Auto-Swap, Script-Aware TTS, Voice Studio & Live Interpreter, LiteRT GPU |
+| 🤖 **DearTalk Android IME** | `v1.0.6` | **Android 16 (API 36)** | **Production Stable** | Target SDK 36, 1-Tap Partner Language Pair UX, Smart Bi-directional Auto-Swap, Script-Aware TTS, Voice Studio & Live Interpreter |
 
 ---
 
