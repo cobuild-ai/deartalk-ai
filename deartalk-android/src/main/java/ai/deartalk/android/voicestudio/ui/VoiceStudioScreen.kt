@@ -92,6 +92,7 @@ fun VoiceStudioScreen(
     var aiTextDisplay by remember { mutableStateOf("") }
     var hasValidResult by remember { mutableStateOf(false) }
 
+    val defaultAppLangCode = if (UiStrings.isKo) "KO" else if (UiStrings.isId) "ID" else "EN"
     val isListening = micUiState == MicUiState.LISTENING
 
     // 💡 클린코드: 중복 호출 제거용 헬퍼 함수
@@ -99,8 +100,8 @@ fun VoiceStudioScreen(
         if (text.isBlank()) return
         voicePipeline.processVoiceInput(
             simulatedVoiceText = text,
-            targetLang = if (selectedMode == 1) tgtLang else if (UiStrings.isKo) "KO" else "EN",
-            sourceLang = if (selectedMode == 1) srcLang else if (UiStrings.isKo) "KO" else "EN",
+            targetLang = if (selectedMode == 1) tgtLang else defaultAppLangCode,
+            sourceLang = if (selectedMode == 1) srcLang else defaultAppLangCode,
             tone = if (selectedMode == 0) tone else null,
             gender = selectedGender,
             pitch = selectedPitch
@@ -111,7 +112,7 @@ fun VoiceStudioScreen(
         if (text.isBlank()) return
         voicePipeline.speakDirectly(
             text = text,
-            targetLang = if (selectedMode == 1) tgtLang else if (UiStrings.isKo) "KO" else "EN",
+            targetLang = if (selectedMode == 1) tgtLang else defaultAppLangCode,
             gender = gender,
             pitch = pitch
         )
@@ -122,7 +123,7 @@ fun VoiceStudioScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val activeCode = if (selectedMode == 1) sourceLanguage else if (UiStrings.isKo) "KO" else "EN"
+            val activeCode = if (selectedMode == 1) sourceLanguage else defaultAppLangCode
             sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(activeCode))
         } else {
             Toast.makeText(context, UiStrings.micPermissionNeeded, Toast.LENGTH_SHORT).show()
@@ -351,7 +352,7 @@ fun VoiceStudioScreen(
                         ) == PackageManager.PERMISSION_GRANTED
 
                         if (hasPermission) {
-                            val activeCode = if (selectedMode == 1) sourceLanguage else if (UiStrings.isKo) "KO" else "EN"
+                            val activeCode = if (selectedMode == 1) sourceLanguage else defaultAppLangCode
                             sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(activeCode))
                         } else {
                             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
