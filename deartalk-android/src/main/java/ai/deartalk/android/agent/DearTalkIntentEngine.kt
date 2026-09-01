@@ -99,14 +99,30 @@ class DearTalkIntentEngine(
             return
         }
 
-        val candidatePaths = mutableListOf(
-            "/data/local/tmp/llm/model.litertlm",
-            "/data/local/tmp/llm/gemma-2b-it.litertlm",
-            "/data/local/tmp/llm/model.bin",
-            "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
-            "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
-            File(appContext.filesDir, "models/model.litertlm").absolutePath,
-            File(appContext.filesDir, "models/model.bin").absolutePath
+        val qwenManager = ai.deartalk.android.data.ModelLifecycleManager(appContext)
+        val qwenPaths = qwenManager.resolveModelPaths()
+        val qwenLlmPath = qwenPaths[ai.deartalk.android.data.ModelLifecycleManager.KEY_LLM]
+
+        val candidatePaths = mutableListOf<String>()
+
+        // 🌟 1순위: 다운로드/설치된 Qwen 고성능 1.7B LLM 모델 우선 바인딩
+        if (!qwenLlmPath.isNullOrBlank()) {
+            candidatePaths.add(qwenLlmPath)
+        }
+        candidatePaths.add(File(appContext.filesDir, "models/qwen/qwen3-1.7b-it.bin").absolutePath)
+        candidatePaths.add("/data/local/tmp/llm/qwen3-1.7b-it.bin")
+
+        // 🌟 2순위: 기본 Gemma 2B LiteRT 및 로컬 모델
+        candidatePaths.addAll(
+            listOf(
+                "/data/local/tmp/llm/model.litertlm",
+                "/data/local/tmp/llm/gemma-2b-it.litertlm",
+                "/data/local/tmp/llm/model.bin",
+                "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
+                "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
+                File(appContext.filesDir, "models/model.litertlm").absolutePath,
+                File(appContext.filesDir, "models/model.bin").absolutePath
+            )
         )
 
         val llmDir = File("/data/local/tmp/llm/")
@@ -162,6 +178,25 @@ class DearTalkIntentEngine(
                         _isModelLoadedFlow.value = true
                         return@withLock
                     }
+                    sharedLoaded = false
+                    _isModelLoadedFlow.value = false
+                    initOnDeviceModel(context.applicationContext)
+                }
+            }
+        }
+    }
+
+    /**
+     * 🔄 모델 핫 리로드: Qwen 패키지 다운로드 완료 또는 삭제 시 새 모델 경로 즉시 재바인딩
+     */
+    fun reloadModel() {
+        if (context == null) return
+        synchronized(DearTalkIntentEngine::class.java) {
+            sharedInitJob = initScope.launch {
+                initMutex.withLock {
+                    try {
+                        sharedLiteRtEngine = null
+                    } catch (_: Throwable) {}
                     sharedLoaded = false
                     _isModelLoadedFlow.value = false
                     initOnDeviceModel(context.applicationContext)

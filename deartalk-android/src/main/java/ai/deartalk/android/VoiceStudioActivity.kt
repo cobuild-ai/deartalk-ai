@@ -52,6 +52,7 @@ class VoiceStudioActivity : ComponentActivity() {
                 VoiceStudioScreen(
                     diagnosticManager = diagnosticManager,
                     modelLifecycleManager = modelLifecycleManager,
+                    intentEngine = intentEngine,
                     sttManager = sttManager,
                     voicePipeline = voicePipeline,
                     onBackClick = { finish() }

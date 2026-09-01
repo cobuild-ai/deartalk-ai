@@ -68,6 +68,7 @@ import ai.deartalk.android.voicestudio.ui.components.VoiceCustomizerRow
 fun VoiceStudioScreen(
     diagnosticManager: SystemDiagnosticManager,
     modelLifecycleManager: ModelLifecycleManager,
+    intentEngine: ai.deartalk.android.agent.DearTalkIntentEngine,
     sttManager: SpeechRecognitionManager,
     voicePipeline: SequentialVoicePipeline,
     onBackClick: () -> Unit
@@ -230,8 +231,15 @@ fun VoiceStudioScreen(
             HardwareDiagnosticCard(
                 metrics = systemMetrics,
                 packState = packState,
-                onDownloadClick = { modelLifecycleManager.startDownload() },
-                onPurgeClick = { modelLifecycleManager.purgeModels() }
+                onDownloadClick = {
+                    modelLifecycleManager.startDownload(
+                        onSuccess = { intentEngine.reloadModel() }
+                    )
+                },
+                onPurgeClick = {
+                    modelLifecycleManager.purgeModels()
+                    intentEngine.reloadModel()
+                }
             )
 
             Spacer(modifier = Modifier.height(14.dp))
