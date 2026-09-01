@@ -209,7 +209,9 @@ object UiStrings {
     val modeToneTransform get() = if (isKo) "✨ 고운말 톤 변환" else if (isId) "✨ Transformasi Gaya Bicara" else "✨ Tone Transformation"
     val modeLiveTranslation get() = if (isKo) "🌐 실시간 다국어 통역" else if (isId) "🌐 Penerjemah Langsung" else "🌐 Live Interpretation"
 
-    // 3. 2-Way 통역 언어 바
+    // 3. 실시간 통역 상대방 언어 바
+    val partnerLangSelectionTitle get() = if (isKo) "🌐 통역할 상대방 언어 선택" else if (isId) "🌐 Pilih Bahasa Lawan Bicara" else "🌐 Select Partner Language"
+    fun conversationPairBadge(myLang: String, partnerLang: String) = if (isKo) "$myLang ⇄ $partnerLang (양방향 자동 통역)" else if (isId) "$myLang ⇄ $partnerLang (Otomatis 2 Arah)" else "$myLang ⇄ $partnerLang (Auto 2-Way)"
     val inputHeaderLabel get() = if (isKo) "🗣️ 입력: " else if (isId) "🗣️ Masukan: " else "🗣️ Input: "
     val outputHeaderLabel get() = if (isKo) "🌐 번역: " else if (isId) "🌐 Terjemahan: " else "🌐 Output: "
     val swapLangContentDesc get() = if (isKo) "입력/출력 언어 맞바꾸기" else if (isId) "Tukar bahasa masukan/keluaran" else "Swap input and output languages"

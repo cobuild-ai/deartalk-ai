@@ -30,6 +30,7 @@ class UiStringsLocaleTest {
         assertEquals("🟢 Gemma 2B Base", UiStrings.tierBadgeBase)
         assertEquals("⚡ STT Only (Needs AI Pack)", UiStrings.tierBadgeSttOnly)
         assertEquals("Polish into a natural, fluent, and well-structured complete sentence preserving original intent.", UiStrings.instRefine)
+        assertEquals("🌐 Select Partner Language", UiStrings.partnerLangSelectionTitle)
 
         // 2. 한국어 오버라이드 테스트
         UiStrings.setLocale(Locale.KOREAN)
@@ -52,6 +53,7 @@ class UiStringsLocaleTest {
         assertEquals("🟢 Gemma 2B Base", UiStrings.tierBadgeBase)
         assertEquals("⚡ STT 모드 (AI팩 필요)", UiStrings.tierBadgeSttOnly)
         assertEquals("문맥을 살려 중복과 어색한 끊김 없이 자연스럽고 유려한 완성형 문장으로 다듬어 작성하세요.", UiStrings.instRefine)
+        assertEquals("🌐 통역할 상대방 언어 선택", UiStrings.partnerLangSelectionTitle)
 
         // 3. 인도네시아어 오버라이드 테스트
         UiStrings.setLocale(Locale("id", "ID"))
@@ -68,5 +70,6 @@ class UiStringsLocaleTest {
         assertEquals("🟢 Gemma 2B Base", UiStrings.tierBadgeBase)
         assertEquals("⚡ Mode STT (Perlu Paket AI)", UiStrings.tierBadgeSttOnly)
         assertEquals("Rapikan menjadi satu kalimat lengkap yang alami dan lancar tanpa pengulangan kata yang janggal.", UiStrings.instRefine)
+        assertEquals("🌐 Pilih Bahasa Lawan Bicara", UiStrings.partnerLangSelectionTitle)
     }
 }

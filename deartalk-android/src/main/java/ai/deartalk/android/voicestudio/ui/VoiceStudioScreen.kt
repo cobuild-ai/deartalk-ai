@@ -60,7 +60,7 @@ import ai.deartalk.android.voicestudio.ui.components.MainRecordButton
 import ai.deartalk.android.voicestudio.ui.components.ModeTabButton
 import ai.deartalk.android.voicestudio.ui.components.QuickSampleChips
 import ai.deartalk.android.voicestudio.ui.components.ToneSelectorRow
-import ai.deartalk.android.voicestudio.ui.components.TwoWayLanguageSelectorRow
+import ai.deartalk.android.voicestudio.ui.components.TargetLanguageSelectorRow
 import ai.deartalk.android.voicestudio.ui.components.VoiceCustomizerRow
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,8 +82,8 @@ fun VoiceStudioScreen(
     var systemMetrics by remember { mutableStateOf(diagnosticManager.diagnose()) }
     var selectedMode by remember { mutableStateOf(0) } // 0: 톤 변환, 1: 실시간 통역
     var selectedTone by remember { mutableStateOf(UiStrings.tonePolite) }
-    var sourceLanguage by remember { mutableStateOf(if (UiStrings.isKo) "KO" else if (UiStrings.isId) "ID" else "EN") }
-    var targetLanguage by remember { mutableStateOf(if (UiStrings.isKo) "JA" else "KO") }
+    val myAppLangCode = if (UiStrings.isKo) "KO" else if (UiStrings.isId) "ID" else "EN"
+    var targetLanguage by remember { mutableStateOf(if (UiStrings.isKo) "EN" else "KO") }
     var selectedGender by remember { mutableStateOf(VoiceGender.FEMALE) }
     var selectedPitch by remember { mutableStateOf(1.0f) }
     var micUiState by remember { mutableStateOf(MicUiState.IDLE) }
@@ -92,16 +92,16 @@ fun VoiceStudioScreen(
     var aiTextDisplay by remember { mutableStateOf("") }
     var hasValidResult by remember { mutableStateOf(false) }
 
-    val defaultAppLangCode = if (UiStrings.isKo) "KO" else if (UiStrings.isId) "ID" else "EN"
+    val defaultAppLangCode = myAppLangCode
     val isListening = micUiState == MicUiState.LISTENING
 
     // 💡 클린코드: 중복 호출 제거용 헬퍼 함수
-    fun executePipeline(text: String, srcLang: String = sourceLanguage, tgtLang: String = targetLanguage, tone: String? = selectedTone) {
+    fun executePipeline(text: String, tgtLang: String = targetLanguage, tone: String? = selectedTone) {
         if (text.isBlank()) return
         voicePipeline.processVoiceInput(
             simulatedVoiceText = text,
             targetLang = if (selectedMode == 1) tgtLang else defaultAppLangCode,
-            sourceLang = if (selectedMode == 1) srcLang else defaultAppLangCode,
+            sourceLang = defaultAppLangCode,
             tone = if (selectedMode == 0) tone else null,
             gender = selectedGender,
             pitch = selectedPitch
@@ -123,8 +123,7 @@ fun VoiceStudioScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val activeCode = if (selectedMode == 1) sourceLanguage else defaultAppLangCode
-            sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(activeCode))
+            sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(defaultAppLangCode))
         } else {
             Toast.makeText(context, UiStrings.micPermissionNeeded, Toast.LENGTH_SHORT).show()
         }
@@ -268,7 +267,7 @@ fun VoiceStudioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🎛️ 3. 세부 옵션 칩 (고운말 톤 선택 or 양방향 다국어 통역 언어 선택)
+            // 🎛️ 3. 세부 옵션 칩 (고운말 톤 선택 or 실시간 통역 상대방 언어 선택)
             if (selectedMode == 0) {
                 ToneSelectorRow(
                     selectedTone = selectedTone,
@@ -278,22 +277,12 @@ fun VoiceStudioScreen(
                     }
                 )
             } else {
-                TwoWayLanguageSelectorRow(
-                    sourceLang = sourceLanguage,
-                    onSourceLangSelected = { newSource ->
-                        sourceLanguage = newSource
-                        if (hasValidResult) executePipeline(rawTextDisplay, srcLang = newSource)
-                    },
+                TargetLanguageSelectorRow(
+                    myLangCode = defaultAppLangCode,
                     targetLang = targetLanguage,
                     onTargetLangSelected = { newTarget ->
                         targetLanguage = newTarget
                         if (hasValidResult) executePipeline(rawTextDisplay, tgtLang = newTarget)
-                    },
-                    onSwap = {
-                        val temp = sourceLanguage
-                        sourceLanguage = targetLanguage
-                        targetLanguage = temp
-                        if (hasValidResult) executePipeline(rawTextDisplay, srcLang = targetLanguage, tgtLang = temp)
                     }
                 )
             }
@@ -317,27 +306,8 @@ fun VoiceStudioScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // 📋 5. Dual-Card 화면 (원문 STT + AI 조율 텍스트)
-            val srcLabel = if (selectedMode == 1) {
-                when (sourceLanguage) {
-                    "KO" -> "🇰🇷 한국어"
-                    "EN" -> "🇺🇸 English"
-                    "JA" -> "🇯🇵 日本語"
-                    "ZH" -> "🇨🇳 中文"
-                    "ID" -> "🇮🇩 Indonesia"
-                    else -> sourceLanguage
-                }
-            } else null
-
-            val tgtLabel = if (selectedMode == 1) {
-                when (targetLanguage) {
-                    "KO" -> "🇰🇷 한국어"
-                    "EN" -> "🇺🇸 English"
-                    "JA" -> "🇯🇵 日本語"
-                    "ZH" -> "🇨🇳 中文"
-                    "ID" -> "🇮🇩 Indonesia"
-                    else -> targetLanguage
-                }
-            } else null
+            val srcLabel = if (selectedMode == 1) UiStrings.getLangDisplayName(defaultAppLangCode) else null
+            val tgtLabel = if (selectedMode == 1) UiStrings.getLangDisplayName(targetLanguage) else null
 
             DualCardDisplay(
                 rawText = if (rawTextDisplay.isBlank()) UiStrings.initialRawPrompt else rawTextDisplay,
@@ -376,8 +346,7 @@ fun VoiceStudioScreen(
                         ) == PackageManager.PERMISSION_GRANTED
 
                         if (hasPermission) {
-                            val activeCode = if (selectedMode == 1) sourceLanguage else defaultAppLangCode
-                            sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(activeCode))
+                            sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(defaultAppLangCode))
                         } else {
                             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                         }
