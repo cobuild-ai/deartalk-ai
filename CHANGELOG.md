@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.8] - 2026-09-03
+
+### Added
+- **Human-Centered 2-Slot Utterance Cache (`AppScopedUtteranceCache`)**:
+  - Implemented an app-scoped in-memory sliding cache based on human working memory limits (`maxApps = 2`: Primary Focus + Secondary Toggled App).
+  - Eliminates subject/pronoun omission ("3박 4일 일정은요?" -> "발리 3박 4일 일정은요?") and homophone typos by injecting prior conversation context into SLM prompts.
+  - Zero-Allocation Circular Ring Buffer (`CircularUtteranceBuffer`): Overwrites slots in-place to ensure zero GC overhead, zero keyboard jitter, and fixed memory footprint under 500 bytes.
+  - 3-minute TTL auto-expiration and pure RAM residency for strict Google Play privacy compliance.
+
+### Refactored
+- **Zero Language Bias in Context Injection**:
+  - Uniformly injected localized conversation context blocks across Korean, Indonesian, and English/global prompts.
+  - Propagated target app `packageName` through `processIntent` and `applyTone` across all voice pipeline flows.
+  - Cleaned prototype legacy parameter naming (`simulatedVoiceText` -> `voiceText`).
+
+---
+
 ## [1.0.7] - 2026-09-02
 
 ### Fixed

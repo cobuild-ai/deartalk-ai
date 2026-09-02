@@ -27,7 +27,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.7` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Perbaikan Padding Bilah Navigasi Samsung One UI, Perbaikan Loop Suara STT, Target SDK 36, UX 1-Ketuk, Auto-Swap Cerdas |
+| 🤖 **DearTalk Android IME** | `v1.0.8` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Cache Konteks Percakapan 2-Slot Berbasis Kognitif Manusia (`AppScopedUtteranceCache`), Buffer Cincin Melingkar Zero-GC, Eliminasi Bias Bahasa, Kepatuhan Target SDK 36 |
 
 ---
 

@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.7` | **Android 16 (API 36)** | **Production Stable** | Samsung One UI Navigation Bar Padding Fix, STT Speech Loop Fix, Target SDK 36, 1-Tap Partner Language Pair UX, Smart Auto-Swap |
+| 🤖 **DearTalk Android IME** | `v1.0.8` | **Android 16 (API 36)** | **Production Stable** | Human-Centered 2-Slot Utterance Cache (`AppScopedUtteranceCache`), Zero-GC Circular Ring Buffer, Zero Language Bias Multilingual Context Injection, Samsung One UI & Target SDK 36 Compliant |
 
 ---
 
