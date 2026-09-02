@@ -65,7 +65,8 @@ class SequentialVoicePipeline(
         tone: String? = null,
         autoSpeak: Boolean = true,
         gender: ai.deartalk.android.tts.VoiceGender = ai.deartalk.android.tts.VoiceGender.FEMALE,
-        pitch: Float = 1.0f
+        pitch: Float = 1.0f,
+        appPackageName: String = "ai.deartalk.android"
     ) {
         currentJob?.cancel()
         currentJob = pipelineScope.launch {
@@ -113,7 +114,13 @@ class SequentialVoicePipeline(
                         is IntentResult.Error -> res.fallbackText
                     }
                 } else {
-                    val translated = intentEngine.translate(simulatedVoiceText, effectiveTargetLang, effectiveSourceLang, tone)
+                    val translated = intentEngine.translate(
+                        voiceInput = simulatedVoiceText,
+                        targetLangCode = effectiveTargetLang,
+                        sourceLangCode = effectiveSourceLang,
+                        tone = tone,
+                        packageName = appPackageName
+                    )
                     if (translated.isNotBlank()) translated else simulatedVoiceText
                 }
 
