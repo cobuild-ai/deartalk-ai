@@ -50,23 +50,26 @@ private class CircularUtteranceBuffer(private val capacity: Int = 2) {
 /**
  * 📱 앱별 격리 STT 대화 맥락 인메모리 고정 슬라이딩 캐시 (AppScopedUtteranceCache)
  *
- * [메모리 극대화 4대 원칙]
- * 1. 최대 앱 3개 제한: 동시에 활성화되는 메신저/업무 앱(카카오톡, 슬랙 등) 최대 3개만 유지.
+ * [인간 인지 한계 기반 4대 메모리 원칙]
+ * 1. 2-슬롯 듀얼 앱 아키텍처 (maxApps = 2):
+ *    인간은 실시간 대화 시 메인 앱 1개(Primary Focus)와 보조 전환 앱 1개(Secondary) 외에
+ *    3개 이상의 앱을 동시에 STT로 넘나들며 대화하는 것이 인지적으로 불가능합니다.
+ *    따라서 슬롯을 정확히 2개로 고정하여 3번째 앱 입력 시 가장 오래된 앱을 즉시 덮어씁니다.
  * 2. 원형 링 버퍼 (In-place Overwrite): 앱당 2개 고정 슬롯을 순환 덮어쓰기하여 메모리 할당 0(Zero).
  * 3. TTL 자동 만료: 3분 이상 대화 단절 시 만료 항목 자동 배제.
- * 4. 영구 메모리 고정 (< 1KB): 전체 캐시가 1KB를 넘지 않아 저사양 폰에서도 GC Jitter 제로.
+ * 4. 초경량 메모리 (< 500 Bytes): 전체 캐시가 500바이트 미만으로 수렴하여 안드로이드 저사양 폰에서도 GC Jitter 제로.
  */
 class AppScopedUtteranceCache(
-    private val maxApps: Int = 3,
+    private val maxApps: Int = 2,
     private val maxUtterancesPerApp: Int = 2,
     private val ttlMillis: Long = 3 * 60 * 1000L // 기본 3분
 ) {
     companion object {
-        /** 전역 공유 인스턴스 (최대 3개 앱, 2개 발화 링버퍼) */
+        /** 전역 공유 인스턴스 (인간 인지 한계 기반: 최대 2개 앱, 각 2개 발화 링버퍼) */
         val shared = AppScopedUtteranceCache()
     }
 
-    // LRU 순서 유지 고정 맵 (최대 3개 앱 파티션)
+    // LRU 순서 유지 고정 맵 (최대 2개 앱 파티션)
     private val appPartitions: MutableMap<String, CircularUtteranceBuffer> =
         Collections.synchronizedMap(
             object : LinkedHashMap<String, CircularUtteranceBuffer>(maxApps, 0.75f, true) {

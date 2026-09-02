@@ -11,9 +11,9 @@ class AppScopedUtteranceCacheTest {
 
     @Before
     fun setUp() {
-        // 테스트용: 최대 3개 앱, 앱당 최대 2개 발화, TTL 3분
+        // 인간 인지 한계 기반 테스트: 최대 2개 앱 (Primary + Secondary), 앱당 최대 2개 발화, TTL 3분
         cache = AppScopedUtteranceCache(
-            maxApps = 3,
+            maxApps = 2,
             maxUtterancesPerApp = 2,
             ttlMillis = 180_000L
         )
@@ -76,18 +76,18 @@ class AppScopedUtteranceCacheTest {
 
     @Test
     fun testLruEviction_exceedingMaxAppsRemovesEldest() {
-        // maxApps = 3
+        // maxApps = 2 (인간 인지 한계 기반: Primary + Secondary 앱 슬롯)
         cache.addUtterance("app.one", "1번 발화")
         cache.addUtterance("app.two", "2번 발화")
+
+        assertEquals(2, cache.getPartitionCount())
+
+        // 3번째 앱(app.three) 추가 시 가장 오래된 app.one 파티션이 Evict 되어야 함
         cache.addUtterance("app.three", "3번 발화")
 
-        assertEquals(3, cache.getPartitionCount())
-
-        // 4번째 앱 추가 시 가장 오래된 app.one 파티션이 Evict 되어야 함
-        cache.addUtterance("app.four", "4번 발화")
-
-        assertEquals(3, cache.getPartitionCount())
+        assertEquals(2, cache.getPartitionCount())
         assertTrue("app.one은 Evict 되어 비어있어야 함", cache.getRecentContext("app.one").isEmpty())
-        assertEquals(1, cache.getRecentContext("app.four").size)
+        assertEquals(1, cache.getRecentContext("app.two").size)
+        assertEquals(1, cache.getRecentContext("app.three").size)
     }
 }
