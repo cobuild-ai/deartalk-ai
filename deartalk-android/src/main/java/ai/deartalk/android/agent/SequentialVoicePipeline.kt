@@ -52,14 +52,14 @@ class SequentialVoicePipeline(
 
     /**
      * 🚀 음성 파이프라인 실행
-     * @param simulatedVoiceText 직접 입력받은 음성 텍스트 (또는 STT 결과)
+     * @param voiceText 직접 입력받은 음성 텍스트 (또는 STT 결과)
      * @param targetLang 목표 언어 코드 (KO, EN, JA, ZH, TH, ID)
      * @param sourceLang 입력 언어 코드
      * @param tone 톤앤매너 (기본 다듬기, 정중하게, 다정하게, 당당하게 등)
      * @param autoSpeak TTS 자동 발화 여부
      */
     fun processVoiceInput(
-        simulatedVoiceText: String,
+        voiceText: String,
         targetLang: String = "KO",
         sourceLang: String = "KO",
         tone: String? = null,
@@ -71,7 +71,7 @@ class SequentialVoicePipeline(
         currentJob?.cancel()
         currentJob = pipelineScope.launch {
             try {
-                if (simulatedVoiceText.isBlank()) {
+                if (voiceText.isBlank()) {
                     _stage.value = VoicePipelineStage.Error(ai.deartalk.android.data.pref.UiStrings.noSpeechDetected)
                     return@launch
                 }
@@ -79,7 +79,7 @@ class SequentialVoicePipeline(
                 val isQwen = modelLifecycleManager.isInstalled()
 
                 // 🌟 2-Way 통역 지능형 언어 감지 및 자동 반전(Auto-Swap)
-                val detectedLang = ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(simulatedVoiceText, fallback = sourceLang)
+                val detectedLang = ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(voiceText, fallback = sourceLang)
                 var effectiveSourceLang = sourceLang
                 var effectiveTargetLang = targetLang
 
@@ -95,33 +95,34 @@ class SequentialVoicePipeline(
                     }
                 }
 
-                Log.d(TAG, "🎙️ [1단계: STT 음성인식 완료] 원문: '$simulatedVoiceText' (감지언어: $detectedLang, 통역방향: $effectiveSourceLang ➔ $effectiveTargetLang, Qwen: $isQwen)")
+                Log.d(TAG, "🎙️ [1단계: STT 음성인식 완료] 원문: '$voiceText' (감지언어: $detectedLang, 통역방향: $effectiveSourceLang ➔ $effectiveTargetLang, Qwen: $isQwen)")
                 _stage.value = VoicePipelineStage.ProcessingSTT(1.0f)
-                delay(80) // UI 반응용 마이크로 딜레이
+                // Compose UI의 STT 완료 애니메이션 렌더링 프레임 확보를 위한 최소 딜레이 (UI Smoothing)
+                delay(80)
 
-                // 2단계: LLM 문맥 정제 또는 다국어 번역
-                Log.d(TAG, "🧠 [2단계: LLM 문맥/번역 시작] $effectiveSourceLang ➔ $effectiveTargetLang (톤: $tone)")
-                _stage.value = VoicePipelineStage.RefiningLLM(simulatedVoiceText)
+                // 2단계: LLM 문맥 정제 또는 다국어 번역 (대화 맥락 주입 및 앱별 격리)
+                Log.d(TAG, "🧠 [2단계: LLM 문맥/번역 시작] $effectiveSourceLang ➔ $effectiveTargetLang (톤: $tone, 앱: $appPackageName)")
+                _stage.value = VoicePipelineStage.RefiningLLM(voiceText)
 
                 val refinedText = if (effectiveTargetLang.equals(effectiveSourceLang, ignoreCase = true) && tone == null) {
-                    when (val res = intentEngine.processIntent(simulatedVoiceText)) {
+                    when (val res = intentEngine.processIntent(voiceText, packageName = appPackageName)) {
                         is IntentResult.Success -> res.text
                         is IntentResult.Error -> res.fallbackText
                     }
                 } else if (tone != null && effectiveTargetLang.equals(effectiveSourceLang, ignoreCase = true)) {
-                    when (val res = intentEngine.applyTone(simulatedVoiceText, tone)) {
+                    when (val res = intentEngine.applyTone(voiceText, tone, packageName = appPackageName)) {
                         is IntentResult.Success -> res.text
                         is IntentResult.Error -> res.fallbackText
                     }
                 } else {
                     val translated = intentEngine.translate(
-                        voiceInput = simulatedVoiceText,
+                        voiceInput = voiceText,
                         targetLangCode = effectiveTargetLang,
                         sourceLangCode = effectiveSourceLang,
                         tone = tone,
                         packageName = appPackageName
                     )
-                    if (translated.isNotBlank()) translated else simulatedVoiceText
+                    if (translated.isNotBlank()) translated else voiceText
                 }
 
                 // 3단계: TTS 음성 합성 (번역 결과 텍스트의 언어에 맞춰 TTS 엔진 완벽 매칭)
@@ -134,7 +135,7 @@ class SequentialVoicePipeline(
                 }
 
                 _stage.value = VoicePipelineStage.Completed(
-                    rawText = simulatedVoiceText,
+                    rawText = voiceText,
                     aiText = refinedText,
                     targetLang = effectiveTargetLang,
                     isQwenEngine = isQwen

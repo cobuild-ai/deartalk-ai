@@ -244,6 +244,16 @@ class DearTalkIntentEngine(
                             priorContext.joinToString("\n") { "- $it" } + "\n\n"
                 } else ""
 
+                val contextBlockIndonesian = if (priorContext.isNotEmpty()) {
+                    "[Konteks Percakapan Sebelumnya (Hanya referensi subjek/kata ganti, JANGAN dijawab)]:\n" +
+                            priorContext.joinToString("\n") { "- $it" } + "\n\n"
+                } else ""
+
+                val contextBlockEnglish = if (priorContext.isNotEmpty()) {
+                    "[Prior Conversation Context (For pronoun/subject resolution only, do NOT answer)]:\n" +
+                            priorContext.joinToString("\n") { "- $it" } + "\n\n"
+                } else ""
+
                 val prompt = if (isInputKorean) {
                     "<start_of_turn>user\n" +
                             "당신은 모바일 키보드의 '실시간 음성 문장 교정 및 다듬기 AI'입니다.\n" +
@@ -270,6 +280,7 @@ class DearTalkIntentEngine(
                             "Anda adalah AI perapih dan pengoreksi tata bahasa pesan teks suara untuk papan ketik ponsel.\n" +
                             "⚠️ PENTING: Anda BUKAN chatbot. JANGAN menjawab pertanyaan atau mengobrol dengan pengguna!\n" +
                             "Tugas tunggal Anda adalah memperbaiki kesalahan ketik/tata bahasa, memberikan tanda baca yang tepat ('?', '!', '.', ','), dan merapikan kalimat masukan menjadi bahasa Indonesia yang baik, alami, dan sopan agar siap dikirim sebagai pesan.\n\n" +
+                            contextBlockIndonesian +
                             "[Contoh]\n" +
                             "- \"saya lagi di jalan tapi macet bgt mungkin telat 15 menit maaf ya\" -> Saya sedang di jalan tetapi lalu lintas sangat macet, mungkin terlambat 15 menit. Maaf ya.\n" +
                             "- \"proposal yg udah diperbarui udh dikirim tolong dicek ya\" -> Proposal yang sudah diperbarui sudah saya kirim, tolong dicek ya.\n" +
@@ -286,6 +297,7 @@ class DearTalkIntentEngine(
                             "⚠️ CRITICAL: You are NOT a chatbot. Do NOT answer questions or converse with the user!\n" +
                             "⚠️ ABSOLUTE RULE: The input is in English. Keep it strictly in ENGLISH. Do NOT translate to Korean or any other language!\n" +
                             "Your ONLY duty is to correct typos, fix grammar, and attach appropriate punctuation marks ('?', '!', '.', ',') in English so the user can send it as a clean message.\n\n" +
+                            contextBlockEnglish +
                             "[Examples]\n" +
                             "- \"what time should we meet tomorrow\" -> What time should we meet tomorrow?\n" +
                             "- \"i just arrived safely\" -> I just arrived safely.\n" +
@@ -301,6 +313,7 @@ class DearTalkIntentEngine(
                             "You are a mobile keyboard's 'speech-to-text punctuation corrector'.\n" +
                             "⚠️ CRITICAL: Do NOT answer questions. Keep the original language of the input.\n" +
                             "Attach appropriate punctuation marks and output ONLY the single-line refined text.\n\n" +
+                            contextBlockEnglish +
                             "Input: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 }
@@ -565,16 +578,17 @@ class DearTalkIntentEngine(
         return text.trim()
     }
 
-    suspend fun processIntent(voiceInput: String): IntentResult = process(voiceInput)
+    suspend fun processIntent(voiceInput: String, packageName: String = ""): IntentResult =
+        process(voiceInput = voiceInput, packageName = packageName)
 
-    suspend fun applyTone(voiceInput: String, toneName: String): IntentResult {
+    suspend fun applyTone(voiceInput: String, toneName: String, packageName: String = ""): IntentResult {
         val tone = CustomTone(
             id = toneName,
             name = toneName,
             instruction = toneName,
             icon = "✨"
         )
-        return processWithTone(voiceInput, tone)
+        return processWithTone(voiceInput = voiceInput, tone = tone, packageName = packageName)
     }
 
     /**

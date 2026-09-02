@@ -99,12 +99,13 @@ fun VoiceStudioScreen(
     fun executePipeline(text: String, tgtLang: String = targetLanguage, tone: String? = selectedTone) {
         if (text.isBlank()) return
         voicePipeline.processVoiceInput(
-            simulatedVoiceText = text,
+            voiceText = text,
             targetLang = if (selectedMode == 1) tgtLang else defaultAppLangCode,
             sourceLang = defaultAppLangCode,
             tone = if (selectedMode == 0) tone else null,
             gender = selectedGender,
-            pitch = selectedPitch
+            pitch = selectedPitch,
+            appPackageName = "ai.deartalk.android.voicestudio"
         )
     }
 
