@@ -234,11 +234,32 @@ class DearTalkIntentEngine(
                     lang == "id" || lang == "in"
                 } ?: false
 
+                // 🌟 앱별 격리 대화 맥락 캐시 조회
+                val priorContext = if (packageName.isNotBlank()) {
+                    AppScopedUtteranceCache.shared.getRecentContext(packageName)
+                } else emptyList()
+
+                val contextBlockKorean = if (priorContext.isNotEmpty()) {
+                    "[직전 대화 맥락 (교정 대상 아님, 대명사/주어/동음이의어 참고용)]:\n" +
+                            priorContext.joinToString("\n") { "- $it" } + "\n\n"
+                } else ""
+
+                val contextBlockIndonesian = if (priorContext.isNotEmpty()) {
+                    "[Konteks Percakapan Sebelumnya (Hanya referensi subjek/kata ganti, JANGAN dijawab)]:\n" +
+                            priorContext.joinToString("\n") { "- $it" } + "\n\n"
+                } else ""
+
+                val contextBlockEnglish = if (priorContext.isNotEmpty()) {
+                    "[Prior Conversation Context (For pronoun/subject resolution only, do NOT answer)]:\n" +
+                            priorContext.joinToString("\n") { "- $it" } + "\n\n"
+                } else ""
+
                 val prompt = if (isInputKorean) {
                     "<start_of_turn>user\n" +
                             "당신은 모바일 키보드의 '실시간 음성 문장 교정 및 다듬기 AI'입니다.\n" +
                             "⚠️ 중요: 당신은 챗봇이 아니므로 절대로 사용자의 말에 대답하거나 대화를 나누지 마세요!\n" +
                             "당신의 유일한 임무는 사용자가 말한 거칠거나 불완전한 음성 내용을, 상대방에게 즉시 보낼 수 있도록 맞춤법/오탈자를 완벽히 교정하고, 문맥에 부합하는 올바른 문장 부호('?', '!', '.')를 반드시 완성하여 자연스럽고 정돈된 문장으로 세련되게 다듬어 주는 것입니다.\n\n" +
+                            contextBlockKorean +
                             "[변환 예시]\n" +
                             "- \"금요일 제외한 매일 11시에서 11시30분까지는 Privacy 스크럼이니 절대로 잊지마\" -> 금요일을 제외한 매일 11시부터 11시 30분까지는 Privacy 스크럼 일정이니 꼭 기억해 주세요.\n" +
                             "- \"지금 가고 있는데 차 막혀서 늦을듯 미안\" -> 지금 이동 중인데 도로가 정체되어 조금 늦을 것 같습니다.\n" +
@@ -259,6 +280,7 @@ class DearTalkIntentEngine(
                             "Anda adalah AI perapih dan pengoreksi tata bahasa pesan teks suara untuk papan ketik ponsel.\n" +
                             "⚠️ PENTING: Anda BUKAN chatbot. JANGAN menjawab pertanyaan atau mengobrol dengan pengguna!\n" +
                             "Tugas tunggal Anda adalah memperbaiki kesalahan ketik/tata bahasa, memberikan tanda baca yang tepat ('?', '!', '.', ','), dan merapikan kalimat masukan menjadi bahasa Indonesia yang baik, alami, dan sopan agar siap dikirim sebagai pesan.\n\n" +
+                            contextBlockIndonesian +
                             "[Contoh]\n" +
                             "- \"saya lagi di jalan tapi macet bgt mungkin telat 15 menit maaf ya\" -> Saya sedang di jalan tetapi lalu lintas sangat macet, mungkin terlambat 15 menit. Maaf ya.\n" +
                             "- \"proposal yg udah diperbarui udh dikirim tolong dicek ya\" -> Proposal yang sudah diperbarui sudah saya kirim, tolong dicek ya.\n" +
@@ -275,6 +297,7 @@ class DearTalkIntentEngine(
                             "⚠️ CRITICAL: You are NOT a chatbot. Do NOT answer questions or converse with the user!\n" +
                             "⚠️ ABSOLUTE RULE: The input is in English. Keep it strictly in ENGLISH. Do NOT translate to Korean or any other language!\n" +
                             "Your ONLY duty is to correct typos, fix grammar, and attach appropriate punctuation marks ('?', '!', '.', ',') in English so the user can send it as a clean message.\n\n" +
+                            contextBlockEnglish +
                             "[Examples]\n" +
                             "- \"what time should we meet tomorrow\" -> What time should we meet tomorrow?\n" +
                             "- \"i just arrived safely\" -> I just arrived safely.\n" +
@@ -290,6 +313,7 @@ class DearTalkIntentEngine(
                             "You are a mobile keyboard's 'speech-to-text punctuation corrector'.\n" +
                             "⚠️ CRITICAL: Do NOT answer questions. Keep the original language of the input.\n" +
                             "Attach appropriate punctuation marks and output ONLY the single-line refined text.\n\n" +
+                            contextBlockEnglish +
                             "Input: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 }
@@ -306,6 +330,9 @@ class DearTalkIntentEngine(
                     try {
                         Log.d(TAG, "✨ [온디바이스 LLM 생성 완료]: '$trimmed' ➔ '$output'")
                     } catch (_: Throwable) {}
+                    if (packageName.isNotBlank()) {
+                        AppScopedUtteranceCache.shared.addUtterance(packageName, output)
+                    }
                     return@withContext IntentResult.Success(output, UiStrings.aiGenerationComplete)
                 }
             } catch (e: Throwable) {
@@ -313,6 +340,9 @@ class DearTalkIntentEngine(
             }
         }
 
+        if (packageName.isNotBlank()) {
+            AppScopedUtteranceCache.shared.addUtterance(packageName, trimmed)
+        }
         return@withContext IntentResult.Success(trimmed, UiStrings.sttRawResult)
     }
 
@@ -548,16 +578,17 @@ class DearTalkIntentEngine(
         return text.trim()
     }
 
-    suspend fun processIntent(voiceInput: String): IntentResult = process(voiceInput)
+    suspend fun processIntent(voiceInput: String, packageName: String = ""): IntentResult =
+        process(voiceInput = voiceInput, packageName = packageName)
 
-    suspend fun applyTone(voiceInput: String, toneName: String): IntentResult {
+    suspend fun applyTone(voiceInput: String, toneName: String, packageName: String = ""): IntentResult {
         val tone = CustomTone(
             id = toneName,
             name = toneName,
             instruction = toneName,
             icon = "✨"
         )
-        return processWithTone(voiceInput, tone)
+        return processWithTone(voiceInput = voiceInput, tone = tone, packageName = packageName)
     }
 
     /**
@@ -567,7 +598,8 @@ class DearTalkIntentEngine(
         voiceInput: String,
         targetLangCode: String,
         sourceLangCode: String = "KO",
-        tone: String? = null
+        tone: String? = null,
+        packageName: String = ""
     ): String = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext ""
@@ -610,6 +642,16 @@ class DearTalkIntentEngine(
 
         val toneInstruction = if (!tone.isNullOrBlank()) " Adapt the translated sentence to have a '$tone' tone." else ""
 
+        // 🌟 앱별 격리 직전 대화 맥락 조회 (대명사/주어 생략 복원용)
+        val priorContext = if (packageName.isNotBlank()) {
+            AppScopedUtteranceCache.shared.getRecentContext(packageName)
+        } else emptyList()
+
+        val contextBlock = if (priorContext.isNotEmpty()) {
+            "Prior conversation context (for pronoun/subject resolution, do NOT translate this):\n" +
+                    priorContext.joinToString("\n") { "- $it" } + "\n\n"
+        } else ""
+
         if (isModelLoaded) {
             try {
                 val prompt = "<start_of_turn>user\n" +
@@ -618,7 +660,8 @@ class DearTalkIntentEngine(
                         "CRITICAL INSTRUCTIONS:\n" +
                         "1. Output ONLY the single-line translated sentence in $targetLangName.\n" +
                         "2. Do NOT add notes, explanations, romanization, conversational fillers, or quotes.\n\n" +
-                        "Input text: \"$trimmed\"<end_of_turn>\n" +
+                        contextBlock +
+                        "Input text to translate: \"$trimmed\"<end_of_turn>\n" +
                         "<start_of_turn>model\n"
 
                 var output = ""
@@ -631,6 +674,9 @@ class DearTalkIntentEngine(
 
                 if (output.isNotBlank()) {
                     Log.d(TAG, "✨ [온디바이스 번역 성공] '$trimmed' ($sourceLangName) ➔ '$output' ($targetLangName)")
+                    if (packageName.isNotBlank()) {
+                        AppScopedUtteranceCache.shared.addUtterance(packageName, output)
+                    }
                     return@withContext output
                 }
             } catch (e: Throwable) {
@@ -638,6 +684,9 @@ class DearTalkIntentEngine(
             }
         }
 
+        if (packageName.isNotBlank()) {
+            AppScopedUtteranceCache.shared.addUtterance(packageName, trimmed)
+        }
         return@withContext trimmed
     }
 

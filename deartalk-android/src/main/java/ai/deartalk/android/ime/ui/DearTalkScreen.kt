@@ -80,13 +80,14 @@ fun DearTalkScreen(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .navigationBarsPadding(),
         color = DearTalkBackground
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 5.dp),
+                .padding(start = 8.dp, end = 8.dp, top = 5.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ─────────────────────────────────────────────────────────────

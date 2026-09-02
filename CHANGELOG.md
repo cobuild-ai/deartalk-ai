@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.8] - 2026-09-03
+
+### Added
+- **Human-Centered 2-Slot Utterance Cache (`AppScopedUtteranceCache`)**:
+  - Implemented an app-scoped in-memory sliding cache based on human working memory limits (`maxApps = 2`: Primary Focus + Secondary Toggled App).
+  - Eliminates subject/pronoun omission ("3박 4일 일정은요?" -> "발리 3박 4일 일정은요?") and homophone typos by injecting prior conversation context into SLM prompts.
+  - Zero-Allocation Circular Ring Buffer (`CircularUtteranceBuffer`): Overwrites slots in-place to ensure zero GC overhead, zero keyboard jitter, and fixed memory footprint under 500 bytes.
+  - 3-minute TTL auto-expiration and pure RAM residency for strict Google Play privacy compliance.
+
+### Refactored
+- **Zero Language Bias in Context Injection**:
+  - Uniformly injected localized conversation context blocks across Korean, Indonesian, and English/global prompts.
+  - Propagated target app `packageName` through `processIntent` and `applyTone` across all voice pipeline flows.
+  - Cleaned prototype legacy parameter naming (`simulatedVoiceText` -> `voiceText`).
+
+---
+
+## [1.0.7] - 2026-09-02
+
+### Fixed
+- **Speech Recognition Infinite Sound Loop Prevention**:
+  - Resolved `SpeechRecognitionManager` defect where `ERROR_NO_MATCH` and `ERROR_SPEECH_TIMEOUT` triggered an infinite rapid keep-alive reconnection loop and system beep noise cycle on silence.
+  - Safely falls back to `VoiceState.FinalResult` when prior recognized text exists, or cleanly transitions to `VoiceState.Idle`.
+- **Samsung One UI System Navigation Bar & Keyboard Switch Overlap**:
+  - Added `.navigationBarsPadding()` and 8.dp bottom safety padding to `DearTalkScreen` and `StandardKeyboardView` root surfaces.
+  - Completely eliminates touch collision between IME control buttons (`Clear`, `Backspace`) and Samsung Galaxy gesture handles or system keyboard switch icons.
+
+---
+
 ## [1.0.6] - 2026-09-02
 
 ### Changed

@@ -93,19 +93,16 @@ class SpeechRecognitionManager(private val context: Context) {
             override fun onError(error: Int) {
                 Log.w(TAG, "⚠️ STT 에러/타임아웃 감지 (코드: $error, 사용자 청취 의도: $isUserIntentionallyListening)")
                 
-                // 사용자가 마이크를 켜둔 상태에서 짧은 침묵(NO_MATCH=7, TIMEOUT=6)이 발생한 경우 마이크 유지
-                if (isUserIntentionallyListening && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
-                    Log.d(TAG, "🔄 침묵 타임아웃 감지 ➔ 마이크 세션 자동 재연결(Keep-Alive)")
-                    mainHandler.postDelayed({
-                        if (isUserIntentionallyListening) {
-                            startListeningInternal(currentListeningLocale)
-                        }
-                    }, 100)
-                    return
-                }
-
-                _voiceState.value = VoiceState.Error(error)
                 isUserIntentionallyListening = false
+
+                // 침묵 또는 미인식 시 무한 재시작 루프를 돌지 않고, 인식된 텍스트가 있으면 전달하고 없으면 세션을 정상 종료
+                if (lastRecognizedText.isNotBlank()) {
+                    _voiceState.value = VoiceState.FinalResult(lastRecognizedText)
+                } else if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                    _voiceState.value = VoiceState.Idle
+                } else {
+                    _voiceState.value = VoiceState.Error(error)
+                }
             }
 
             override fun onResults(results: Bundle?) {
