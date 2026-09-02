@@ -46,13 +46,14 @@ fun StandardKeyboardView(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .navigationBarsPadding(),
         color = DearTalkBackground
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 5.dp),
+                .padding(start = 4.dp, end = 4.dp, top = 5.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 상단 툴바: 일반 키보드 상태 & [✨ AI 모드로 복귀] 버튼

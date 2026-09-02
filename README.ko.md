@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.6` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | Target SDK 36, 1-Tap 대화 파트너 언어 선택 UX, 지능형 양방향 자동 반전(Auto-Swap), 스크립트 일치 TTS 엔진, Voice Studio & 실시간 대면 통역기 |
+| 🤖 **DearTalk Android IME** | `v1.0.7` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 삼성 One UI 내비게이션 바 패딩 겹침 해결, STT 비프음 무한 루프 차단, Target SDK 36, 1-Tap 언어 선택, 지능형 Auto-Swap |
 
 ---
 

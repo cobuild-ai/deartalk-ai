@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2026-09-02
+
+### Fixed
+- **Speech Recognition Infinite Sound Loop Prevention**:
+  - Resolved `SpeechRecognitionManager` defect where `ERROR_NO_MATCH` and `ERROR_SPEECH_TIMEOUT` triggered an infinite rapid keep-alive reconnection loop and system beep noise cycle on silence.
+  - Safely falls back to `VoiceState.FinalResult` when prior recognized text exists, or cleanly transitions to `VoiceState.Idle`.
+- **Samsung One UI System Navigation Bar & Keyboard Switch Overlap**:
+  - Added `.navigationBarsPadding()` and 8.dp bottom safety padding to `DearTalkScreen` and `StandardKeyboardView` root surfaces.
+  - Completely eliminates touch collision between IME control buttons (`Clear`, `Backspace`) and Samsung Galaxy gesture handles or system keyboard switch icons.
+
+---
+
 ## [1.0.6] - 2026-09-02
 
 ### Changed
