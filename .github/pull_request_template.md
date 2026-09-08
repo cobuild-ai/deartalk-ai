@@ -33,6 +33,7 @@ Please check what tests you ran before submitting this PR:
 ---
 
 ## 📋 Contributor Checklist
+- [ ] ✍️ **Contributor License Agreement (CLA)**: I confirm that this contribution is my original work and I agree to the [Contributor License Agreement (CLA)](CLA.md) and Apache License 2.0.
 - [ ] My code adheres to the project's **Zero Fake Rules Invariant** (100% on-device AI inference, no mock fallbacks).
 - [ ] I have updated relevant documentation if this PR introduces public-facing changes.
 - [ ] If modifying `README`, I updated all 3 languages (`README.md`, `README.ko.md`, `README.id.md`) in sync.
