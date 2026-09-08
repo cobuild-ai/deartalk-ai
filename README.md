@@ -32,6 +32,15 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 ---
 
+## 📱 On-Device AI Showcase (Samsung Galaxy S22 Ultra)
+
+| 🎙️ Voice Studio & Tone Refinement | 🌐 2-Way Live Multilingual Interpreter | 🔒 On-Device Privacy & Interactive Sandbox |
+| :---: | :---: | :---: |
+| <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI Voice Studio Tone Refinement"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI Live Multilingual Interpreter"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI Privacy Sandbox"> |
+| **0ms Speech Tone Transformation**<br>Refines informal/raw speech (*"오늘 밥 같이 먹을래?"*) into polite, context-aware expressions (*"오늘 식사 함께 하실 수 있으실까요?"*). | **Simultaneous 2-Way Interpreter**<br>`🇰🇷 KO ⇄ 🇺🇸 EN` (and ID, JA, ES) with dual-gender vocal timbre and 4-tier pitch calibration. | **100% Air-Gapped Privacy Sandbox**<br>Zero network transmission (`🔒 100% Safe - 0% Server Traffic`). Local neural inference running inside your device. |
+
+---
+
 ## 🌟 Key Platform Features
 
 ### 🎙️ AI Voice Studio & Live Interpreter (`VoiceStudioActivity`)
