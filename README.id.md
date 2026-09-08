@@ -31,6 +31,15 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 ---
 
+## 📱 Pameran AI On-Device (Samsung Galaxy S22 Ultra)
+
+| 🎙️ Voice Studio & Gaya Bicara Sopan | 🌐 Penerjemah Multibahasa 2-Arah | 🔒 Privasi On-Device & Kotak Pasir |
+| :---: | :---: | :---: |
+| <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI Voice Studio Perubahan Gaya Bicara"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI Penerjemah Langsung Multibahasa"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI Kotak Pasir Privasi On-Device"> |
+| **Transformasi Nada Bicara 0ms**<br>Merombak ucapan santai (*"오늘 밥 같이 먹을래?"*) menjadi kalimat sopan dan tertata (*"오늘 식사 함께 하실 수 있으실까요?"*). | **Penerjemah Simultan 2-Arah**<br>`🇰🇷 Korea ⇄ 🇺🇸 Inggris` (serta ID, JA, ES) dengan pilihan vokal pria/wanita dan 4 tingkat kalibrasi nada. | **Kotak Pasir Privasi 100% Aman**<br>Nol transmisi jaringan ke server luar (`🔒 100% Aman - 0% Lalu Lintas Server`). Berjalan lokal di perangkat Anda. |
+
+---
+
 ## 🌟 Fitur Utama Papan Ketik Android
 
 ### 🎙️ AI Voice Studio & Penerjemah Langsung (`VoiceStudioActivity`)

@@ -31,6 +31,15 @@
 
 ---
 
+## 📱 온디바이스 AI 실기기 쇼케이스 (Samsung Galaxy S22 Ultra)
+
+| 🎙️ 보이스 스튜디오 & 고운말 톤 스피킹 | 🌐 양방향 실시간 다국어 통역기 | 🔒 온디바이스 프라이버시 & 대화형 샌드박스 |
+| :---: | :---: | :---: |
+| <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI 보이스 스튜디오 고운말 톤 변환"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI 실시간 다국어 통역기"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI 온디바이스 프라이버시 샌드박스"> |
+| **0ms 즉각 음성 톤 조율**<br>날것의 구어체 발화(*"오늘 밥 같이 먹을래?"*)를 정중하고 단정한 표현(*"오늘 식사 함께 하실 수 있으실까요?"*)으로 즉각 교정. | **실시간 양방향 동시통역**<br>`🇰🇷 한국어 ⇄ 🇺🇸 영어` (및 인도네시아어, 일본어, 스페인어) 지원, 여성/남성 음색 및 4단계 피치 조율. | **100% 에어갭 안심 샌드박스**<br>외부 네트워크 전송 0% (`🔒 100% 안전 - 외부 서버 통신 0%`). 내 스마트폰 내부에서만 완벽히 격리 실행. |
+
+---
+
 ## 🌟 안드로이드 키보드 주요 기능
 
 ### 🎙️ AI Voice Studio & 실시간 대면 통역기 (`VoiceStudioActivity`)
