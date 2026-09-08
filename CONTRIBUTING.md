@@ -57,6 +57,10 @@ make lint              # or ./verify.sh lint
 
 ---
 
+
+## ✍️ Contributor License Agreement (CLA)
+By submitting a Pull Request to DearTalkAI, you agree to our [Contributor License Agreement (CLA)](CLA.md). All contributions are licensed under the **Apache License 2.0** pursuant to Section 5 of the License.
+
 ## 🚨 Inviolable Core Principles (The Zero Fake Rule)
 
 Before writing any code, please review our inviolable governance principles in [GEMINI.md](GEMINI.md):
