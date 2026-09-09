@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -98,18 +100,19 @@ fun HardwareDiagnosticCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(UiStrings.diagModelTitle, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(UiStrings.diagModelTitle, fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
                             Text(UiStrings.diagModelSubtitle, fontSize = 11.sp, color = DearTalkTextDim)
                         }
                         Button(
                             onClick = onDownloadClick,
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkPrimary)
+                            colors = ButtonDefaults.buttonColors(containerColor = DearTalkPrimary),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(UiStrings.diagDownloadBtn, fontSize = 12.sp)
+                            Text(UiStrings.diagDownloadBtn, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -145,7 +148,27 @@ fun HardwareDiagnosticCard(
                     }
                 }
                 is ModelPackState.Error -> {
-                    Text(UiStrings.diagErrorLabel(packState.message), fontSize = 12.sp, color = Color(0xFFEF4444))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            UiStrings.diagErrorLabel(packState.message),
+                            fontSize = 12.sp,
+                            color = Color(0xFFEF4444),
+                            modifier = Modifier.weight(1f).padding(end = 8.dp)
+                        )
+                        OutlinedButton(
+                            onClick = onDownloadClick,
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = DearTalkSecondary)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(UiStrings.diagRetryBtn, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DearTalkSecondary)
+                        }
+                    }
                 }
             }
         }

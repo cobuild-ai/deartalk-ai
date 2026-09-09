@@ -25,8 +25,10 @@ import ai.deartalk.android.ime.ui.theme.DearTalkText
 import ai.deartalk.android.ime.ui.theme.DearTalkTextDim
 
 @Composable
-fun QuickSampleChips(onSampleSelected: (String) -> Unit) {
-    val samples = UiStrings.quickSamples
+fun QuickSampleChips(
+    samples: List<String> = UiStrings.quickSamples,
+    onSampleSelected: (String) -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(UiStrings.quickTestTitle, fontSize = 12.sp, color = DearTalkTextDim)
         Spacer(modifier = Modifier.height(6.dp))
@@ -40,7 +42,7 @@ fun QuickSampleChips(onSampleSelected: (String) -> Unit) {
                         .clip(RoundedCornerShape(16.dp))
                         .background(DearTalkKey)
                         .clickable { onSampleSelected(sample) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text(sample, fontSize = 12.sp, color = DearTalkText)
                 }

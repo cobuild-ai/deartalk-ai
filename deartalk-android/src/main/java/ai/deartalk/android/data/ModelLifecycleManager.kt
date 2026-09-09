@@ -110,7 +110,9 @@ class ModelLifecycleManager(private val context: Context) {
         val adbDir = File("/data/local/tmp/llm")
         if (adbDir.exists() && adbDir.isDirectory) {
             val sttFile = File(adbDir, "qwen3-asr-0.6b.bin")
-            val llmFile = File(adbDir, "qwen3-1.7b-it.bin")
+            val llmFile = File(adbDir, "qwen2.5-0.5b-it.bin").takeIf { it.exists() }
+                ?: File(adbDir, "qwen-0.5b-it.bin").takeIf { it.exists() }
+                ?: File(adbDir, "qwen3-1.7b-it.bin")
             val ttsFile = File(adbDir, "qwen3-tts-0.6b.bin")
             if (sttFile.exists() || llmFile.exists() || ttsFile.exists()) {
                 if (sttFile.exists()) paths[KEY_STT] = sttFile.absolutePath
@@ -123,7 +125,9 @@ class ModelLifecycleManager(private val context: Context) {
         // 2. 앱 내부 On-Demand 다운로드 디렉토리 감지
         val modelDir = getModelDirectory()
         val appStt = File(modelDir, "qwen3-asr-0.6b.bin")
-        val appLlm = File(modelDir, "qwen3-1.7b-it.bin")
+        val appLlm = File(modelDir, "qwen2.5-0.5b-it.bin").takeIf { it.exists() }
+            ?: File(modelDir, "qwen-0.5b-it.bin").takeIf { it.exists() }
+            ?: File(modelDir, "qwen3-1.7b-it.bin")
         val appTts = File(modelDir, "qwen3-tts-0.6b.bin")
 
         if (appStt.exists() && appLlm.exists() && appTts.exists()) {

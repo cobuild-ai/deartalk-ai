@@ -17,13 +17,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -36,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -91,6 +97,7 @@ fun VoiceStudioScreen(
     var rawTextDisplay by remember { mutableStateOf("") }
     var aiTextDisplay by remember { mutableStateOf("") }
     var hasValidResult by remember { mutableStateOf(false) }
+    var showPurgeConfirmDialog by remember { mutableStateOf(false) }
 
     val defaultAppLangCode = myAppLangCode
     val isListening = micUiState == MicUiState.LISTENING
@@ -195,6 +202,37 @@ fun VoiceStudioScreen(
         }
     }
 
+    // 🛡️ 모델 패키지 삭제 확인 다이얼로그
+    if (showPurgeConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showPurgeConfirmDialog = false },
+            title = {
+                Text(UiStrings.diagPurgeConfirmTitle, fontWeight = FontWeight.Bold, color = DearTalkText)
+            },
+            text = {
+                Text(UiStrings.diagPurgeConfirmMessage, fontSize = 14.sp, color = DearTalkText)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPurgeConfirmDialog = false
+                        modelLifecycleManager.purgeModels()
+                        intentEngine.reloadModel()
+                    }
+                ) {
+                    Text(UiStrings.btnDelete, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPurgeConfirmDialog = false }) {
+                    Text(UiStrings.btnCancel, color = DearTalkText)
+                }
+            },
+            containerColor = DearTalkSurface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -218,6 +256,44 @@ fun VoiceStudioScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DearTalkBackground)
             )
         },
+        bottomBar = {
+            // 🔴 7. 화면 최하단 상시 고정 메인 마이크 발화 바 (Sticky Bottom Bar)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
+                color = DearTalkBackground,
+                shadowElevation = 10.dp
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    MainRecordButton(
+                        micUiState = micUiState,
+                        rmsDb = rmsDb,
+                        onClick = {
+                            if (isListening) {
+                                sttManager.stopListening()
+                            } else {
+                                val hasPermission = ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.RECORD_AUDIO
+                                ) == PackageManager.PERMISSION_GRANTED
+
+                                if (hasPermission) {
+                                    sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(defaultAppLangCode))
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        },
         containerColor = DearTalkBackground
     ) { innerPadding ->
         Column(
@@ -238,8 +314,7 @@ fun VoiceStudioScreen(
                     )
                 },
                 onPurgeClick = {
-                    modelLifecycleManager.purgeModels()
-                    intentEngine.reloadModel()
+                    showPurgeConfirmDialog = true
                 }
             )
 
@@ -257,12 +332,26 @@ fun VoiceStudioScreen(
                 ModeTabButton(
                     title = UiStrings.modeToneTransform,
                     isSelected = selectedMode == 0,
-                    onClick = { selectedMode = 0 }
+                    onClick = {
+                        if (selectedMode != 0) {
+                            selectedMode = 0
+                            if (hasValidResult && rawTextDisplay.isNotBlank()) {
+                                executePipeline(rawTextDisplay, tone = selectedTone)
+                            }
+                        }
+                    }
                 )
                 ModeTabButton(
                     title = UiStrings.modeLiveTranslation,
                     isSelected = selectedMode == 1,
-                    onClick = { selectedMode = 1 }
+                    onClick = {
+                        if (selectedMode != 1) {
+                            selectedMode = 1
+                            if (hasValidResult && rawTextDisplay.isNotBlank()) {
+                                executePipeline(rawTextDisplay, tgtLang = targetLanguage)
+                            }
+                        }
+                    }
                 )
             }
 
@@ -322,8 +411,10 @@ fun VoiceStudioScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 💡 6. 빠른 테스트 문장 칩
+            // 💡 6. 빠른 테스트 문장 칩 (모드별 상황 특화)
+            val currentSamples = if (selectedMode == 0) UiStrings.quickSamples else UiStrings.quickTranslationSamples
             QuickSampleChips(
+                samples = currentSamples,
                 onSampleSelected = { sample ->
                     rawTextDisplay = sample
                     hasValidResult = true
@@ -331,31 +422,7 @@ fun VoiceStudioScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 🔴 7. 메인 마이크 발화 & 녹음 제어 버튼
-            MainRecordButton(
-                micUiState = micUiState,
-                rmsDb = rmsDb,
-                onClick = {
-                    if (isListening) {
-                        sttManager.stopListening()
-                    } else {
-                        val hasPermission = ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.RECORD_AUDIO
-                        ) == PackageManager.PERMISSION_GRANTED
-
-                        if (hasPermission) {
-                            sttManager.startListening(LanguageLocaleHelper.getLocaleForCode(defaultAppLangCode))
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        }
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

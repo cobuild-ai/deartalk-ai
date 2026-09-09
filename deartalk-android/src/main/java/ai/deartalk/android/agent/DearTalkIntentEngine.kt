@@ -105,10 +105,15 @@ class DearTalkIntentEngine(
 
         val candidatePaths = mutableListOf<String>()
 
-        // 🌟 1순위: 다운로드/설치된 Qwen 고성능 1.7B LLM 모델 우선 바인딩
+        // 🌟 1순위: 다운로드/설치된 Qwen 0.5B 초경량 / 1.7B LLM 모델 우선 바인딩
         if (!qwenLlmPath.isNullOrBlank()) {
             candidatePaths.add(qwenLlmPath)
         }
+        candidatePaths.add(File(appContext.filesDir, "models/qwen/qwen2.5-0.5b-it.bin").absolutePath)
+        candidatePaths.add(File(appContext.filesDir, "models/qwen/qwen-0.5b-it.bin").absolutePath)
+        candidatePaths.add("/data/local/tmp/llm/qwen2.5-0.5b-it.bin")
+        candidatePaths.add("/data/local/tmp/llm/qwen-0.5b-it.bin")
+        candidatePaths.add("/data/local/tmp/llm/qwen2.5-0.5b-it.litertlm")
         candidatePaths.add(File(appContext.filesDir, "models/qwen/qwen3-1.7b-it.bin").absolutePath)
         candidatePaths.add("/data/local/tmp/llm/qwen3-1.7b-it.bin")
 

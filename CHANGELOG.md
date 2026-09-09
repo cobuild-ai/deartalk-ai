@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.9] - 2026-09-10
+
+### Added
+- **Voice Studio Sticky Bottom Bar**: Mic button now permanently fixed at screen bottom via `Scaffold(bottomBar)` + `navigationBarsPadding()`, eliminating system navigation bar overlap.
+- **Mode Switch Auto Re-translation**: Switching between Tone Transform and Live Interpretation modes now automatically re-processes existing text through the new pipeline.
+- **Model Purge Confirmation Dialog**: `AlertDialog` safety prompt before deleting on-device AI model package (~1.2GB).
+- **Download Error Retry Button**: `OutlinedButton` with refresh icon in Error state, enabling immediate re-download without app restart.
+- **Quick Translation Sample Sentences**: Mode-specific sample chips for both Tone Transform and Live Interpretation modes (3 languages: KO/EN/ID).
+
+### Changed
+- **UX Copy Refinement**: Replaced technical terminology "발화 음색(發話 音色)" → "🎙️ 목소리 설정" and "톤 매칭" → "🎚️ 목소리 톤:" for user-friendly language.
+- **On-Device SLM Engine**: Standardized to `Qwen 0.5B Nano` across all UI labels and model detection paths.
+
+### Fixed
+- **Recording Button Label Wrapping**: Added `maxLines = 1` + `TextOverflow.Ellipsis` to prevent forced line breaks on narrow screens or large font accessibility settings.
+
+### Accessibility
+- **TalkBack Semantics**: Added `selectable(selected, role = Role.Tab)` to gender toggle and mode tabs, `Role.RadioButton` to pitch chips, and `semantics { role = Role.Button }` to main mic button for screen reader support.
+
+---
+
 ## [1.0.8] - 2026-09-03
 
 ### Added

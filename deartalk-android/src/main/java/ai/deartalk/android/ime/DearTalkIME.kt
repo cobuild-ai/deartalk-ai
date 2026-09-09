@@ -23,6 +23,8 @@ import ai.deartalk.android.agent.DearTalkIntentEngine
 import ai.deartalk.android.agent.IntentResult
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.CustomToneManager
+import ai.deartalk.android.data.pref.DearTalkSettings
+import ai.deartalk.android.data.pref.KoreanKeyboardType
 import ai.deartalk.android.ime.ui.DearTalkScreen
 import ai.deartalk.android.ime.ui.MicUiState
 import ai.deartalk.android.ime.ui.StandardKeyboardView
@@ -59,14 +61,19 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private var tonesState by mutableStateOf<List<CustomTone>>(emptyList())
     private var aiModesState by mutableStateOf<List<ai.deartalk.android.data.pref.AiModeItem>>(emptyList())
     private var isStandardKeyboardModeState by mutableStateOf(false)
+    private var koreanKeyboardTypeState by mutableStateOf(KoreanKeyboardType.DUBEOLSIK)
+    private var clipboardTextState by mutableStateOf<String?>(null)
     private val hangulComposer = HangulComposer()
+    private val cheonjiinComposer = CheonjiinComposer()
 
     override fun onCreate() {
         super.onCreate()
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
 
-        UiStrings.setLocale(ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this))
+        UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
+        koreanKeyboardTypeState = DearTalkSettings.getKoreanKeyboardType(this)
+        refreshClipboard()
 
         modelLifecycleManager = ai.deartalk.android.data.ModelLifecycleManager(this)
         activeTierState = modelLifecycleManager.activeTier.value
@@ -86,13 +93,35 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         val pkg = info?.packageName ?: ""
         currentPackageName = pkg
         hangulComposer.reset()
+        cheonjiinComposer.reset()
 
-        UiStrings.setLocale(ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this))
+        UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
+        koreanKeyboardTypeState = DearTalkSettings.getKoreanKeyboardType(this)
+        refreshClipboard()
 
         modelLifecycleManager.refreshState()
         activeTierState = modelLifecycleManager.activeTier.value
         tonesState = CustomToneManager.getTones(this)
         aiModesState = CustomToneManager.getAllAiModes(this)
+    }
+
+    private fun refreshClipboard() {
+        try {
+            val cm = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            if (cm != null && cm.hasPrimaryClip()) {
+                val clip = cm.primaryClip
+                if (clip != null && clip.itemCount > 0) {
+                    val text = clip.getItemAt(0).coerceToText(this)?.toString()
+                    clipboardTextState = if (!text.isNullOrBlank()) text else null
+                } else {
+                    clipboardTextState = null
+                }
+            } else {
+                clipboardTextState = null
+            }
+        } catch (e: Exception) {
+            clipboardTextState = null
+        }
     }
 
     private fun observeTier() {
@@ -122,24 +151,58 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                 DearTalkTheme {
                     if (isStandardKeyboardModeState) {
                         StandardKeyboardView(
+                            koreanKeyboardType = koreanKeyboardTypeState,
+                            onKoreanKeyboardTypeChange = { type ->
+                                hangulComposer.commit(currentInputConnection)
+                                cheonjiinComposer.commit(currentInputConnection)
+                                koreanKeyboardTypeState = type
+                                DearTalkSettings.setKoreanKeyboardType(this@DearTalkIME, type)
+                            },
+                            clipboardText = clipboardTextState,
+                            onPasteClick = { text ->
+                                currentInputConnection?.commitText(text, 1)
+                                clipboardTextState = null
+                            },
                             onCharClick = { char ->
                                 hangulComposer.inputJamo(currentInputConnection, char)
                             },
+                            onCheonjiinConsonantClick = { key ->
+                                cheonjiinComposer.inputConsonantKey(currentInputConnection, key)
+                            },
+                            onCheonjiinVowelClick = { key ->
+                                cheonjiinComposer.inputVowelKey(currentInputConnection, key)
+                            },
                             onDeleteClick = {
-                                if (!hangulComposer.delete(currentInputConnection)) {
-                                    currentInputConnection?.deleteSurroundingText(1, 0)
+                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                    cheonjiinComposer.delete(currentInputConnection)
+                                } else {
+                                    if (!hangulComposer.delete(currentInputConnection)) {
+                                        currentInputConnection?.deleteSurroundingText(1, 0)
+                                    }
                                 }
                             },
                             onSpaceClick = {
-                                hangulComposer.commit(currentInputConnection)
-                                currentInputConnection?.commitText(" ", 1)
+                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                    cheonjiinComposer.space(currentInputConnection)
+                                } else {
+                                    hangulComposer.commit(currentInputConnection)
+                                    currentInputConnection?.commitText(" ", 1)
+                                }
                             },
                             onEnterClick = {
-                                hangulComposer.commit(currentInputConnection)
+                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                    cheonjiinComposer.commit(currentInputConnection)
+                                } else {
+                                    hangulComposer.commit(currentInputConnection)
+                                }
                                 handleEnter()
                             },
                             onSwitchToAiModeClick = {
-                                hangulComposer.commit(currentInputConnection)
+                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                    cheonjiinComposer.commit(currentInputConnection)
+                                } else {
+                                    hangulComposer.commit(currentInputConnection)
+                                }
                                 isStandardKeyboardModeState = false
                             }
                         )

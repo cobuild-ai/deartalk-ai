@@ -193,17 +193,22 @@ object UiStrings {
     val backButtonContentDesc get() = if (isKo) "뒤로가기" else if (isId) "Kembali" else "Back"
 
     // 1. 하드웨어 진단 및 모델 상태
-    fun diagOptimal(ram: String, storage: String) = if (isKo) "🟢 최적 사양 (RAM ${ram}GB / 여유 ${storage}GB)" else if (isId) "🟢 Spesifikasi Optimal (RAM ${ram}GB / Bebas ${storage}GB)" else "🟢 Optimal Spec (RAM ${ram}GB / Free ${storage}GB)"
-    fun diagCaution(ram: String) = if (isKo) "🟡 주의 사양 (RAM ${ram}GB - 순차 파이프라인 구동)" else if (isId) "🟡 Perhatian (RAM ${ram}GB - Alur Kerja Sekuensial)" else "🟡 Caution (RAM ${ram}GB - Sequential Pipeline)"
-    fun diagRestricted(ram: String) = if (isKo) "🔴 사양 제한 (RAM ${ram}GB - 기본 엔진 권장)" else if (isId) "🔴 Terbatas (RAM ${ram}GB - Disarankan Mesin Standar)" else "🔴 Restricted (RAM ${ram}GB - Standard Engine Recommended)"
+    fun diagOptimal(ram: String, storage: String) = if (isKo) "최적 사양 (RAM ${ram}GB / 여유 ${storage}GB)" else if (isId) "Spesifikasi Optimal (RAM ${ram}GB / Bebas ${storage}GB)" else "Optimal Spec (RAM ${ram}GB / Free ${storage}GB)"
+    fun diagCaution(ram: String) = if (isKo) "주의 사양 (RAM ${ram}GB - 순차 파이프라인 구동)" else if (isId) "Perhatian (RAM ${ram}GB - Alur Kerja Sekuensial)" else "Caution (RAM ${ram}GB - Sequential Pipeline)"
+    fun diagRestricted(ram: String) = if (isKo) "사양 제한 (RAM ${ram}GB - 기본 엔진 권장)" else if (isId) "Terbatas (RAM ${ram}GB - Disarankan Mesin Standar)" else "Restricted (RAM ${ram}GB - Standard Engine Recommended)"
     
-    val diagModelTitle get() = if (isKo) "Qwen 고품질 온디바이스 패키지" else if (isId) "Paket AI Kualitas Tinggi Qwen" else "Qwen High-Quality AI Package"
-    val diagModelSubtitle get() = if (isKo) "STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB" else if (isId) "STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB" else "STT(0.6B) + LLM(1.7B) + TTS(0.6B) · 1.8GB"
+    val diagModelTitle get() = if (isKo) "Qwen 0.5B Nano 온디바이스 패키지" else if (isId) "Paket AI Qwen 0.5B Nano" else "Qwen 0.5B Nano AI Package"
+    val diagModelSubtitle get() = if (isKo) "STT(0.6B) + LLM(0.5B) + TTS(0.6B) · 1.2GB" else if (isId) "STT(0.6B) + LLM(0.5B) + TTS(0.6B) · 1.2GB" else "STT(0.6B) + LLM(0.5B) + TTS(0.6B) · 1.2GB"
     val diagDownloadBtn get() = if (isKo) "다운로드" else if (isId) "Unduh" else "Download"
-    val diagDownloadingLabel get() = if (isKo) "고품질 패키지 다운로드 중..." else if (isId) "Mengunduh paket kualitas tinggi..." else "Downloading High-Quality Package..."
-    val diagActiveLabel get() = if (isKo) "Qwen 고성능 엔진 활성화됨" else if (isId) "Mesin Qwen Performa Tinggi Aktif" else "Qwen Neural Engine Active"
+    val diagDownloadingLabel get() = if (isKo) "Qwen 모델 패키지 다운로드 중..." else if (isId) "Mengunduh paket model Qwen..." else "Downloading Qwen Model Package..."
+    val diagActiveLabel get() = if (isKo) "Qwen 0.5B Nano 엔진 활성화됨" else if (isId) "Mesin Qwen 0.5B Nano Aktif" else "Qwen 0.5B Nano Engine Active"
     val diagPurgeContentDesc get() = if (isKo) "모델 패키지 삭제" else if (isId) "Hapus paket model" else "Purge model package"
+    val diagPurgeConfirmTitle get() = if (isKo) "모델 패키지 삭제" else if (isId) "Hapus Paket Model" else "Delete Model Package"
+    val diagPurgeConfirmMessage get() = if (isKo) "다운로드된 온디바이스 AI 모델 파일을 삭제하시겠습니까? 필요 시 언제든 다시 다운로드할 수 있습니다." else if (isId) "Hapus paket model AI on-device? Anda dapat mengunduhnya kembali kapan saja." else "Delete downloaded on-device AI model package? You can re-download anytime."
+    val btnDelete get() = if (isKo) "삭제" else if (isId) "Hapus" else "Delete"
+    val btnCancel get() = if (isKo) "취소" else if (isId) "Batal" else "Cancel"
     fun diagErrorLabel(msg: String) = if (isKo) "⚠️ 다운로드 오류: $msg" else if (isId) "⚠️ Kesalahan unduhan: $msg" else "⚠️ Download error: $msg"
+    val diagRetryBtn get() = if (isKo) "다시 시도" else if (isId) "Coba Lagi" else "Retry"
 
     // 2. 모드 탭
     val modeToneTransform get() = if (isKo) "✨ 고운말 톤 변환" else if (isId) "✨ Transformasi Gaya Bicara" else "✨ Tone Transformation"
@@ -236,10 +241,10 @@ object UiStrings {
     }
 
     // 5. 음성 커스터마이저
-    val voiceToneCustomizerTitle get() = if (isKo) "🎙️ 발화 음색" else if (isId) "🎙️ Karakter Suara" else "🎙️ Vocal Timbre"
+    val voiceToneCustomizerTitle get() = if (isKo) "🎙️ 목소리 설정" else if (isId) "🎙️ Pengaturan Suara" else "🎙️ Voice Settings"
     val voiceFemale get() = if (isKo) "👩 여성 음성" else if (isId) "👩 Suara Wanita" else "👩 Female Voice"
     val voiceMale get() = if (isKo) "👨 남성 음성" else if (isId) "👨 Suara Pria" else "👨 Male Voice"
-    val pitchMatchingLabel get() = if (isKo) "🎚️ 톤 매칭:" else if (isId) "🎚️ Nada Suara:" else "🎚️ Pitch Match:"
+    val pitchMatchingLabel get() = if (isKo) "🎚️ 목소리 톤:" else if (isId) "🎚️ Nada Suara:" else "🎚️ Voice Tone:"
     val pitchNormal get() = if (isKo) "보통" else if (isId) "Normal" else "Normal"
     val pitchDeepLow get() = if (isKo) "중후한 저음" else if (isId) "Bass Dalam" else "Deep Low"
     val pitchWarmMid get() = if (isKo) "부드러운 중음" else if (isId) "Sedang Hangat" else "Warm Mid"
@@ -287,6 +292,29 @@ object UiStrings {
             "Sorry, I might be late due to traffic",
             "Please reply after reviewing the documents",
             "How much is this item?"
+        )
+    }
+
+    val quickTranslationSamples: List<String> get() = if (isKo) {
+        listOf(
+            "이 근처에 맛있는 식당이 있나요?",
+            "체크아웃 시간을 연장할 수 있을까요?",
+            "이 주소로 가려면 어떻게 가야 하나요?",
+            "영수증을 받을 수 있을까요?"
+        )
+    } else if (isId) {
+        listOf(
+            "Apakah ada restoran enak di dekat sini?",
+            "Bisakah saya memperpanjang waktu check-out?",
+            "Bagaimana cara menuju ke alamat ini?",
+            "Bisakah saya mendapatkan tanda terima?"
+        )
+    } else {
+        listOf(
+            "Is there a good restaurant nearby?",
+            "Could I extend my check-out time?",
+            "How do I get to this address?",
+            "Could I get a receipt, please?"
         )
     }
 
