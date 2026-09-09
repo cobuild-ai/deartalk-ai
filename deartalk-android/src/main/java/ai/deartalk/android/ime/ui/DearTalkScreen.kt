@@ -210,57 +210,38 @@ fun DearTalkScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 🌟 실시간 온디바이스 지능 등급 (AI Tier) 인디케이터 바
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        when (activeTier) {
-                            ai.deartalk.android.data.ActiveAiTier.HIGH_QWEN -> Color(0xFF064E3B).copy(alpha = 0.6f)
-                            ai.deartalk.android.data.ActiveAiTier.BASE_GEMMA -> Color(0xFF1E293B)
-                            ai.deartalk.android.data.ActiveAiTier.STT_ONLY -> Color(0xFF78350F).copy(alpha = 0.5f)
-                        }
-                    )
-                    .clickable { onVoiceStudioClick() }
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            // 🌟 온디바이스 지능 등급 인디케이터 바 최적화
+            // HIGH_QWEN / BASE_GEMMA 등 모델 정상 작동 시에는 거추장스러운 모델명 배너를 완전히 숨겨
+            // 소중한 키보드 입력창 세로 공간을 극대화합니다. (AI 팩 다운로드가 필요한 STT_ONLY 시에만 안내 노출)
+            if (activeTier == ai.deartalk.android.data.ActiveAiTier.STT_ONLY) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF78350F).copy(alpha = 0.5f))
+                        .clickable { onVoiceStudioClick() }
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = when (activeTier) {
-                            ai.deartalk.android.data.ActiveAiTier.HIGH_QWEN -> UiStrings.tierBadgeHigh
-                            ai.deartalk.android.data.ActiveAiTier.BASE_GEMMA -> UiStrings.tierBadgeBase
-                            ai.deartalk.android.data.ActiveAiTier.STT_ONLY -> UiStrings.tierBadgeSttOnly
-                        },
+                        text = UiStrings.tierBadgeSttOnly,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = when (activeTier) {
-                            ai.deartalk.android.data.ActiveAiTier.HIGH_QWEN -> Color(0xFF34D399)
-                            ai.deartalk.android.data.ActiveAiTier.BASE_GEMMA -> Color(0xFF60A5FA)
-                            ai.deartalk.android.data.ActiveAiTier.STT_ONLY -> Color(0xFFFBBF24)
-                        }
+                        color = Color(0xFFFBBF24)
                     )
-                }
-
-                if (activeTier == ai.deartalk.android.data.ActiveAiTier.STT_ONLY) {
                     Text(
                         text = "📥 ${UiStrings.tierDownloadAction} ›",
                         fontSize = 10.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFFBBF24)
                     )
-                } else {
-                    Text(
-                        text = "100% On-Device",
-                        fontSize = 10.sp,
-                        color = DearTalkTextDim
-                    )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+            } else {
+                Spacer(modifier = Modifier.height(2.dp))
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
 
             // ─────────────────────────────────────────────────────────────
             // [2열] ✨ 스마트 DIFF 작업 캔버스 (STT 원문 ➔ AI 다듬기 비교) + 우측 [📥 입력] / [✕ 취소]

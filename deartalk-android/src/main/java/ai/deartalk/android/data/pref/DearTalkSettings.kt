@@ -85,4 +85,24 @@ object DearTalkSettings {
             if (isKorean) "$name (사용자 지정)" else "$name (Custom)"
         }
     }
+
+    private const val KEY_KOREAN_KEYBOARD_TYPE = "key_korean_keyboard_type"
+
+    fun getKoreanKeyboardType(context: Context): KoreanKeyboardType {
+        val name = getPrefs(context).getString(KEY_KOREAN_KEYBOARD_TYPE, KoreanKeyboardType.DUBEOLSIK.name)
+        return try {
+            KoreanKeyboardType.valueOf(name ?: KoreanKeyboardType.DUBEOLSIK.name)
+        } catch (e: Exception) {
+            KoreanKeyboardType.DUBEOLSIK
+        }
+    }
+
+    fun setKoreanKeyboardType(context: Context, type: KoreanKeyboardType) {
+        getPrefs(context).edit().putString(KEY_KOREAN_KEYBOARD_TYPE, type.name).apply()
+    }
+}
+
+enum class KoreanKeyboardType {
+    DUBEOLSIK,
+    CHEONJIIN
 }

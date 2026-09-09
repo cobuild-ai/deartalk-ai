@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.8` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 인간 인지공학 기반 2-슬롯 대화 맥락 캐시(`AppScopedUtteranceCache`), 원형 링 버퍼 Zero-GC, 다국어 맥락 주입 언어 편향 제거, Target SDK 36 지원 |
+| 🤖 **DearTalk Android IME** | `v1.0.9` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 보이스 스튜디오 하단 고정 UI, 모드 전환 자동 재번역, TalkBack 접근성(Semantics), 온디바이스 Qwen 0.5B Nano, Target SDK 36 지원 |
 
 ---
 

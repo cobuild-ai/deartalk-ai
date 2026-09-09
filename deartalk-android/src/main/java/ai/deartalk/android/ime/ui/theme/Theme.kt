@@ -14,6 +14,7 @@ val DearTalkSecondary = Color(0xFF38BDF8)
 val DearTalkText = Color(0xFFF8FAFC)
 val DearTalkTextDim = Color(0xFF94A3B8)
 val DearTalkAccentGlow = Color(0xFF818CF8)
+val DearTalkBorder = Color(0xFF334155)
 
 private val DarkColorScheme = darkColorScheme(
     primary = DearTalkPrimary,

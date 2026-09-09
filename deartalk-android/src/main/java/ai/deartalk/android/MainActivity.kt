@@ -12,6 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +40,7 @@ import androidx.lifecycle.lifecycleScope
 import ai.deartalk.android.agent.DearTalkIntentEngine
 import ai.deartalk.android.agent.IntentResult
 import ai.deartalk.android.data.pref.DearTalkSettings
+import ai.deartalk.android.data.pref.KoreanKeyboardType
 import ai.deartalk.android.data.pref.UiStrings
 import ai.deartalk.android.ime.ui.theme.*
 import ai.deartalk.android.stt.SpeechRecognitionManager
@@ -186,6 +188,7 @@ fun MainOnDeviceScreen(
     var presetJob by remember { mutableStateOf<Job?>(null) }
 
     var silenceTimeoutMs by remember { mutableFloatStateOf(DearTalkSettings.getSilenceTimeoutMillis(context).toFloat()) }
+    var selectedKoreanKeyboardType by remember { mutableStateOf(DearTalkSettings.getKoreanKeyboardType(context)) }
 
     LaunchedEffect(Unit) {
         sttManager.voiceState.collect { state ->
@@ -539,6 +542,102 @@ fun MainOnDeviceScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = DearTalkKey.copy(alpha = 0.6f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Memory, contentDescription = null, tint = DearTalkSecondary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isModelLoaded) {
+                                    if (isKorean) "🧠 탑재 AI 모델: Qwen 0.5B Nano (100% On-Device)"
+                                    else if (isIndonesian) "🧠 Model AI: Qwen 0.5B Nano (100% On-Device)"
+                                    else "🧠 AI Model: Qwen 0.5B Nano (100% On-Device)"
+                                } else {
+                                    if (isKorean) "⚡ 기본 모드: 고속 로컬 STT (경량 온디바이스)"
+                                    else if (isIndonesian) "⚡ Mode Dasar: STT Lokal Cepat (On-Device Ringan)"
+                                    else "⚡ Base Mode: Fast Local STT (Lightweight On-Device)"
+                                },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = DearTalkSecondary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = DearTalkKey.copy(alpha = 0.6f)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Keyboard, contentDescription = null, tint = DearTalkSecondary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (isKorean) "⌨️ 기본 한글 자판" else if (isIndonesian) "⌨️ Tata Letak Hangul" else "⌨️ Hangul Layout",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = DearTalkSecondary
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(DearTalkKeyActive)
+                                    .padding(1.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(if (selectedKoreanKeyboardType == KoreanKeyboardType.DUBEOLSIK) DearTalkPrimary else Color.Transparent)
+                                        .clickable {
+                                            selectedKoreanKeyboardType = KoreanKeyboardType.DUBEOLSIK
+                                            DearTalkSettings.setKoreanKeyboardType(context, KoreanKeyboardType.DUBEOLSIK)
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "두벌식",
+                                        fontSize = 11.sp,
+                                        fontWeight = if (selectedKoreanKeyboardType == KoreanKeyboardType.DUBEOLSIK) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedKoreanKeyboardType == KoreanKeyboardType.DUBEOLSIK) Color.White else DearTalkTextDim
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(if (selectedKoreanKeyboardType == KoreanKeyboardType.CHEONJIIN) DearTalkPrimary else Color.Transparent)
+                                        .clickable {
+                                            selectedKoreanKeyboardType = KoreanKeyboardType.CHEONJIIN
+                                            DearTalkSettings.setKoreanKeyboardType(context, KoreanKeyboardType.CHEONJIIN)
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "천지인",
+                                        fontSize = 11.sp,
+                                        fontWeight = if (selectedKoreanKeyboardType == KoreanKeyboardType.CHEONJIIN) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedKoreanKeyboardType == KoreanKeyboardType.CHEONJIIN) Color.White else DearTalkTextDim
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     if (!isModelLoaded) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Box(
@@ -555,7 +654,7 @@ fun MainOnDeviceScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = if (isKorean) "📦 Gemma 온디바이스 AI" else if (isIndonesian) "📦 AI On-Device Gemma" else "📦 Gemma On-Device AI",
+                                        text = if (isKorean) "📦 Qwen 0.5B 초경량 온디바이스 AI" else if (isIndonesian) "📦 AI On-Device Qwen 0.5B" else "📦 Qwen 0.5B On-Device AI",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = DearTalkText,
@@ -580,11 +679,11 @@ fun MainOnDeviceScreen(
 
                                 Text(
                                     text = if (isKorean)
-                                        "외부 서버로 대화 내용이 전혀 전송되지 않고, 내 스마트폰 안에서만 100% 오프라인으로 안전하게 생각하고 다듬어 주는 구글 Gemma 온디바이스 AI입니다. 비행기 모드나 인터넷이 안 되는 곳에서도 100% 작동합니다."
+                                        "외부 서버로 대화 내용이 전혀 전송되지 않고, 내 스마트폰 안에서만 100% 오프라인으로 0.2초 만에 가볍고 빠르게 다듬어 주는 Qwen 0.5B 초경량 온디바이스 AI입니다. 비행기 모드나 인터넷이 안 되는 곳에서도 100% 작동합니다."
                                     else if (isIndonesian)
-                                        "Model AI Google Gemma yang berjalan 100% secara lokal di ponsel pintar Anda tanpa mengirim data apa pun ke server luar. Berfungsi sepenuhnya offline bahkan dalam mode pesawat."
+                                        "Model AI Qwen 0.5B yang berjalan 100% offline di ponsel pintar Anda tanpa mengirim data apa pun ke server luar. Merespons dalam 0,2 detik dan berfungsi sepenuhnya bahkan dalam mode pesawat."
                                     else
-                                        "Google Gemma on-device AI executing 100% locally on your smartphone without sending any data to the cloud. Works completely offline even in airplane mode.",
+                                        "Qwen 0.5B ultra-lightweight on-device AI executing 100% locally on your smartphone in ~0.2s without cloud traffic. Works completely offline even in airplane mode.",
                                     fontSize = 11.sp,
                                     color = DearTalkTextDim,
                                     lineHeight = 16.sp
@@ -729,17 +828,19 @@ fun MainOnDeviceScreen(
                         Icon(
                             imageVector = if (isListening) Icons.Default.StopCircle else Icons.Default.Mic,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = if (isListening) {
-                                if (isKorean) "🛑 말씀 끝내기 (터치하여 AI 다듬기)" else if (isIndonesian) "🛑 Selesai Bicara (Rapikan dengan AI)" else "🛑 Finish Speaking (Polish with AI)"
+                                if (isKorean) "🛑 녹음 중... 터치하여 완료" else if (isIndonesian) "🛑 Merekam... Ketuk Selesai" else "🛑 Recording... Tap to Stop"
                             } else {
                                 if (isKorean) "🎙️ 마이크 켜고 말씀하기" else if (isIndonesian) "🎙️ Ketuk untuk Bicara" else "🎙️ Tap to Speak"
                             },
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
 

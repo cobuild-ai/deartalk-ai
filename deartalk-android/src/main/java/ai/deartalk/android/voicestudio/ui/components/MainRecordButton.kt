@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -29,7 +30,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.deartalk.android.data.pref.UiStrings
@@ -62,6 +68,13 @@ fun MainRecordButton(
         1.0f
     }
 
+    val buttonLabel = when (micUiState) {
+        MicUiState.PREPARING -> UiStrings.contentDescPreparing
+        MicUiState.LISTENING -> UiStrings.contentDescStop
+        MicUiState.PROCESSING_AI -> UiStrings.micBtnProcessing
+        MicUiState.IDLE -> UiStrings.contentDescSpeak
+    }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
@@ -76,6 +89,10 @@ fun MainRecordButton(
                         MicUiState.IDLE -> Brush.radialGradient(listOf(DearTalkPrimary, Color(0xFF4338CA)))
                     }
                 )
+                .semantics {
+                    contentDescription = buttonLabel
+                    role = Role.Button
+                }
                 .clickable(enabled = !isPreparing && !isProcessing, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
@@ -119,6 +136,8 @@ fun MainRecordButton(
             },
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             color = when (micUiState) {
                 MicUiState.PREPARING -> Color(0xFFD97706)
                 MicUiState.LISTENING -> Color(0xFFFF2E2E)
