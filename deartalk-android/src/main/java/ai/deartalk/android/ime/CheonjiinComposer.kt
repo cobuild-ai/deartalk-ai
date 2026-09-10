@@ -60,14 +60,17 @@ class CheonjiinComposer {
         get() = cho != -1 || jung != -1 || vowelBuffer.isNotEmpty()
 
     fun makeSyllable(): String {
-        if (cho != -1 && jung != -1) {
+        if (cho != -1 && jung in 0..20) {
             val code = 0xAC00 + (cho * 21 + jung) * 28 + jong
             return code.toChar().toString()
         }
         if (cho != -1 && jung == -1) {
+            if (vowelBuffer.isNotEmpty()) {
+                return chosungs[cho] + vowelBuffer.toString()
+            }
             return chosungs[cho].toString()
         }
-        if (cho == -1 && jung != -1) {
+        if (cho == -1 && jung in 0..20) {
             return jungsungs[jung]
         }
         if (vowelBuffer.isNotEmpty()) {
@@ -203,21 +206,30 @@ class CheonjiinComposer {
         vowelBuffer.append(vowelChar)
         val synthesizedJung = synthesizeJung(vowelBuffer.toString())
 
-        if (synthesizedJung != -1) {
+        if (synthesizedJung in 0..20) {
             jung = synthesizedJung
             ic?.setComposingText(makeSyllable(), 1)
+        } else if (synthesizedJung == -2) {
+            // 아래아 단독/조합 전이 상태 (표시용)
+            jung = -1
+            ic?.setComposingText(makeSyllable(), 1)
         } else {
-            // 합성 불가능한 조합이면 이전 글자 커밋 후 독립 모음으로 시작
-            if (cho != -1 || jung != -1) {
+            // 합성 불가능한 조합이면 이전 글자 커밋 후 새 모음으로 시작
+            if (cho != -1 || jung in 0..20 || vowelBuffer.length > 1) {
+                vowelBuffer.deleteCharAt(vowelBuffer.length - 1)
                 commit(ic)
             }
             vowelBuffer.clear()
             vowelBuffer.append(vowelChar)
             val singleJung = synthesizeJung(vowelBuffer.toString())
-            if (singleJung != -1) {
+            if (singleJung in 0..20) {
                 jung = singleJung
                 ic?.setComposingText(makeSyllable(), 1)
+            } else if (singleJung == -2) {
+                jung = -1
+                ic?.setComposingText(makeSyllable(), 1)
             } else {
+                jung = -1
                 ic?.setComposingText(vowelBuffer.toString(), 1)
             }
         }
@@ -231,34 +243,35 @@ class CheonjiinComposer {
         return when (buf) {
             "ㅣ" -> 20 // ㅣ
             "ㅡ" -> 18 // ㅡ
-            "ㆍ", "·", "." -> -2 // 아라에아 단독 (표시용)
-            
+            "ㆍ", "·", "." -> -2 // 아래아 1개 (단독/조합 전이)
+            "ㆍㆍ", "··", "..", "ㆍ.", ".ㆍ" -> -2 // 아래아 2개 (ㅑ, ㅕ, ㅛ, ㅠ 전이)
+
             "ㅣㆍ", "ㅣ·", "ㅣ." -> 0  // ㅏ
-            "ㅣㆍㆍ", "ㅣ··", "ㅣ.." -> 2 // ㅑ
+            "ㅣㆍㆍ", "ㅣ··", "ㅣ..", "ㅣㆍ.", "ㅣ.ㆍ" -> 2 // ㅑ
             "ㆍㅣ", "·ㅣ", ".ㅣ" -> 4  // ㅓ
-            "ㆍㆍㅣ", "··ㅣ", "..ㅣ" -> 6 // ㅕ
-            
+            "ㆍㆍㅣ", "··ㅣ", "..ㅣ", "ㆍ.ㅣ", ".ㆍㅣ" -> 6 // ㅕ
+
             "ㆍㅡ", "·ㅡ", ".ㅡ" -> 8  // ㅗ
-            "ㆍㆍㅡ", "··ㅡ", "..ㅡ" -> 12 // ㅛ
+            "ㆍㆍㅡ", "··ㅡ", "..ㅡ", "ㆍ.ㅡ", ".ㆍㅡ" -> 12 // ㅛ
             "ㅡㆍ", "ㅡ·", "ㅡ." -> 13 // ㅜ
-            "ㅡㆍㆍ", "ㅡ··", "ㅡ.." -> 17 // ㅠ
+            "ㅡㆍㆍ", "ㅡ··", "ㅡ..", "ㅡㆍ.", "ㅡ.ㆍ" -> 17 // ㅠ
             "ㅡㅣ" -> 19 // ㅢ
-            
+
             // ㅐ, ㅒ, ㅔ, ㅖ
             "ㅣㆍㅣ", "ㅣ·ㅣ", "ㅣ.ㅣ" -> 1  // ㅐ (ㅏ + ㅣ)
-            "ㅣㆍㆍㅣ", "ㅣ··ㅣ", "ㅣ..ㅣ" -> 3 // ㅒ (ㅑ + ㅣ)
+            "ㅣㆍㆍㅣ", "ㅣ··ㅣ", "ㅣ..ㅣ", "ㅣㆍ.ㅣ", "ㅣ.ㆍㅣ" -> 3 // ㅒ (ㅑ + ㅣ)
             "ㆍㅣㅣ", "·ㅣㅣ", ".ㅣㅣ" -> 5  // ㅔ (ㅓ + ㅣ)
-            "ㆍㆍㅣㅣ", "··ㅣㅣ", "..ㅣㅣ" -> 7 // ㅖ (ㅕ + ㅣ)
-            
+            "ㆍㆍㅣㅣ", "··ㅣㅣ", "..ㅣㅣ", "ㆍ.ㅣㅣ", ".ㆍㅣㅣ" -> 7 // ㅖ (ㅕ + ㅣ)
+
             // ㅘ, ㅙ, ㅚ
-            "ㆍㅡㅣㆍ", "·ㅡㅣ·" -> 9   // ㅘ (ㅗ + ㅏ)
-            "ㆍㅡㅣㆍㅣ", "·ㅡㅣ·ㅣ" -> 10 // ㅙ (ㅗ + ㅐ)
-            "ㆍㅡㅣ", "·ㅡㅣ" -> 11   // ㅚ (ㅗ + ㅣ)
-            
+            "ㆍㅡㅣㆍ", "·ㅡㅣ·", ".ㅡㅣ." -> 9   // ㅘ (ㅗ + ㅏ)
+            "ㆍㅡㅣㆍㅣ", "·ㅡㅣ·ㅣ", ".ㅡㅣ.ㅣ" -> 10 // ㅙ (ㅗ + ㅐ)
+            "ㆍㅡㅣ", "·ㅡㅣ", ".ㅡㅣ" -> 11   // ㅚ (ㅗ + ㅣ)
+
             // ㅝ, ㅞ, ㅟ
-            "ㅡㆍㆍㅣ", "ㅡ.ㆍㅣ" -> 14  // ㅝ (ㅜ + ㅓ)
-            "ㅡㆍㆍㅣㅣ", "ㅡ.ㆍㅣㅣ" -> 15 // ㅞ (ㅜ + ㅔ)
-            "ㅡㆍㅣ", "ㅡ.ㅣ" -> 16    // ㅟ (ㅜ + ㅣ)
+            "ㅡㆍㆍㅣ", "ㅡ··ㅣ", "ㅡ..ㅣ", "ㅡㆍ.ㅣ", "ㅡ.ㆍㅣ" -> 14  // ㅝ (ㅜ + ㅓ)
+            "ㅡㆍㆍㅣㅣ", "ㅡ··ㅣㅣ", "ㅡ..ㅣㅣ", "ㅡㆍ.ㅣㅣ", "ㅡ.ㆍㅣㅣ" -> 15 // ㅞ (ㅜ + ㅔ)
+            "ㅡㆍㅣ", "ㅡ·ㅣ", "ㅡ.ㅣ" -> 16    // ㅟ (ㅜ + ㅣ)
 
             else -> -1
         }
@@ -286,33 +299,27 @@ class CheonjiinComposer {
             return
         }
 
-        if (jung != -1) {
-            if (vowelBuffer.isNotEmpty()) {
-                vowelBuffer.deleteCharAt(vowelBuffer.length - 1)
-                val newJung = synthesizeJung(vowelBuffer.toString())
-                if (newJung >= 0) {
-                    jung = newJung
-                    ic?.setComposingText(makeSyllable(), 1)
-                } else {
-                    jung = -1
-                    ic?.setComposingText(makeSyllable(), 1)
-                }
+        if (vowelBuffer.isNotEmpty()) {
+            vowelBuffer.deleteCharAt(vowelBuffer.length - 1)
+            val newJung = synthesizeJung(vowelBuffer.toString())
+            if (newJung in 0..20) {
+                jung = newJung
             } else {
                 jung = -1
-                ic?.setComposingText(makeSyllable(), 1)
             }
+            ic?.setComposingText(makeSyllable(), 1)
+            return
+        }
+
+        if (jung != -1) {
+            jung = -1
+            ic?.setComposingText(makeSyllable(), 1)
             return
         }
 
         if (cho != -1) {
             cho = -1
             ic?.setComposingText("", 1)
-            return
-        }
-
-        if (vowelBuffer.isNotEmpty()) {
-            vowelBuffer.deleteCharAt(vowelBuffer.length - 1)
-            ic?.setComposingText(vowelBuffer.toString(), 1)
             return
         }
 

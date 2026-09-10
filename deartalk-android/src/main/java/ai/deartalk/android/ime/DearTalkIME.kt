@@ -20,6 +20,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import ai.deartalk.android.agent.DearTalkIntentEngine
+import ai.deartalk.android.crash.CrashLogger
 import ai.deartalk.android.agent.IntentResult
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.CustomToneManager
@@ -164,38 +165,71 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                                 clipboardTextState = null
                             },
                             onCharClick = { char ->
-                                hangulComposer.inputJamo(currentInputConnection, char)
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.commit(currentInputConnection)
+                                        currentInputConnection?.commitText(char.toString(), 1)
+                                    } else {
+                                        hangulComposer.inputJamo(currentInputConnection, char)
+                                    }
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCharClick($char)", "IME character input exception", e)
+                                }
                             },
                             onCheonjiinConsonantClick = { key ->
-                                cheonjiinComposer.inputConsonantKey(currentInputConnection, key)
+                                runCatching {
+                                    cheonjiinComposer.inputConsonantKey(currentInputConnection, key)
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCheonjiinConsonantClick($key)", "Cheonjiin consonant input exception", e)
+                                    cheonjiinComposer.reset()
+                                }
                             },
                             onCheonjiinVowelClick = { key ->
-                                cheonjiinComposer.inputVowelKey(currentInputConnection, key)
+                                runCatching {
+                                    cheonjiinComposer.inputVowelKey(currentInputConnection, key)
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCheonjiinVowelClick($key)", "Cheonjiin vowel input exception", e)
+                                    cheonjiinComposer.reset()
+                                }
                             },
                             onDeleteClick = {
-                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
-                                    cheonjiinComposer.delete(currentInputConnection)
-                                } else {
-                                    if (!hangulComposer.delete(currentInputConnection)) {
-                                        currentInputConnection?.deleteSurroundingText(1, 0)
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.delete(currentInputConnection)
+                                    } else {
+                                        if (!hangulComposer.delete(currentInputConnection)) {
+                                            currentInputConnection?.deleteSurroundingText(1, 0)
+                                        }
                                     }
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onDeleteClick", "Delete action exception", e)
+                                    currentInputConnection?.deleteSurroundingText(1, 0)
                                 }
                             },
                             onSpaceClick = {
-                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
-                                    cheonjiinComposer.space(currentInputConnection)
-                                } else {
-                                    hangulComposer.commit(currentInputConnection)
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.space(currentInputConnection)
+                                    } else {
+                                        hangulComposer.commit(currentInputConnection)
+                                        currentInputConnection?.commitText(" ", 1)
+                                    }
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onSpaceClick", "Space action exception", e)
                                     currentInputConnection?.commitText(" ", 1)
                                 }
                             },
                             onEnterClick = {
-                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
-                                    cheonjiinComposer.commit(currentInputConnection)
-                                } else {
-                                    hangulComposer.commit(currentInputConnection)
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.commit(currentInputConnection)
+                                    } else {
+                                        hangulComposer.commit(currentInputConnection)
+                                    }
+                                    handleEnter()
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onEnterClick", "Enter action exception", e)
                                 }
-                                handleEnter()
                             },
                             onSwitchToAiModeClick = {
                                 if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {

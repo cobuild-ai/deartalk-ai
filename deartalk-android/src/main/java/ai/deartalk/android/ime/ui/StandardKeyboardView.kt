@@ -279,7 +279,7 @@ fun StandardKeyboardView(
             Spacer(modifier = Modifier.height(4.dp))
 
             // ─────────────────────────────────────────────────────────────
-            // [최하단 공통 행]: 기호, 한/영, Space, Enter
+            // [최하단 공통 행]: 기호(!#1), 한/영, 쉼표(,), Space, 마침표(.), Enter
             // ─────────────────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -289,7 +289,7 @@ fun StandardKeyboardView(
                 // !#1 기호/숫자 전환
                 KeyBox(
                     text = if (layoutType == KeyboardLayoutType.SYMBOLS) (if (isKorean) "한글" else "ABC") else "!#1",
-                    modifier = Modifier.weight(1.2f),
+                    modifier = Modifier.weight(1.1f),
                     bgColor = DearTalkKeyActive,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -308,7 +308,7 @@ fun StandardKeyboardView(
                     } else {
                         if (layoutType == KeyboardLayoutType.ENGLISH) "KOR" else "ENG"
                     },
-                    modifier = Modifier.weight(1.2f),
+                    modifier = Modifier.weight(1.1f),
                     bgColor = DearTalkKeyActive,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -316,10 +316,21 @@ fun StandardKeyboardView(
                     }
                 )
 
+                // 쉼표 (,) 키
+                KeyBox(
+                    text = ",",
+                    modifier = Modifier.weight(0.9f),
+                    bgColor = DearTalkKeyActive,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onCharClick(',')
+                    }
+                )
+
                 // Space 키
                 KeyBox(
                     text = "Space",
-                    modifier = Modifier.weight(3.5f),
+                    modifier = Modifier.weight(2.6f),
                     bgColor = DearTalkKey,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -327,10 +338,21 @@ fun StandardKeyboardView(
                     }
                 )
 
+                // 마침표 (.) 키
+                KeyBox(
+                    text = ".",
+                    modifier = Modifier.weight(0.9f),
+                    bgColor = DearTalkKeyActive,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onCharClick('.')
+                    }
+                )
+
                 // Enter 키
                 Box(
                     modifier = Modifier
-                        .weight(1.5f)
+                        .weight(1.3f)
                         .height(42.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .background(DearTalkSecondary)
@@ -348,7 +370,7 @@ fun StandardKeyboardView(
 }
 
 /**
- * 천지인(Cheonjiin) 3x4 키패드 컴포저블
+ * 천지인(Cheonjiin) 3x4 키패드 컴포저블 (삼성 순정 스타일: 부가 설명 없는 미니멀 디자인)
  */
 @Composable
 private fun CheonjiinKeyboardLayout(
@@ -363,38 +385,38 @@ private fun CheonjiinKeyboardLayout(
     ) {
         // Row 1: [ ㅣ ] [ ㆍ ] [ ㅡ ]
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CheonjiinKey(mainText = "ㅣ", subText = "사람", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅣ') })
-            CheonjiinKey(mainText = "ㆍ", subText = "하늘", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㆍ') })
-            CheonjiinKey(mainText = "ㅡ", subText = "땅", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅡ') })
+            CheonjiinKey(mainText = "ㅣ", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅣ') })
+            CheonjiinKey(mainText = "ㆍ", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㆍ') })
+            CheonjiinKey(mainText = "ㅡ", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅡ') })
         }
 
         // Row 2: [ ㄱ ㅋ ] [ ㄴ ㄹ ] [ ㄷ ㅌ ]
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CheonjiinKey(mainText = "ㄱ ㅋ", subText = "ㄲ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄱ') })
-            CheonjiinKey(mainText = "ㄴ ㄹ", subText = "", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄴ') })
-            CheonjiinKey(mainText = "ㄷ ㅌ", subText = "ㄸ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄷ') })
+            CheonjiinKey(mainText = "ㄱ ㅋ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄱ') })
+            CheonjiinKey(mainText = "ㄴ ㄹ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄴ') })
+            CheonjiinKey(mainText = "ㄷ ㅌ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄷ') })
         }
 
         // Row 3: [ ㅂ ㅍ ] [ ㅅ ㅎ ] [ ㅈ ㅊ ]
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CheonjiinKey(mainText = "ㅂ ㅍ", subText = "ㅃ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅂ') })
-            CheonjiinKey(mainText = "ㅅ ㅎ", subText = "ㅆ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅅ') })
-            CheonjiinKey(mainText = "ㅈ ㅊ", subText = "ㅉ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅈ') })
+            CheonjiinKey(mainText = "ㅂ ㅍ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅂ') })
+            CheonjiinKey(mainText = "ㅅ ㅎ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅅ') })
+            CheonjiinKey(mainText = "ㅈ ㅊ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅈ') })
         }
 
-        // Row 4: [ !?# ] [ ㅇ ㅁ ] [ ⌫ ]
+        // Row 4: [ .,?! ] [ ㅇ ㅁ ] [ ⌫ ]
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
             KeyBox(
                 text = ".,?!",
-                modifier = Modifier.weight(1f).height(46.dp),
+                modifier = Modifier.weight(1f).height(48.dp),
                 bgColor = DearTalkKeyActive,
                 textColor = DearTalkText,
                 onClick = onSymbolsClick
             )
-            CheonjiinKey(mainText = "ㅇ ㅁ", subText = "", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅇ') })
+            CheonjiinKey(mainText = "ㅇ ㅁ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅇ') })
             KeyBox(
                 text = "⌫",
-                modifier = Modifier.weight(1f).height(46.dp),
+                modifier = Modifier.weight(1f).height(48.dp),
                 bgColor = DearTalkKeyActive,
                 textColor = DearTalkText,
                 onClick = onDeleteClick
@@ -406,38 +428,24 @@ private fun CheonjiinKeyboardLayout(
 @Composable
 private fun CheonjiinKey(
     mainText: String,
-    subText: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
-            .height(46.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(DearTalkKey)
             .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = mainText,
-                color = DearTalkText,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
-            )
-            if (subText.isNotEmpty()) {
-                Text(
-                    text = subText,
-                    color = DearTalkTextDim,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Normal
-                )
-            }
-        }
+        Text(
+            text = mainText,
+            color = DearTalkText,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -541,23 +549,28 @@ private fun SymbolKeyboardLayout(
     onKeyClick: (Char) -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    var symbolPage by remember { mutableStateOf(1) }
+
     val row1 = "1234567890"
-    val row2 = "@#$%&-+()*"
-    val row3 = "!\"':;/?~"
+    val row2 = if (symbolPage == 1) "@#$%&-+()/" else "[]{}₩€£¥^°"
+    val row3 = if (symbolPage == 1) "*\"':;!?~\\" else "|`·…«»§±¡"
+    val row4 = if (symbolPage == 1) listOf(',', '.', '_', '=', '<', '>') else listOf('¿', '÷', '×', '≠', '≤', '≥')
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Row 1: 숫자행
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             row1.forEach { char ->
                 KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
             }
         }
+        // Row 2: 주요 기호
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             row2.forEach { char ->
                 KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
             }
         }
+        // Row 3: 문장 부호 + Delete
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-            Spacer(modifier = Modifier.weight(0.5f))
             row3.forEach { char ->
                 KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
             }
@@ -568,6 +581,20 @@ private fun SymbolKeyboardLayout(
                 textColor = DearTalkText,
                 onClick = onDeleteClick
             )
+        }
+        // Row 4: 페이지 전환 (1/2, 2/2) + 추가 기호
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+            KeyBox(
+                text = if (symbolPage == 1) "1/2" else "2/2",
+                modifier = Modifier.weight(1.3f),
+                bgColor = DearTalkPrimary,
+                textColor = Color.White,
+                onClick = { symbolPage = if (symbolPage == 1) 2 else 1 }
+            )
+            row4.forEach { char ->
+                KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
+            }
+            Spacer(modifier = Modifier.weight(0.3f))
         }
     }
 }

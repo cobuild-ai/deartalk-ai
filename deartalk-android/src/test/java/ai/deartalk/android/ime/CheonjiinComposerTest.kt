@@ -58,4 +58,44 @@ class CheonjiinComposerTest {
         composer.inputConsonantKey(null, 'ㄱ')
         assertEquals("각", composer.makeSyllable())
     }
+
+    @Test
+    fun testAraeaAloneNoCrash() {
+        // 단독 'ㆍ' 입력 시 ArrayIndexOutOfBoundsException 없이 안전하게 표시
+        composer.inputVowelKey(null, 'ㆍ')
+        assertEquals("ㆍ", composer.makeSyllable())
+
+        // 연타 'ㆍ' + 'ㆍ' 입력 시에도 안전
+        composer.inputVowelKey(null, 'ㆍ')
+        assertEquals("ㆍㆍ", composer.makeSyllable())
+    }
+
+    @Test
+    fun testConsonantAndAraea() {
+        // 'ㄱ' + 'ㆍ' -> 초성 + 아래아 표시
+        composer.inputConsonantKey(null, 'ㄱ')
+        composer.inputVowelKey(null, 'ㆍ')
+        assertEquals("ㄱㆍ", composer.makeSyllable())
+
+        // + 'ㅣ' -> '개' (또는 'ㅓ' 계열 합성)
+        composer.inputVowelKey(null, 'ㅣ')
+        assertEquals("거", composer.makeSyllable())
+    }
+
+    @Test
+    fun testAraeaThenVowelSynthesis() {
+        // 'ㆍ' + 'ㅡ' -> 'ㅗ'
+        composer.inputVowelKey(null, 'ㆍ')
+        composer.inputVowelKey(null, 'ㅡ')
+        assertEquals("ㅗ", composer.makeSyllable())
+    }
+
+    @Test
+    fun testDeleteWithAraea() {
+        // 'ㄱ' + 'ㆍ' 후 삭제 시 'ㄱ' 유지
+        composer.inputConsonantKey(null, 'ㄱ')
+        composer.inputVowelKey(null, 'ㆍ')
+        composer.delete(null)
+        assertEquals("ㄱ", composer.makeSyllable())
+    }
 }
