@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.9` | **Android 16 (API 36)** | **Production Stable** | Voice Studio Sticky Navigation, Mode-switch Re-translation, TalkBack Semantics, On-Device Qwen 0.5B Nano, Target SDK 36 |
+| 🤖 **DearTalk Android IME** | `v1.0.10` | **Android 16 (API 36)** | **Production Stable** | Cheonjiin Crash Hotfix, Samsung Minimal Layout, Permanent Bottom Bar Punctuation (.,), 2-Page Rich Symbols, Enterprise CrashLogger & Circuit Breaker |
 
 ---
 

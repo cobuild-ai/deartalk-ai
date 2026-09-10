@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.9` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 보이스 스튜디오 하단 고정 UI, 모드 전환 자동 재번역, TalkBack 접근성(Semantics), 온디바이스 Qwen 0.5B Nano, Target SDK 36 지원 |
+| 🤖 **DearTalk Android IME** | `v1.0.10` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 천지인 크래시 핫픽스, 삼성 순정 미니멀 자판, 하단 공통바 마침표/쉼표 탑재, 2페이지 특수기호 풀 확장, 전역 CrashLogger 및 서킷브레이커 안전 격벽 |
 
 ---
 

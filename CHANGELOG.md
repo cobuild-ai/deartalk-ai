@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.10] - 2026-09-10
+
+### Fixed
+- **Cheonjiin Automata Crash Resolution**: Eliminated `ArrayIndexOutOfBoundsException: length=21; index=-2` in `CheonjiinComposer.kt` by strictly bounding `jung` index to `0..20` and safely handling intermediate araea (`"ㆍ"`, `"ㆍㆍ"`) transitions.
+- **IME Keystroke Circuit Breaker**: Wrapped all keyboard input event handlers with `runCatching` to prevent keyboard service termination and ensure instant self-healing on unexpected edge cases.
+
+### Changed
+- **Samsung-Style Cheonjiin Minimal Layout**: Removed legacy explanatory subtexts ("사람", "하늘", "땅", "ㄲ", "ㄸ") for a clean, distraction-free 18sp Korean 3x4 keypad mirroring genuine Samsung Cheonjiin.
+
+### Added
+- **Global Punctuation Access (Bottom Bar)**: Integrated permanent comma (`,`) and period (`.`) keys directly on the bottom common bar across all keyboards (`[!#1] [KOR/ENG] [,] [Space] [.] [Enter]`).
+- **Rich 2-Page Special Symbols (`SymbolKeyboardLayout`)**: Expanded symbol keyboard into a 2-page pagination system (`1/2` and `2/2`) providing full punctuation (`.`, `,`, `?`, `!`), currencies (`₩`, `$`, `€`, `£`), math operators (`≠`, `≤`, `≥`, `÷`, `×`), and brackets.
+- **Enterprise Crash Diagnostics (`CrashLogger`)**: Registered `DearTalkApplication` with a custom `UncaughtExceptionHandler` that writes persistent diagnostic crash dumps to `files/crash_logs/` for fail-safe post-mortem debugging.
+
+---
+
 ## [1.0.9] - 2026-09-10
 
 ### Added
