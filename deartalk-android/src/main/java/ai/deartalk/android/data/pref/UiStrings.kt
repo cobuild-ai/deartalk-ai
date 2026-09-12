@@ -33,14 +33,14 @@ object UiStrings {
     // DearTalkScreen.kt — 마이크 버튼 상태 (안 짤리는 컴팩트 레이블)
     // ═══════════════════════════════════════════════════
     val micPreparing get() = if (isKo) "마이크 준비 중..." else if (isId) "Menyiapkan..." else "Preparing mic..."
-    val micListening get() = if (isKo) "듣는 중 (터치 시 완료)" else if (isId) "Mendengarkan (Ketuk selesai)" else "Listening (Tap to finish)"
+    val micListening get() = if (isKo) "듣는 중 (터치 시 완료)" else if (isId) "Mendengarkan (Ketuk)" else "Listening (Tap to finish)"
     val micProcessingAi get() = if (isKo) "AI 다듬는 중..." else if (isId) "AI merapikan..." else "AI Polishing..."
     val micIdle get() = if (isKo) "AI 음성 입력" else if (isId) "Masukan Suara AI" else "AI Voice Input"
 
     // ═══════════════════════════════════════════════════
     // DearTalkScreen.kt — 키보드/설정 버튼
     // ═══════════════════════════════════════════════════
-    val keyboard get() = if (isKo) "자판" else if (isId) "Papan Ketik" else "Keys"
+    val keyboard get() = if (isKo) "자판" else if (isId) "Ketik" else "Keys"
     val keyboardContentDesc get() = if (isKo) "일반 자판으로 전환" else if (isId) "Beralih ke papan ketik biasa" else "Switch to standard keyboard"
     val settingsContentDesc get() = if (isKo) "DearTalk AI 설정 및 가이드" else if (isId) "Pengaturan & Panduan DearTalk AI" else "DearTalk AI Settings & Guide"
 
@@ -65,7 +65,7 @@ object UiStrings {
     // ═══════════════════════════════════════════════════
     // DearTalkScreen.kt — 입력/취소 버튼
     // ═══════════════════════════════════════════════════
-    val apply get() = if (isKo) "입력" else if (isId) "Terapkan" else "Apply"
+    val apply get() = if (isKo) "입력" else if (isId) "Kirim" else "Apply"
     val applyContentDesc get() = if (isKo) "메시지 창에 입력" else if (isId) "Masukkan ke pesan" else "Insert into message"
     val cancel get() = if (isKo) "취소" else if (isId) "Batal" else "Cancel"
     val cancelContentDesc get() = if (isKo) "입력 취소" else if (isId) "Batal" else "Cancel"
@@ -80,7 +80,7 @@ object UiStrings {
     // DearTalkScreen.kt — 유틸리티 바
     // ═══════════════════════════════════════════════════
     val deleteCharContentDesc get() = if (isKo) "한 글자 지우기" else if (isId) "Hapus satu karakter" else "Delete character"
-    val deleteSentence get() = if (isKo) "문장삭제" else if (isId) "Hapus Kalimat" else "Del Sent"
+    val deleteSentence get() = if (isKo) "문장삭제" else if (isId) "Hapus" else "Del Sent"
     val deleteSentenceContentDesc get() = if (isKo) "방금 입력한 문장 전체 삭제" else if (isId) "Hapus seluruh kalimat sebelumnya" else "Delete current sentence"
     val space get() = if (isKo) "스페이스" else if (isId) "Spasi" else "Space"
     val enterContentDesc get() = if (isKo) "줄바꿈 또는 전송" else if (isId) "Kirim atau baris baru" else "Enter or send"
@@ -88,7 +88,7 @@ object UiStrings {
     // ═══════════════════════════════════════════════════
     // StandardKeyboardView.kt
     // ═══════════════════════════════════════════════════
-    val standardKeyboardMode get() = if (isKo) "⌨️ 일반 키보드" else if (isId) "⌨️ Papan Ketik Biasa" else "⌨️ Standard Keyboard"
+    val standardKeyboardMode get() = if (isKo) "⌨️ 일반 키보드" else if (isId) "⌨️ Papan Ketik" else "⌨️ Standard Keyboard"
     val aiVoiceMode get() = if (isKo) "✨ AI 음성 모드" else if (isId) "✨ Mode Suara AI" else "✨ AI Voice Mode"
     val korEngToggle get() = if (isKo) "한/영" else "KO/EN"
 
@@ -128,14 +128,14 @@ object UiStrings {
     // ═══════════════════════════════════════════════════
     val aiProcessing get() = if (isKo) "🔒 AI가 문장을 다듬는 중..." else if (isId) "🔒 AI sedang merapikan kalimat..." else "🔒 Polishing sentence with AI..."
     val errorOccurred get() = if (isKo) "준비 완료" else if (isId) "Siap" else "Ready"
-    val aiTextComplete get() = if (isKo) "✨ 문장이 완성되었습니다 ([입력]을 눌러 전송)" else if (isId) "✨ Kalimat siap dikirim (ketuk [Terapkan])" else "✨ Ready to send (tap [Apply])"
-    val sttComplete get() = if (isKo) "🎤 음성 인식 완료 ([입력]을 눌러 전송)" else if (isId) "🎤 Suara dikenali (ketuk [Terapkan])" else "🎤 Speech recognized (tap [Apply])"
+    val aiTextComplete get() = if (isKo) "✨ 문장이 완성되었습니다 ([입력]을 눌러 전송)" else if (isId) "✨ Kalimat siap dikirim (ketuk [Kirim])" else "✨ Ready to send (tap [Apply])"
+    val sttComplete get() = if (isKo) "🎤 음성 인식 완료 ([입력]을 눌러 전송)" else if (isId) "🎤 Suara dikenali (ketuk [Kirim])" else "🎤 Speech recognized (tap [Apply])"
     val noTextToTransform get() = if (isKo) "⚠️ 다듬을 내용이 없습니다." else if (isId) "⚠️ Tidak ada teks untuk dirapikan" else "⚠️ No text provided"
     fun modeProcessing(icon: String, name: String) = if (isKo) "🔒 $icon $name 적용 중..." else if (isId) "🔒 Menerapkan $name..." else "🔒 Applying $name..."
-    fun modeComplete(name: String) = if (isKo) "✨ $name 적용 완료 ([입력] 터치)" else if (isId) "✨ $name siap (ketuk [Terapkan])" else "✨ $name ready (tap [Apply])"
+    fun modeComplete(name: String) = if (isKo) "✨ $name 적용 완료 ([입력] 터치)" else if (isId) "✨ $name siap (ketuk [Kirim])" else "✨ $name ready (tap [Apply])"
     val transformFailed get() = if (isKo) "⚠️ 변환 실패 (원문이 유지됩니다)" else if (isId) "⚠️ Gagal mengubah (teks asli dipertahankan)" else "⚠️ Transformation failed (original kept)"
     fun toneConverting(icon: String, name: String) = if (isKo) "🔒 $icon $name 말투로 바꾸는 중..." else if (isId) "🔒 Mengubah ke gaya $name..." else "🔒 Changing tone to $name..."
-    fun toneApplied(name: String) = if (isKo) "✨ $name 말투 적용 완료 ([입력] 터치)" else if (isId) "✨ Gaya $name siap (ketuk [Terapkan])" else "✨ $name tone ready (tap [Apply])"
+    fun toneApplied(name: String) = if (isKo) "✨ $name 말투 적용 완료 ([입력] 터치)" else if (isId) "✨ Gaya $name siap (ketuk [Kirim])" else "✨ $name tone ready (tap [Apply])"
     val textApplied get() = if (isKo) "✅ 입력창에 입력되었습니다" else if (isId) "✅ Dimasukkan ke pesan" else "✅ Inserted into message"
     val aiTextCleared get() = if (isKo) "🗑️ 내용을 지웠습니다" else if (isId) "🗑️ Teks dihapus" else "🗑️ Text cleared"
     val lastSentenceDeleted get() = if (isKo) "✂️ 방금 입력한 문장이 삭제되었습니다" else if (isId) "✂️ Kalimat sebelumnya telah dihapus" else "✂️ Previous sentence deleted"
@@ -163,8 +163,8 @@ object UiStrings {
     // MainActivity.kt — 정보 및 도움말
     // ═══════════════════════════════════════════════════
     val settingsTabAbout get() = if (isKo) "ℹ️ 앱 정보 및 도움말" else if (isId) "ℹ️ Informasi & Bantuan" else "ℹ️ About & Help"
-    val appVersionLabel get() = if (isKo) "앱 버전" else if (isId) "Versi Aplikasi" else "App Version"
-    val buildTimestampLabel get() = if (isKo) "업데이트 일시" else if (isId) "Terakhir Diperbarui" else "Last Updated"
+    val appVersionLabel get() = if (isKo) "앱 버전" else if (isId) "Versi" else "App Version"
+    val buildTimestampLabel get() = if (isKo) "업데이트 일시" else if (isId) "Pembaruan" else "Last Updated"
     val userGuideTitle get() = if (isKo) "📖 DearTalk AI 쉽게 쓰는 법" else if (isId) "📖 Panduan Cepat DearTalk AI" else "📖 DearTalk AI Quick Guide"
     val userGuideHowToUseTitle get() = if (isKo) "💡 이렇게 사용해 보세요" else if (isId) "💡 Cara Penggunaan" else "💡 How to Use"
     val userGuideHowToUseContent get() = if (isKo) {
@@ -178,7 +178,7 @@ object UiStrings {
         "2. Buka aplikasi pesan (WhatsApp, SMS, Email) dan buka papan ketik.\n" +
         "3. Ketuk tombol mikrofon (🎙️) di papan ketik dan bicaralah secara alami.\n" +
         "4. Ketuk tombol gaya seperti [Sopan], [Santai], atau [Formal] untuk merapikan kalimat.\n" +
-        "5. Periksa kalimat yang dirapikan lalu ketuk [Terapkan 📥] untuk langsung memasukkan ke pesan."
+        "5. Periksa kalimat yang dirapikan lalu ketuk [Kirim 📥] untuk langsung memasukkan ke pesan."
     } else {
         "1. Tap Step 1 and Step 2 buttons above to enable and set DearTalk AI as default.\n" +
         "2. Tap any chat or text input area in KakaoTalk, Messages, or Email.\n" +
@@ -187,13 +187,15 @@ object UiStrings {
         "5. Check the refined sentence and tap [Apply 📥] to insert it instantly."
     }
     // ═══════════════════════════════════════════════════
-    // VoiceStudioActivity.kt — 온디바이스 보이스 스튜디오 & 실시간 통역기
+    // DearTalkLiveActivity.kt — 1:1 실시간 대면 대화 & 지능형 보이스 레코더
     // ═══════════════════════════════════════════════════
-    val voiceStudioTitle get() = if (isKo) "🎙️ DearTalk 보이스 스튜디오" else if (isId) "🎙️ Studio Suara DearTalk" else "🎙️ DearTalk Voice Studio"
+    val dearTalkLiveTitle get() = if (isKo) "🎙️ DearTalk Live" else if (isId) "🎙️ DearTalk Live" else "🎙️ DearTalk Live"
+    val dearTalkLiveSubtitle get() = if (isKo) "1:1 실시간 대면 대화 & 보이스 레코더" else if (isId) "Percakapan Tatap Muka 1:1 & Perekam Suara" else "1:1 Face-to-Face Live Voice & Recorder"
+    val voiceStudioTitle get() = if (isKo) "🎙️ DearTalk Live" else if (isId) "🎙️ DearTalk Live" else "🎙️ DearTalk Live"
     val backButtonContentDesc get() = if (isKo) "뒤로가기" else if (isId) "Kembali" else "Back"
 
     // 1. 하드웨어 진단 및 모델 상태
-    fun diagOptimal(ram: String, storage: String) = if (isKo) "최적 사양 (RAM ${ram}GB / 여유 ${storage}GB)" else if (isId) "Spesifikasi Optimal (RAM ${ram}GB / Bebas ${storage}GB)" else "Optimal Spec (RAM ${ram}GB / Free ${storage}GB)"
+    fun diagOptimal(ram: String, storage: String) = if (isKo) "최적 사양 (RAM ${ram}GB / 여유 ${storage}GB)" else if (isId) "Optimal (RAM ${ram}GB / Bebas ${storage}GB)" else "Optimal Spec (RAM ${ram}GB / Free ${storage}GB)"
     fun diagCaution(ram: String) = if (isKo) "주의 사양 (RAM ${ram}GB - 순차 파이프라인 구동)" else if (isId) "Perhatian (RAM ${ram}GB - Alur Kerja Sekuensial)" else "Caution (RAM ${ram}GB - Sequential Pipeline)"
     fun diagRestricted(ram: String) = if (isKo) "사양 제한 (RAM ${ram}GB - 기본 엔진 권장)" else if (isId) "Terbatas (RAM ${ram}GB - Disarankan Mesin Standar)" else "Restricted (RAM ${ram}GB - Standard Engine Recommended)"
     
@@ -207,12 +209,14 @@ object UiStrings {
     val diagPurgeConfirmMessage get() = if (isKo) "다운로드된 온디바이스 AI 모델 파일을 삭제하시겠습니까? 필요 시 언제든 다시 다운로드할 수 있습니다." else if (isId) "Hapus paket model AI on-device? Anda dapat mengunduhnya kembali kapan saja." else "Delete downloaded on-device AI model package? You can re-download anytime."
     val btnDelete get() = if (isKo) "삭제" else if (isId) "Hapus" else "Delete"
     val btnCancel get() = if (isKo) "취소" else if (isId) "Batal" else "Cancel"
+    val btnStop get() = if (isKo) "중지" else if (isId) "Berhenti" else "Stop"
+    val textCopiedFeedback get() = if (isKo) "클립보드에 복사되었습니다." else if (isId) "Disalin ke papan klip." else "Copied to clipboard."
     fun diagErrorLabel(msg: String) = if (isKo) "⚠️ 다운로드 오류: $msg" else if (isId) "⚠️ Kesalahan unduhan: $msg" else "⚠️ Download error: $msg"
     val diagRetryBtn get() = if (isKo) "다시 시도" else if (isId) "Coba Lagi" else "Retry"
 
     // 2. 모드 탭
-    val modeToneTransform get() = if (isKo) "✨ 고운말 톤 변환" else if (isId) "✨ Transformasi Gaya Bicara" else "✨ Tone Transformation"
-    val modeLiveTranslation get() = if (isKo) "🌐 실시간 다국어 통역" else if (isId) "🌐 Penerjemah Langsung" else "🌐 Live Interpretation"
+    val modeToneTransform get() = if (isKo) "✨ 고운말 톤 변환" else if (isId) "✨ Gaya Bicara" else "✨ Tone Transformation"
+    val modeLiveTranslation get() = if (isKo) "🌐 실시간 다국어 통역" else if (isId) "🌐 Penerjemah" else "🌐 Live Interpretation"
 
     // 3. 실시간 통역 상대방 언어 바
     val partnerLangSelectionTitle get() = if (isKo) "🌐 통역할 상대방 언어 선택" else if (isId) "🌐 Pilih Bahasa Lawan Bicara" else "🌐 Select Partner Language"
@@ -241,9 +245,9 @@ object UiStrings {
     }
 
     // 5. 음성 커스터마이저
-    val voiceToneCustomizerTitle get() = if (isKo) "🎙️ 목소리 설정" else if (isId) "🎙️ Pengaturan Suara" else "🎙️ Voice Settings"
-    val voiceFemale get() = if (isKo) "👩 여성 음성" else if (isId) "👩 Suara Wanita" else "👩 Female Voice"
-    val voiceMale get() = if (isKo) "👨 남성 음성" else if (isId) "👨 Suara Pria" else "👨 Male Voice"
+    val voiceToneCustomizerTitle get() = if (isKo) "🎙️ 목소리 설정" else if (isId) "🎙️ Suara" else "🎙️ Voice Settings"
+    val voiceFemale get() = if (isKo) "👩 여성 음성" else if (isId) "👩 Wanita" else "👩 Female Voice"
+    val voiceMale get() = if (isKo) "👨 남성 음성" else if (isId) "👨 Pria" else "👨 Male Voice"
     val pitchMatchingLabel get() = if (isKo) "🎚️ 목소리 톤:" else if (isId) "🎚️ Nada Suara:" else "🎚️ Voice Tone:"
     val pitchNormal get() = if (isKo) "보통" else if (isId) "Normal" else "Normal"
     val pitchDeepLow get() = if (isKo) "중후한 저음" else if (isId) "Bass Dalam" else "Deep Low"
@@ -281,10 +285,10 @@ object UiStrings {
         )
     } else if (isId) {
         listOf(
-            "Mau makan bareng hari ini?",
-            "Maaf sepertinya saya terlambat karena macet",
-            "Mohon balas setelah meninjau dokumen",
-            "Berapa harga produk ini?"
+            "Makan bareng yuk?",
+            "Maaf telat kena macet",
+            "Tolong balas setelah dicek",
+            "Berapa harga barang ini?"
         )
     } else {
         listOf(
@@ -325,4 +329,40 @@ object UiStrings {
 
     val tierBannerSttOnlyPrompt get() = if (isKo) "💡 AI 모델을 다운로드하면 문맥 정제 및 톤 변환이 활성화됩니다." else if (isId) "💡 Unduh model AI untuk mengaktifkan pemurnian & nada bicara." else "💡 Download AI model to enable context refinement & tone styles."
     val tierDownloadAction get() = if (isKo) "AI 팩 다운로드" else if (isId) "Unduh Paket AI" else "Download AI Pack"
+
+    // ═══════════════════════════════════════════════════
+    // DearTalk Live — 실시간 1:1 통역 UI 다국어 지원 (KO, EN, ID)
+    // ═══════════════════════════════════════════════════
+    val liveTitle get() = "DearTalk Live"
+    val liveSubtitle get() = if (isKo) "외국인과 마주보고 서로 말해보세요.\n하단의 [말하기]와 [듣기] 버튼으로 AI가 실시간 통역합니다."
+    else if (isId) "Bicara tatap muka dengan lawan bicara Anda.\nAI menerjemahkan secara langsung dengan tombol [Bicara] dan [Dengar]."
+    else "Speak face-to-face with your partner.\nAI interprets simultaneously using [Speak] and [Listen] buttons."
+
+    val liveSpeakMe get() = if (isKo) "🗣️ 내가 말하기" else if (isId) "🗣️ Saya Bicara" else "🗣️ Speak (Me)"
+    val liveSpeakMeSub get() = if (isKo) "내 언어로 발화" else if (isId) "Bicara bahasa saya" else "Speak in my language"
+
+    val liveListenPartner get() = if (isKo) "👂 상대방 듣기" else if (isId) "👂 Dengarkan" else "👂 Listen (Partner)"
+    val liveListenPartnerSub get() = if (isKo) "상대방 발화 청취" else if (isId) "Dengar bahasa mitra" else "Listen to partner"
+
+    val liveFinishRecording get() = if (isKo) "⏹️ 말씀 완료" else if (isId) "⏹️ Selesai" else "⏹️ Done"
+    val liveFinishRecordingSub get() = if (isKo) "탭하여 즉시 번역" else if (isId) "Ketuk untuk terjemah" else "Tap to translate"
+
+    val liveMePrefix get() = if (isKo) "나" else if (isId) "Saya" else "Me"
+    val livePartnerPrefix get() = if (isKo) "상대" else if (isId) "Mitra" else "Partner"
+
+    val liveBadgeOffline get() = if (isKo) "⚡ 오프라인" else "⚡ Offline"
+    val liveBadgeDownloading get() = if (isKo) "⏳ 다운중" else if (isId) "⏳ Mengunduh" else "⏳ Downloading"
+    val liveBadgeStreaming get() = if (isKo) "🌐 실시간" else "🌐 Live"
+
+    val liveMenuFlipOn get() = if (isKo) "대면 플립 뷰 (180°)" else if (isId) "Tampilan Balik (180°)" else "Face-to-face Flip (180°)"
+    val liveMenuFlipOff get() = if (isKo) "대면 플립 뷰 해제" else if (isId) "Matikan Balik Layar" else "Turn off Flip View"
+
+    val liveMenuContinuousOn get() = if (isKo) "연속 청취/강의 모드" else if (isId) "Mode Rekam Berkelanjutan" else "Continuous Listen Mode"
+    val liveMenuContinuousOff get() = if (isKo) "연속 청취 모드 종료" else if (isId) "Hentikan Mode Berkelanjutan" else "End Continuous Mode"
+
+    val liveMenuExport get() = if (isKo) "대화록 마크다운 공유" else if (isId) "Bagikan Transkrip Markdown" else "Share Markdown Transcript"
+    val liveNewSessionCreated get() = if (isKo) "새로운 대화 세션이 시작되었습니다." else if (isId) "Sesi percakapan baru telah dimulai." else "New conversation session started."
+
+    val officialLangSection get() = if (isKo) "공식 지원 언어" else if (isId) "Bahasa Resmi" else "Official Languages"
+    val crossLangSection get() = if (isKo) "교차 통역 언어" else if (isId) "Bahasa Terjemahan Silang" else "Cross-Translation"
 }

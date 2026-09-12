@@ -16,7 +16,9 @@ class TextToSpeechManager(context: Context) {
         private const val TAG = "TextToSpeechManager"
     }
 
+    private val appContext: Context = context.applicationContext
     private var tts: TextToSpeech? = null
+    @Volatile
     private var isInitialized = false
     private var activeLocale: Locale = Locale.getDefault()
     private var currentGender = VoiceGender.FEMALE
@@ -24,7 +26,17 @@ class TextToSpeechManager(context: Context) {
     private var currentRate = 1.0f
 
     init {
-        tts = TextToSpeech(context) { status ->
+        initTts()
+    }
+
+    @Synchronized
+    private fun initTts(onReady: (() -> Unit)? = null) {
+        try {
+            tts?.shutdown()
+        } catch (_: Throwable) {}
+
+        isInitialized = false
+        tts = TextToSpeech(appContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 val defaultLocale = Locale.getDefault()
                 val res = tts?.setLanguage(defaultLocale)
@@ -37,6 +49,10 @@ class TextToSpeechManager(context: Context) {
                 isInitialized = true
                 applyVoiceConfig()
                 Log.d(TAG, "🔊 TTS 초기화 완료 (음성 개수: ${tts?.voices?.size ?: 0})")
+                onReady?.invoke()
+            } else {
+                Log.e(TAG, "❌ TTS 초기화 실패 (status=$status)")
+                isInitialized = false
             }
         }
     }
@@ -95,34 +111,83 @@ class TextToSpeechManager(context: Context) {
         tts?.setSpeechRate(currentRate)
     }
 
+    /**
+     * 🔊 언어 선택 시 해당 언어의 TTS 보이스 및 엔진을 사전 워밍업 (첫 발화 지연 0ms 목표)
+     */
+    fun prewarmLanguage(targetLocale: Locale) {
+        if (!isInitialized || tts == null) {
+            initTts {
+                prewarmLanguage(targetLocale)
+            }
+            return
+        }
+        try {
+            val availability = tts?.isLanguageAvailable(targetLocale) ?: TextToSpeech.LANG_NOT_SUPPORTED
+            Log.d(TAG, "🔊 [${targetLocale.toLanguageTag()}] TTS 언어 가용성: $availability")
+            if (availability >= TextToSpeech.LANG_AVAILABLE) {
+                applyVoiceConfig(targetLocale)
+                Log.d(TAG, "⚡ [${targetLocale.toLanguageTag()}] TTS 보이스 프리웜 성공")
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "⚠️ [${targetLocale.toLanguageTag()}] TTS 프리웜 예외: ${e.message}")
+        }
+    }
+
     fun speak(
         text: String,
         targetLangCode: String = "KO",
         gender: VoiceGender = currentGender,
         pitch: Float = currentPitch
     ) {
-        if (isInitialized && text.isNotBlank()) {
-            currentGender = gender
-            currentPitch = pitch
+        if (text.isBlank()) return
 
-            val targetLocale = ai.deartalk.android.util.LanguageLocaleHelper.getLocaleForCode(targetLangCode)
+        currentGender = gender
+        currentPitch = pitch
+        val targetLocale = ai.deartalk.android.util.LanguageLocaleHelper.getLocaleForCode(targetLangCode)
 
-            try {
-                tts?.setLanguage(targetLocale)
-                applyVoiceConfig(targetLocale)
-            } catch (_: Throwable) {}
+        if (!isInitialized || tts == null) {
+            Log.w(TAG, "⚠️ TTS 미초기화 상태 감지 ➔ 자율 재초기화(Self-Healing) 후 발화")
+            initTts {
+                performSpeak(text, targetLocale)
+            }
+            return
+        }
 
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "DearTalk_TTS")
+        val result = performSpeak(text, targetLocale)
+        if (result == TextToSpeech.ERROR) {
+            Log.w(TAG, "⚠️ TTS 발화 실패 (Dead Binder 또는 서비스 단절) ➔ 세션 재연결 및 자동 재시도")
+            initTts {
+                performSpeak(text, targetLocale)
+            }
+        }
+    }
+
+    private fun performSpeak(text: String, targetLocale: Locale): Int {
+        return try {
+            tts?.setLanguage(targetLocale)
+            applyVoiceConfig(targetLocale)
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "DearTalk_TTS") ?: TextToSpeech.ERROR
+        } catch (e: Exception) {
+            Log.e(TAG, "TTS speak exception: ${e.message}")
+            TextToSpeech.ERROR
         }
     }
 
     fun stop() {
-        tts?.stop()
+        try {
+            tts?.stop()
+        } catch (_: Throwable) {}
     }
 
     fun shutdown() {
-        tts?.stop()
-        tts?.shutdown()
-        tts = null
+        try {
+            tts?.stop()
+            tts?.shutdown()
+        } catch (e: Exception) {
+            Log.w(TAG, "TTS shutdown exception: ${e.message}")
+        } finally {
+            tts = null
+            isInitialized = false
+        }
     }
 }

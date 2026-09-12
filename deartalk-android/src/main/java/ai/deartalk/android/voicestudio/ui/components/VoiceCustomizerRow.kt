@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,7 +54,15 @@ fun VoiceCustomizerRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(UiStrings.voiceToneCustomizerTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                Text(
+                    text = UiStrings.voiceToneCustomizerTitle,
+                    modifier = Modifier.weight(1f, fill = false),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DearTalkText,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -75,7 +84,8 @@ fun VoiceCustomizerRow(
                             UiStrings.voiceFemale,
                             fontSize = 12.sp,
                             fontWeight = if (selectedGender == VoiceGender.FEMALE) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedGender == VoiceGender.FEMALE) Color.White else DearTalkTextDim
+                            color = if (selectedGender == VoiceGender.FEMALE) Color.White else DearTalkTextDim,
+                            maxLines = 1
                         )
                     }
                     Box(
@@ -93,7 +103,8 @@ fun VoiceCustomizerRow(
                             UiStrings.voiceMale,
                             fontSize = 12.sp,
                             fontWeight = if (selectedGender == VoiceGender.MALE) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedGender == VoiceGender.MALE) Color.White else DearTalkTextDim
+                            color = if (selectedGender == VoiceGender.MALE) Color.White else DearTalkTextDim,
+                            maxLines = 1
                         )
                     }
                 }
@@ -109,7 +120,7 @@ fun VoiceCustomizerRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(UiStrings.pitchMatchingLabel, fontSize = 11.5.sp, color = DearTalkTextDim)
+                Text(UiStrings.pitchMatchingLabel, fontSize = 11.5.sp, color = DearTalkTextDim, maxLines = 1)
                 listOf(
                     UiStrings.pitchNormal to 1.0f,
                     UiStrings.pitchDeepLow to 0.85f,
@@ -132,7 +143,8 @@ fun VoiceCustomizerRow(
                             text = label,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) Color.Black else DearTalkText
+                            color = if (isSelected) Color.Black else DearTalkText,
+                            maxLines = 1
                         )
                     }
                 }

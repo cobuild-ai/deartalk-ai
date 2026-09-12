@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +39,7 @@ fun StandardKeyboardView(
     onKoreanKeyboardTypeChange: (KoreanKeyboardType) -> Unit = {},
     clipboardText: String? = null,
     onPasteClick: (String) -> Unit = {},
+    onDismissClipboardClick: () -> Unit = {},
     onCharClick: (Char) -> Unit,
     onCheonjiinConsonantClick: (Char) -> Unit = {},
     onCheonjiinVowelClick: (Char) -> Unit = {},
@@ -168,7 +170,7 @@ fun StandardKeyboardView(
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .weight(1f)
                             .height(30.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFF1E293B))
@@ -193,7 +195,30 @@ fun StandardKeyboardView(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // 수동 닫기 (×) 버튼
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DearTalkKeyActive)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onDismissClipboardClick()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "클립보드 닫기",
+                            tint = DearTalkTextDim,
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
@@ -220,9 +245,25 @@ fun StandardKeyboardView(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onDeleteClick()
                             },
+                            onEnterClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onEnterClick()
+                            },
+                            onSpaceClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onSpaceClick()
+                            },
                             onSymbolsClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 layoutType = KeyboardLayoutType.SYMBOLS
+                            },
+                            onToggleLangClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                layoutType = KeyboardLayoutType.ENGLISH
+                            },
+                            onSpecialCharClick = { char ->
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onCharClick(char)
                             }
                         )
                     } else {
@@ -276,71 +317,96 @@ fun StandardKeyboardView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            val isCheonjiin = (layoutType == KeyboardLayoutType.HANGUL && currentKoreanType == KoreanKeyboardType.CHEONJIIN)
+            if (!isCheonjiin) {
+                Spacer(modifier = Modifier.height(4.dp))
 
-            // ─────────────────────────────────────────────────────────────
-            // [최하단 공통 행]: 기호, 한/영, Space, Enter
-            // ─────────────────────────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // !#1 기호/숫자 전환
-                KeyBox(
-                    text = if (layoutType == KeyboardLayoutType.SYMBOLS) (if (isKorean) "한글" else "ABC") else "!#1",
-                    modifier = Modifier.weight(1.2f),
-                    bgColor = DearTalkKeyActive,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        layoutType = if (layoutType == KeyboardLayoutType.SYMBOLS) {
-                            if (isKorean) KeyboardLayoutType.HANGUL else KeyboardLayoutType.ENGLISH
-                        } else {
-                            KeyboardLayoutType.SYMBOLS
-                        }
-                    }
-                )
-
-                // 한/영 전환
-                KeyBox(
-                    text = if (isKorean) {
-                        if (layoutType == KeyboardLayoutType.HANGUL) UiStrings.korEngToggle else "ENG"
-                    } else {
-                        if (layoutType == KeyboardLayoutType.ENGLISH) "KOR" else "ENG"
-                    },
-                    modifier = Modifier.weight(1.2f),
-                    bgColor = DearTalkKeyActive,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        layoutType = if (layoutType == KeyboardLayoutType.HANGUL) KeyboardLayoutType.ENGLISH else KeyboardLayoutType.HANGUL
-                    }
-                )
-
-                // Space 키
-                KeyBox(
-                    text = "Space",
-                    modifier = Modifier.weight(3.5f),
-                    bgColor = DearTalkKey,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onSpaceClick()
-                    }
-                )
-
-                // Enter 키
-                Box(
-                    modifier = Modifier
-                        .weight(1.5f)
-                        .height(42.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(DearTalkSecondary)
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onEnterClick()
-                        },
-                    contentAlignment = Alignment.Center
+                // ─────────────────────────────────────────────────────────────
+                // [최하단 공통 행]: 기호(!#1), 한/영, 쉼표(,), Space, 마침표(.), Enter (두벌식/영문/기호용)
+                // ─────────────────────────────────────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.Black, modifier = Modifier.size(18.dp))
+                    // !#1 기호/숫자 전환
+                    KeyBox(
+                        text = if (layoutType == KeyboardLayoutType.SYMBOLS) (if (isKorean) "한글" else "ABC") else "!#1",
+                        modifier = Modifier.weight(1.1f),
+                        bgColor = DearTalkKeyActive,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            layoutType = if (layoutType == KeyboardLayoutType.SYMBOLS) {
+                                if (isKorean) KeyboardLayoutType.HANGUL else KeyboardLayoutType.ENGLISH
+                            } else {
+                                KeyboardLayoutType.SYMBOLS
+                            }
+                        }
+                    )
+
+                    // 한/영 전환
+                    KeyBox(
+                        text = if (isKorean) {
+                            if (layoutType == KeyboardLayoutType.HANGUL) UiStrings.korEngToggle else "ENG"
+                        } else {
+                            if (layoutType == KeyboardLayoutType.ENGLISH) "KOR" else "ENG"
+                        },
+                        modifier = Modifier.weight(1.1f),
+                        bgColor = DearTalkKeyActive,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            layoutType = if (layoutType == KeyboardLayoutType.HANGUL) KeyboardLayoutType.ENGLISH else KeyboardLayoutType.HANGUL
+                        }
+                    )
+
+                    // 쉼표 (,) 키
+                    KeyBox(
+                        text = ",",
+                        modifier = Modifier.weight(0.9f),
+                        bgColor = DearTalkKeyActive,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onCharClick(',')
+                        }
+                    )
+
+                    // Space 키
+                    KeyBox(
+                        text = "Space",
+                        modifier = Modifier.weight(2.6f),
+                        bgColor = DearTalkKey,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onSpaceClick()
+                        }
+                    )
+
+                    // 마침표 (.) 키
+                    KeyBox(
+                        text = ".",
+                        modifier = Modifier.weight(0.9f),
+                        bgColor = DearTalkKeyActive,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onCharClick('.')
+                        }
+                    )
+
+                    // Enter 키
+                    Box(
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(42.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(DearTalkSecondary)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onEnterClick()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.Black, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
         }
@@ -348,57 +414,157 @@ fun StandardKeyboardView(
 }
 
 /**
- * 천지인(Cheonjiin) 3x4 키패드 컴포저블
+ * 천지인(Cheonjiin) 4행 x 4열 삼성 순정 표준 레이아웃
+ * - 좌측 3개 열: 글쓰기 자판 (1~9, 0 숫자 각인 및 천지인 자모)
+ * - 우측 4번째 열: 백스페이스(⌫), 엔터(↵), 문장부호(.,?!), 마침표(.)
  */
 @Composable
 private fun CheonjiinKeyboardLayout(
     onConsonantClick: (Char) -> Unit,
     onVowelClick: (Char) -> Unit,
     onDeleteClick: () -> Unit,
-    onSymbolsClick: () -> Unit
+    onEnterClick: () -> Unit,
+    onSpaceClick: () -> Unit,
+    onSymbolsClick: () -> Unit,
+    onToggleLangClick: () -> Unit,
+    onSpecialCharClick: (Char) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        // Row 1: [ ㅣ ] [ ㆍ ] [ ㅡ ]
+        // ─────────────────────────────────────────────────────────────
+        // Row 1: [ ㅣ (1) ] [ ㆍ (2) ] [ ㅡ (3) ] | [ ⌫ Backspace ]
+        // ─────────────────────────────────────────────────────────────
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CheonjiinKey(mainText = "ㅣ", subText = "사람", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅣ') })
-            CheonjiinKey(mainText = "ㆍ", subText = "하늘", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㆍ') })
-            CheonjiinKey(mainText = "ㅡ", subText = "땅", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅡ') })
+            CheonjiinKey(mainText = "ㅣ", subText = "1", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅣ') })
+            CheonjiinKey(mainText = "ㆍ", subText = "2", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㆍ') })
+            CheonjiinKey(mainText = "ㅡ", subText = "3", modifier = Modifier.weight(1f), onClick = { onVowelClick('ㅡ') })
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(DearTalkKeyActive)
+                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                    .clickable { onDeleteClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "삭제", tint = DearTalkText, modifier = Modifier.size(20.dp))
+            }
         }
 
-        // Row 2: [ ㄱ ㅋ ] [ ㄴ ㄹ ] [ ㄷ ㅌ ]
+        // ─────────────────────────────────────────────────────────────
+        // Row 2: [ ㄱ ㅋ (4) ] [ ㄴ ㄹ (5) ] [ ㄷ ㅌ (6) ] | [ ↵ Enter ]
+        // ─────────────────────────────────────────────────────────────
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CheonjiinKey(mainText = "ㄱ ㅋ", subText = "ㄲ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄱ') })
-            CheonjiinKey(mainText = "ㄴ ㄹ", subText = "", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄴ') })
-            CheonjiinKey(mainText = "ㄷ ㅌ", subText = "ㄸ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄷ') })
+            CheonjiinKey(mainText = "ㄱ ㅋ", subText = "4", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄱ') })
+            CheonjiinKey(mainText = "ㄴ ㄹ", subText = "5", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄴ') })
+            CheonjiinKey(mainText = "ㄷ ㅌ", subText = "6", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㄷ') })
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(DearTalkSecondary)
+                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                    .clickable { onEnterClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.Black, modifier = Modifier.size(20.dp))
+            }
         }
 
-        // Row 3: [ ㅂ ㅍ ] [ ㅅ ㅎ ] [ ㅈ ㅊ ]
+        // ─────────────────────────────────────────────────────────────
+        // Row 3: [ ㅂ ㅍ (7) ] [ ㅅ ㅎ (8) ] [ ㅈ ㅊ (9) ] | [ .,?! ]
+        // ─────────────────────────────────────────────────────────────
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CheonjiinKey(mainText = "ㅂ ㅍ", subText = "ㅃ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅂ') })
-            CheonjiinKey(mainText = "ㅅ ㅎ", subText = "ㅆ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅅ') })
-            CheonjiinKey(mainText = "ㅈ ㅊ", subText = "ㅉ", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅈ') })
+            CheonjiinKey(mainText = "ㅂ ㅍ", subText = "7", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅂ') })
+            CheonjiinKey(mainText = "ㅅ ㅎ", subText = "8", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅅ') })
+            CheonjiinKey(mainText = "ㅈ ㅊ", subText = "9", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅈ') })
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(DearTalkKeyActive)
+                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                    .clickable { onSymbolsClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = ".,?!", color = DearTalkText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            }
         }
 
-        // Row 4: [ !?# ] [ ㅇ ㅁ ] [ ⌫ ]
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-            KeyBox(
-                text = ".,?!",
-                modifier = Modifier.weight(1f).height(46.dp),
-                bgColor = DearTalkKeyActive,
-                textColor = DearTalkText,
-                onClick = onSymbolsClick
-            )
-            CheonjiinKey(mainText = "ㅇ ㅁ", subText = "", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅇ') })
-            KeyBox(
-                text = "⌫",
-                modifier = Modifier.weight(1f).height(46.dp),
-                bgColor = DearTalkKeyActive,
-                textColor = DearTalkText,
-                onClick = onDeleteClick
-            )
+        // ─────────────────────────────────────────────────────────────
+        // Row 4: [ !#1 | 한/영 ] [ ㅇ ㅁ (0) ] [ ␣ Space ] | [ . ]
+        // ─────────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Col 1: [!#1] + [한/영]
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(DearTalkKeyActive)
+                        .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                        .clickable { onSymbolsClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "!#1", color = DearTalkText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1.1f)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(DearTalkKeyActive)
+                        .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                        .clickable { onToggleLangClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = UiStrings.korEngToggle, color = DearTalkText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            // Col 2: [ ㅇ ㅁ (0) ]
+            CheonjiinKey(mainText = "ㅇ ㅁ", subText = "0", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅇ') })
+
+            // Col 3: [ ␣ ] Space
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(DearTalkKey)
+                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                    .clickable { onSpaceClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "␣", color = DearTalkText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+
+            // Col 4: [ . ] 마침표
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(DearTalkKeyActive)
+                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                    .clickable { onSpecialCharClick('.') },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = ".", color = DearTalkText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -406,38 +572,36 @@ private fun CheonjiinKeyboardLayout(
 @Composable
 private fun CheonjiinKey(
     mainText: String,
-    subText: String,
+    subText: String? = null,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
-            .height(46.dp)
+            .height(52.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(DearTalkKey)
             .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+        if (!subText.isNullOrBlank()) {
             Text(
-                text = mainText,
-                color = DearTalkText,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
+                text = subText,
+                color = DearTalkTextDim,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 2.dp, end = 5.dp)
             )
-            if (subText.isNotEmpty()) {
-                Text(
-                    text = subText,
-                    color = DearTalkTextDim,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Normal
-                )
-            }
         }
+        Text(
+            text = mainText,
+            color = DearTalkText,
+            fontSize = if (mainText.length > 2) 16.sp else 18.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -541,23 +705,28 @@ private fun SymbolKeyboardLayout(
     onKeyClick: (Char) -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    var symbolPage by remember { mutableStateOf(1) }
+
     val row1 = "1234567890"
-    val row2 = "@#$%&-+()*"
-    val row3 = "!\"':;/?~"
+    val row2 = if (symbolPage == 1) "@#$%&-+()/" else "[]{}₩€£¥^°"
+    val row3 = if (symbolPage == 1) "*\"':;!?~\\" else "|`·…«»§±¡"
+    val row4 = if (symbolPage == 1) listOf(',', '.', '_', '=', '<', '>') else listOf('¿', '÷', '×', '≠', '≤', '≥')
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Row 1: 숫자행
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             row1.forEach { char ->
                 KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
             }
         }
+        // Row 2: 주요 기호
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             row2.forEach { char ->
                 KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
             }
         }
+        // Row 3: 문장 부호 + Delete
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-            Spacer(modifier = Modifier.weight(0.5f))
             row3.forEach { char ->
                 KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
             }
@@ -568,6 +737,20 @@ private fun SymbolKeyboardLayout(
                 textColor = DearTalkText,
                 onClick = onDeleteClick
             )
+        }
+        // Row 4: 페이지 전환 (1/2, 2/2) + 추가 기호
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+            KeyBox(
+                text = if (symbolPage == 1) "1/2" else "2/2",
+                modifier = Modifier.weight(1.3f),
+                bgColor = DearTalkPrimary,
+                textColor = Color.White,
+                onClick = { symbolPage = if (symbolPage == 1) 2 else 1 }
+            )
+            row4.forEach { char ->
+                KeyBox(text = char.toString(), modifier = Modifier.weight(1f), onClick = { onKeyClick(char) })
+            }
+            Spacer(modifier = Modifier.weight(0.3f))
         }
     }
 }

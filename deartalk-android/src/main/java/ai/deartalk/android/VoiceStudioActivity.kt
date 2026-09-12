@@ -61,6 +61,12 @@ class VoiceStudioActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        sttManager.cancelListening()
+        ttsManager.stop()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         voicePipeline.releaseMemory()

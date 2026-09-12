@@ -15,6 +15,7 @@
     </queries>
 
     <application
+        android:name=".DearTalkApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -35,12 +36,20 @@
             </intent-filter>
         </activity>
 
-        <!-- 🎙️ 온디바이스 AI 대면 통역 & 보이스 스튜디오 액티비티 -->
+        <!-- 🎙️ 온디바이스 AI 1:1 대면 대화 & 보이스 레코더 (DearTalk Live) 액티비티 -->
+        <activity
+            android:name=".live.DearTalkLiveActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:label="DearTalk Live"
+            android:theme="@style/Theme.DearTalk" />
+
+        <!-- 🎙️ 온디바이스 AI 대면 통역 & 보이스 스튜디오 액티비티 (레거시 호환) -->
         <activity
             android:name=".VoiceStudioActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:label="Voice Studio"
+            android:label="DearTalk Live"
             android:theme="@style/Theme.DearTalk" />
 
         <!-- DearTalk IME Service (핵심 키보드 서비스) -->
