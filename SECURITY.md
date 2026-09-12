@@ -23,7 +23,7 @@
 
 If you discover a potential security vulnerability or unintentional network leakage in DearTalkAI, please notify us responsibly:
 
-1. **Email:** Send details to `security@deartalk.ai` (or via private GitHub Security Advisory).
+1. **Email:** Send details to `onthelogic@gmail.com` (or via private GitHub Security Advisory).
 2. **Details to Include:**
    - Description of the vulnerability and affected Android version.
    - Steps to reproduce or proof-of-concept.

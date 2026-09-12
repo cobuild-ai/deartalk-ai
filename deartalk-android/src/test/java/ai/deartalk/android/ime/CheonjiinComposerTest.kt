@@ -58,4 +58,142 @@ class CheonjiinComposerTest {
         composer.inputConsonantKey(null, 'ㄱ')
         assertEquals("각", composer.makeSyllable())
     }
+
+    @Test
+    fun testAraeaAloneNoCrash() {
+        // 단독 'ㆍ' 입력 시 ArrayIndexOutOfBoundsException 없이 안전하게 표시
+        composer.inputVowelKey(null, 'ㆍ')
+        assertEquals("ㆍ", composer.makeSyllable())
+
+        // 연타 'ㆍ' + 'ㆍ' 입력 시에도 안전
+        composer.inputVowelKey(null, 'ㆍ')
+        assertEquals("ㆍㆍ", composer.makeSyllable())
+    }
+
+    @Test
+    fun testConsonantAndAraea() {
+        // 'ㄱ' + 'ㆍ' -> 초성 + 아래아 표시
+        composer.inputConsonantKey(null, 'ㄱ')
+        composer.inputVowelKey(null, 'ㆍ')
+        assertEquals("ㄱㆍ", composer.makeSyllable())
+
+        // + 'ㅣ' -> '개' (또는 'ㅓ' 계열 합성)
+        composer.inputVowelKey(null, 'ㅣ')
+        assertEquals("거", composer.makeSyllable())
+    }
+
+    @Test
+    fun testAraeaThenVowelSynthesis() {
+        // 'ㆍ' + 'ㅡ' -> 'ㅗ'
+        composer.inputVowelKey(null, 'ㆍ')
+        composer.inputVowelKey(null, 'ㅡ')
+        assertEquals("ㅗ", composer.makeSyllable())
+    }
+
+    @Test
+    fun testDeleteWithAraea() {
+        // 'ㄱ' + 'ㆍ' 후 삭제 시 'ㄱ' 유지
+        composer.inputConsonantKey(null, 'ㄱ')
+        composer.inputVowelKey(null, 'ㆍ')
+        composer.delete(null)
+        assertEquals("ㄱ", composer.makeSyllable())
+    }
+
+    class FakeInputConnection : java.lang.reflect.InvocationHandler {
+        val composingText = StringBuilder()
+        val committedText = StringBuilder()
+        var finishComposingCallCount = 0
+
+        override fun invoke(proxy: Any, method: java.lang.reflect.Method, args: Array<out Any>?): Any? {
+            when (method.name) {
+                "setComposingText" -> {
+                    val text = args?.get(0) as? CharSequence ?: ""
+                    composingText.setLength(0)
+                    composingText.append(text)
+                    return true
+                }
+                "commitText" -> {
+                    val text = args?.get(0) as? CharSequence ?: ""
+                    committedText.append(text)
+                    composingText.setLength(0)
+                    return true
+                }
+                "finishComposingText" -> {
+                    finishComposingCallCount++
+                    committedText.append(composingText)
+                    composingText.setLength(0)
+                    return true
+                }
+            }
+            val returnType = method.returnType
+            if (returnType == Boolean::class.javaPrimitiveType || returnType == Boolean::class.java) {
+                return true
+            }
+            if (returnType == Int::class.javaPrimitiveType || returnType == Int::class.java) {
+                return 0
+            }
+            return null
+        }
+
+        fun getFullText(): String = committedText.toString() + composingText.toString()
+    }
+
+    @Test
+    fun testCommitCallsFinishComposingText() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // "안" 입력 -> commit
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        assertEquals("안", handler.getFullText())
+
+        composer.commit(mockConnection)
+        // commitText 및 finishComposingText가 호출되어야 함
+        assertEquals("안", handler.committedText.toString())
+        assertEquals("", handler.composingText.toString())
+        org.junit.Assert.assertTrue(handler.finishComposingCallCount >= 1)
+        org.junit.Assert.assertFalse(composer.isComposing)
+    }
+
+    @Test
+    fun testTypingAtMiddleOfTextAfterCursorMove() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // 1. 문장 끝에서 "요" 입력 중 상태
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        composer.inputVowelKey(mockConnection, 'ㅡ')
+        assertEquals("요", handler.composingText.toString())
+
+        // 2. 사용자가 텍스트 중간을 터치하여 커서를 이동 -> IME onUpdateSelection 발생
+        // finishComposingText 호출 및 composer.reset()
+        mockConnection.finishComposingText()
+        composer.reset()
+        assertEquals("요", handler.committedText.toString())
+        assertEquals("", handler.composingText.toString())
+        org.junit.Assert.assertFalse(composer.isComposing)
+
+        // 3. 커서가 위치한 중간에서 새 글자 "가" 입력 시작
+        // "요"와 결합되지 않고 독립된 "가"로 정상 시작되어야 함!
+        composer.inputConsonantKey(mockConnection, 'ㄱ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+
+        assertEquals("가", handler.composingText.toString())
+        assertEquals("요가", handler.getFullText())
+    }
 }
+

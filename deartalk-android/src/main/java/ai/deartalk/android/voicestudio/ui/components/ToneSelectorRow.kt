@@ -52,7 +52,8 @@ fun ToneSelectorRow(selectedTone: String, onToneSelected: (String) -> Unit) {
                     text = tone,
                     fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) Color.Black else DearTalkText
+                    color = if (isSelected) Color.Black else DearTalkText,
+                    maxLines = 1
                 )
             }
         }

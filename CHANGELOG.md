@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-09-12
+
+### Added
+- **🎙️ DearTalk Live (Real-Time 1:1 Face-to-Face Voice Messenger)**:
+  - 여행 및 비즈니스 현장 특화 2-Way 실시간 통역 메신저 런칭 (`ai.deartalk.android.live`).
+  - **대형 듀얼 마이크 액션 바**: `[🗣️ 내가 말하기]`(내 언어 STT ➔ AI 번역 ➔ 상대방 언어로 자동 TTS 발화) & `[👂 상대방 듣기]`(상대방 언어 STT ➔ 내 언어로 번역 ➔ 스크립트 텍스트 렌더링).
+  - **100% 오프라인 SQLite 로컬 저장소**: 네트워크 연결 없이도 모든 대화 세션 및 메시지 무손실 영구 보존.
+  - **대면 180도 플립 뷰 (Face-to-Face Flip View)**: 맞은편 외국인 파트너를 위해 상대방 말풍선 및 번역문을 180도 회전 렌더링.
+  - **연속 청취 / 강의 레코더 모드 (Continuous Listening)**: 발화 종료 후 자동으로 다음 음성을 연속 청취하는 무인 루프.
+  - **대화록 마크다운 내보내기 & 시스템 원터치 공유**: 전체 대화 세션을 마크다운 파일로 직렬화하여 카카오톡, 이메일, 클라우드로 공유.
+- **⚡ 지능형 음성 인식(ASR) 오인식 문맥 보정 (Context-Aware Speech Repair)**:
+  - 직전 5개 턴의 대화 맥락을 온디바이스 SLM(Qwen/Gemma)에 주입하여 음향적 오인식(예: 호텔 대화 중 '포항 되나요' ➔ '포함 되나요')을 원래 의도대로 똑똑하게 복원.
+  - **3대 메타 원칙(Fidelity-First)** 준수: 원형 보존(Tone & Voice), 최소 교정(Minimal Polish), 모호할 땐 평서문 기본값 처리.
+- **⏱️ 10초 장문 무음 감지 확장 & 원터치 `[⏹️ 말씀 완료]` 토글**:
+  - 상대방 장문 설명 중 숨을 고를 때 끊기지 않도록 VAD 무음 대기 한계를 10초로 대폭 확장.
+  - 상대방 발화가 끝났을 때 탭 한 번으로 0.1초 만에 즉시 번역으로 직결되는 즉시 완료 토글 탑재.
+- **📥 상단 언어 선택 시 온디바이스 STT 언어팩 자동 선제 다운로드 & TTS 프리웜**:
+  - 언어 선택 즉시 시스템에 온디바이스 모델 다운로드를 트리거하여 첫 발화 대기 시간 0초 달성.
+
+### Changed
+- **2-Tier 계층화 & 2단 반응형 언어 선택 카드 UI**:
+  - `✨ 공식 지원 3대 언어`(한국어, 영어, 인도네시아어)와 `🌐 교차 통역 언어` 분리.
+  - 구글/애플 번역 스타일의 2단 카드(상단: 화자/뱃지, 하단: 언어명/드롭다운)로 가로 150dp 내에서 10글자 이상의 긴 언어명도 줄바꿈 0% 완벽 피팅.
+- **공식 대외 이메일 및 테스터 커뮤니티 일원화**:
+  - 모든 대외 문의 및 보안 창구를 `onthelogic@gmail.com`으로 통일.
+  - 오픈소스 테스터 커뮤니티를 `aibuilder-testers@googlegroups.com` (`https://groups.google.com/g/aibuilder-testers`)로 갱신.
+
+---
+
+## [1.0.10] - 2026-09-10
+
+### Fixed
+- **Cheonjiin Automata Crash Resolution**: Eliminated `ArrayIndexOutOfBoundsException: length=21; index=-2` in `CheonjiinComposer.kt` by strictly bounding `jung` index to `0..20` and safely handling intermediate araea (`"ㆍ"`, `"ㆍㆍ"`) transitions.
+- **IME Keystroke Circuit Breaker**: Wrapped all keyboard input event handlers with `runCatching` to prevent keyboard service termination and ensure instant self-healing on unexpected edge cases.
+
+### Changed
+- **Samsung-Style Cheonjiin Minimal Layout**: Removed legacy explanatory subtexts ("사람", "하늘", "땅", "ㄲ", "ㄸ") for a clean, distraction-free 18sp Korean 3x4 keypad mirroring genuine Samsung Cheonjiin.
+
+### Added
+- **Global Punctuation Access (Bottom Bar)**: Integrated permanent comma (`,`) and period (`.`) keys directly on the bottom common bar across all keyboards (`[!#1] [KOR/ENG] [,] [Space] [.] [Enter]`).
+- **Rich 2-Page Special Symbols (`SymbolKeyboardLayout`)**: Expanded symbol keyboard into a 2-page pagination system (`1/2` and `2/2`) providing full punctuation (`.`, `,`, `?`, `!`), currencies (`₩`, `$`, `€`, `£`), math operators (`≠`, `≤`, `≥`, `÷`, `×`), and brackets.
+- **Enterprise Crash Diagnostics (`CrashLogger`)**: Registered `DearTalkApplication` with a custom `UncaughtExceptionHandler` that writes persistent diagnostic crash dumps to `files/crash_logs/` for fail-safe post-mortem debugging.
+
+---
+
 ## [1.0.9] - 2026-09-10
 
 ### Added

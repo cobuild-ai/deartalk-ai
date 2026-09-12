@@ -102,4 +102,61 @@ class DearTalkIntentEngineTest {
         intentEngine.detectAndInitOnDeviceModel()
         assertFalse(intentEngine.isModelLoadedFlow.value)
     }
+
+    @Test
+    fun `cleanLlmOutput_Gemma_및_Qwen_ChatML_특수토큰_정제_테스트`() {
+        // Gemma 토큰 테스트
+        val gemmaRaw = "<start_of_turn>model\n내일 뵙겠습니다.<end_of_turn>"
+        assertEquals("내일 뵙겠습니다.", intentEngine.cleanLlmOutput(gemmaRaw))
+
+        // Qwen ChatML 토큰 테스트
+        val qwenRaw = "<|im_start|>assistant\nSampai jumpa besok.<|im_end|>"
+        assertEquals("Sampai jumpa besok.", intentEngine.cleanLlmOutput(qwenRaw))
+
+        // 접두어 제거 테스트
+        val prefixRaw = "최종 문장: 안녕하세요!"
+        assertEquals("안녕하세요!", intentEngine.cleanLlmOutput(prefixRaw))
+
+        // 복합 마크다운 및 따옴표 제거 테스트
+        val complexRaw = "<|im_start|>assistant\n\"Terima kasih banyak atas bantuannya!\"<|im_end|>"
+        assertEquals("Terima kasih banyak atas bantuannya!", intentEngine.cleanLlmOutput(complexRaw))
+    }
+
+    @Test
+    fun `인도네시아어_톤변환_원문보존_테스트`() = runBlocking {
+        val tone = ai.deartalk.android.data.pref.CustomTone(
+            id = "tone_polite",
+            name = "Sopan",
+            instruction = "Gunakan bahasa sopan"
+        )
+        val indonesianInput = "Besok jam berapa kita bisa bertemu?"
+        val result = intentEngine.processWithTone(indonesianInput, tone)
+        assertTrue(result is IntentResult.Success)
+        assertEquals(indonesianInput, (result as IntentResult.Success).text)
+    }
+
+    @Test
+    fun `명시적_의문문_폴백_물음표_자동부착_테스트`() = runBlocking {
+        // 1. 명백한 의문사/의문어미("언제 출발해", "내일 몇 시에 만날까") -> 모델 미로드 폴백 시에도 '?' 자동 부착
+        val result1 = intentEngine.process("언제 출발해")
+        assertTrue(result1 is IntentResult.Success)
+        assertEquals("언제 출발해?", (result1 as IntentResult.Success).text)
+
+        val result2 = intentEngine.process("내일 몇 시에 만날까")
+        assertTrue(result2 is IntentResult.Success)
+        assertEquals("내일 몇 시에 만날까?", (result2 as IntentResult.Success).text)
+
+        // 2. 평서문("나 괜찮아", "밥 먹었어", "지금 출발했습니다") -> 물음표 부착하지 않고 평문 보존
+        val result3 = intentEngine.process("나 괜찮아")
+        assertTrue(result3 is IntentResult.Success)
+        assertEquals("나 괜찮아", (result3 as IntentResult.Success).text)
+
+        val result4 = intentEngine.process("밥 먹었어")
+        assertTrue(result4 is IntentResult.Success)
+        assertEquals("밥 먹었어", (result4 as IntentResult.Success).text)
+
+        val result5 = intentEngine.process("지금 출발했습니다")
+        assertTrue(result5 is IntentResult.Success)
+        assertEquals("지금 출발했습니다", (result5 as IntentResult.Success).text)
+    }
 }

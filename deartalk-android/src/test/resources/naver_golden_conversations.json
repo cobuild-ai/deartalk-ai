@@ -1,0 +1,296 @@
+[
+  {
+    "date": "20260912",
+    "title": "Where are you headed?",
+    "title_ko": "어디로 가세요?",
+    "sentences": [
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "Where are you headed?",
+        "ko": "어디로 가세요?",
+        "audio": "/wordbook/mew/sentence/20220615_02.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Female",
+        "en": "Take me to the W hotel.",
+        "ko": "W 호텔로 가주세요.",
+        "audio": "/wordbook/mew/sentence/20220615_03.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "Sure.",
+        "ko": "물론이죠.",
+        "audio": "/wordbook/mew/sentence/20220615_04.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Female",
+        "en": "Could you speed up? I’m running a little late.",
+        "ko": "더 빨리 가주실 수 있나요? 조금 늦을 것 같아서요.",
+        "audio": "/wordbook/mew/sentence/20220615_05.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "Alright. I’ll go as fast as I can.",
+        "ko": "알겠습니다. 최대한 빨리 가도록 하겠습니다.",
+        "audio": "/wordbook/mew/sentence/20220615_06.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Female",
+        "en": "Keep going straight and please turn right up ahead.",
+        "ko": "직진하시다가 저 앞에서 우회전해 주세요.",
+        "audio": "/wordbook/mew/sentence/20220615_07.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Female",
+        "en": "Let me out over there.",
+        "ko": "저기에서 내려주세요.",
+        "audio": "/wordbook/mew/sentence/20220615_08.mp3"
+      }
+    ]
+  },
+  {
+    "date": "20260910",
+    "title": "Does my room rate include breakfast?",
+    "title_ko": "제 객실 요금에 조식이 포함되나요?",
+    "sentences": [
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Do you have a reservation?",
+        "ko": "예약을 하셨나요?",
+        "audio": "/wordbook/mew/sentence/20220613_02.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Yes. I have a reservation.",
+        "ko": "네. 예약했습니다.",
+        "audio": "/wordbook/mew/sentence/20220613_03.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "And my reservation is under Peter.",
+        "ko": "그리고 예약은 피터로 되어있습니다.",
+        "audio": "/wordbook/mew/sentence/20220613_04.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "I’d like a room with a view on a lower floor.",
+        "ko": "전망 좋은 저층 객실로 주세요.",
+        "audio": "/wordbook/mew/sentence/20220613_05.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Actually, we’ve upgraded you to a suite.",
+        "ko": "사실, 스위트룸으로 업그레이드해 드렸습니다.",
+        "audio": "/wordbook/mew/sentence/20220613_06.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Wow! Thanks!",
+        "ko": "우와! 감사합니다!",
+        "audio": "/wordbook/mew/sentence/20220613_07.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Does my room rate include breakfast?",
+        "ko": "제 객실 요금에 조식이 포함되나요?",
+        "audio": "/wordbook/mew/sentence/20220613_08.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Yes. And breakfast is served from 6:30 to 10:30 a.m.",
+        "ko": "네. 그리고 조식 서비스는 6시 30분부터 10시 30분까지 제공됩니다.",
+        "audio": "/wordbook/mew/sentence/20220613_09.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Here’s your key, and the bellboy will deliver your luggage to your room.",
+        "ko": "열쇠는 여기 있습니다. 벨보이가 짐을 객실로 가져다드릴 것입니다.",
+        "audio": "/wordbook/mew/sentence/20220613_10.mp3"
+      }
+    ]
+  },
+  {
+    "date": "20260909",
+    "title": "I’m just browsing.",
+    "title_ko": "그냥 구경하는 거예요.",
+    "sentences": [
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "Can you direct me to the shoe store?",
+        "ko": "신발가게가 어디 있는지 가르쳐 주시겠어요?",
+        "audio": "/wordbook/mew/sentence/20220611_02.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Female",
+        "en": "It’s on the second floor. May I help you?",
+        "ko": "2층에 있습니다. 도와드릴까요?",
+        "audio": "/wordbook/mew/sentence/20220611_03.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "No, thanks. I’m just browsing.",
+        "ko": "아니에요. 그냥 구경하는 거예요.",
+        "audio": "/wordbook/mew/sentence/20220611_04.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "This is exactly what I was looking for!",
+        "ko": "이게 바로 제가 찾고 있던 거예요!",
+        "audio": "/wordbook/mew/sentence/20220611_05.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Male",
+        "en": "Do you have this in a brighter shade?",
+        "ko": "이거 더 밝은 색상 있나요?",
+        "audio": "/wordbook/mew/sentence/20220611_06.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Female",
+        "en": "I’m sorry. That’s our only yellow.",
+        "ko": "죄송하지만 노란색은 그게 전부입니다.",
+        "audio": "/wordbook/mew/sentence/20220611_07.mp3"
+      }
+    ]
+  },
+  {
+    "date": "20260908",
+    "title": "We’re offering a 20% discount.",
+    "title_ko": "20% 할인을 해드리고 있어요.",
+    "sentences": [
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "How can I help you?",
+        "ko": "무엇을 도와드릴까요?",
+        "audio": "/wordbook/mew/sentence/20220610_02.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Hi, I’d like to sign up for the yoga class.",
+        "ko": "안녕하세요. 요가 강좌에 등록하고 싶습니다.",
+        "audio": "/wordbook/mew/sentence/20220610_03.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "We are having various promotional events now.",
+        "ko": "저희가 지금 다양한 행사를 진행하고 있어요.",
+        "audio": "/wordbook/mew/sentence/20220610_04.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Are you offering any discounts?",
+        "ko": "할인을 해주시는 건가요?",
+        "audio": "/wordbook/mew/sentence/20220610_05.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Yes. We’re offering a 20% discount.",
+        "ko": "네. 20% 할인을 해드리고 있어요.",
+        "audio": "/wordbook/mew/sentence/20220610_06.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "The original price is 96 dollars, but it is 76 dollars and 80 cents during the promotion.",
+        "ko": "원가는 96달러인데 행사 기간에는 76달러 80센트입니다.",
+        "audio": "/wordbook/mew/sentence/20220610_07.mp3"
+      }
+    ]
+  },
+  {
+    "date": "20260903",
+    "title": "Have you had breakfast?",
+    "title_ko": "아침은 먹었어?",
+    "sentences": [
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Have you had breakfast?",
+        "ko": "아침은 먹었어?",
+        "audio": "/wordbook/mew/sentence/20220606_02.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Yes. How about you?",
+        "ko": "응. 너는?",
+        "audio": "/wordbook/mew/sentence/20220606_03.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "I had a cup of tea just now. What did you have for your breakfast?",
+        "ko": "방금 차 한잔 마셨어. 넌 아침 뭐 먹었어?",
+        "audio": "/wordbook/mew/sentence/20220606_04.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "I had a scrambled egg and a cup of coffee.",
+        "ko": "스크램블 에그랑 커피 한 잔 마셨어. ",
+        "audio": "/wordbook/mew/sentence/20220606_05.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "Why don’t you have any food for your breakfast?",
+        "ko": "아침으로 음식을 좀 먹지 그랬어?",
+        "audio": "/wordbook/mew/sentence/20220606_06.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "I am not used to having food in the morning.",
+        "ko": "난 아침을 먹는 게 익숙하지 않아.",
+        "audio": "/wordbook/mew/sentence/20220606_07.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "If I do so, I’ll have a problem with my belly.",
+        "ko": "아침을 먹으면 속이 안 좋아.",
+        "audio": "/wordbook/mew/sentence/20220606_08.mp3"
+      },
+      {
+        "speaker": "B",
+        "gender": "Male",
+        "en": "How about milk? Is it OK for you to drink milk in the morning?",
+        "ko": "우유를 마시는 건 어때? 아침에 우유 마시는 건 괜찮아?",
+        "audio": "/wordbook/mew/sentence/20220606_09.mp3"
+      },
+      {
+        "speaker": "A",
+        "gender": "Female",
+        "en": "Milk is OK with me. But a cup of tea or coffee is enough for me.",
+        "ko": "우유는 괜찮은데 그냥 차나 커피 한잔하는 것도 난 충분해.",
+        "audio": "/wordbook/mew/sentence/20220606_10.mp3"
+      }
+    ]
+  }
+]

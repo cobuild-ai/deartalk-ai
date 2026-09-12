@@ -112,6 +112,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        sttManager.cancelListening()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         sttManager.destroy()
@@ -246,9 +251,10 @@ fun MainOnDeviceScreen(
                 title = {
                     Text(
                         if (isKorean) "DearTalk AI 설정 및 가이드"
-                        else if (isIndonesian) "Pengaturan & Panduan DearTalk AI"
+                        else if (isIndonesian) "Pengaturan DearTalk AI"
                         else "DearTalk AI Settings & Guide",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -299,7 +305,7 @@ fun MainOnDeviceScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = if (isKorean) "🚀 1분 키보드 빠른 시작" else if (isIndonesian) "🚀 Mulai Cepat Papan Ketik 1 Menit" else "🚀 Quick Keyboard Setup",
+                                text = if (isKorean) "🚀 1분 키보드 빠른 시작" else if (isIndonesian) "🚀 Mulai Cepat 1 Menit" else "🚀 Quick Keyboard Setup",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = DearTalkText
@@ -326,7 +332,7 @@ fun MainOnDeviceScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isKorean) "1단계: 키보드 켜기 (활성화)" else if (isIndonesian) "Langkah 1: Aktifkan Papan Ketik" else "Step 1: Enable Keyboard",
+                                text = if (isKorean) "1단계: 키보드 켜기 (활성화)" else if (isIndonesian) "1. Aktifkan Papan Ketik" else "Step 1: Enable Keyboard",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (isImeEnabled) Color(0xFF4ADE80) else DearTalkText
@@ -370,7 +376,7 @@ fun MainOnDeviceScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isKorean) "2단계: 기본 키보드로 선택" else if (isIndonesian) "Langkah 2: Pilih Papan Ketik Utama" else "Step 2: Set as Default Keyboard",
+                                text = if (isKorean) "2단계: 기본 키보드로 선택" else if (isIndonesian) "2. Pilih Papan Ketik" else "Step 2: Set as Default Keyboard",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (isImeSelected) Color(0xFF4ADE80) else DearTalkText
@@ -400,7 +406,7 @@ fun MainOnDeviceScreen(
                                 text = if (isImeSelected) {
                                     if (isKorean) "✅ 선택됨" else if (isIndonesian) "✅ Terpilih" else "✅ Selected"
                                 } else {
-                                    if (isKorean) "키보드 선택 ➔" else if (isIndonesian) "Pilih Papan Ketik ➔" else "Select Keyboard ➔"
+                                    if (isKorean) "키보드 선택 ➔" else if (isIndonesian) "Pilih ➔" else "Select ➔"
                                 },
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
@@ -446,13 +452,13 @@ fun MainOnDeviceScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = if (isKorean) "🎙️ Voice Studio (대면 통역 & 고운말)" else if (isIndonesian) "🎙️ Voice Studio (Penerjemah & Suara)" else "🎙️ Voice Studio (Live Interpreter)",
+                                    text = if (isKorean) "🎙️ DearTalk Live (1:1 실시간 대화)" else if (isIndonesian) "🎙️ DearTalk Live (Percakapan 1:1)" else "🎙️ DearTalk Live (1:1 Face-to-Face)",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = DearTalkText
                                 )
                                 Text(
-                                    text = if (isKorean) "Qwen 기반 다국어 실시간 통역 & 고운말 톤 스피킹" else if (isIndonesian) "Terjemahan langsung multibahasa & penyesuaian nada berbasis Qwen" else "Qwen-powered live multilingual translation & tone speaking",
+                                    text = if (isKorean) "1:1 실시간 대면 대화 & 지능형 보이스 레코더 (오프라인 SQLite 저장)" else if (isIndonesian) "Percakapan tatap muka 1:1 & perekam suara AI" else "1:1 live voice conversation & smart voice recorder",
                                     fontSize = 11.sp,
                                     color = DearTalkSecondary
                                 )
@@ -460,7 +466,7 @@ fun MainOnDeviceScreen(
                         }
                         Button(
                             onClick = {
-                                val intent = android.content.Intent(context, VoiceStudioActivity::class.java)
+                                val intent = android.content.Intent(context, ai.deartalk.android.live.DearTalkLiveActivity::class.java)
                                 context.startActivity(intent)
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -511,7 +517,7 @@ fun MainOnDeviceScreen(
                             )
                             Text(
                                 text = if (isModelLoaded) {
-                                    if (isKorean) "✨ 내 폰 안에서만 작동 중 (외부 유출 0%)" else if (isIndonesian) "✨ Berjalan lokal di HP Anda (Nol Kebocoran Cloud)" else "✨ Running locally inside your phone (Zero Cloud Leak)"
+                                    if (isKorean) "✨ 내 폰 안에서만 작동 중 (외부 유출 0%)" else if (isIndonesian) "✨ Berjalan lokal di HP (100% Aman)" else "✨ Running locally inside your phone (Zero Cloud Leak)"
                                 } else {
                                     if (isKorean) "ℹ️ 오프라인 음성 인식 모드 가동 중" else if (isIndonesian) "ℹ️ Mode Pengenalan Suara Offline Aktif" else "ℹ️ Offline Speech Recognition Mode Active"
                                 },
@@ -534,7 +540,7 @@ fun MainOnDeviceScreen(
                             Icon(Icons.Default.Language, contentDescription = null, tint = DearTalkSecondary, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isKorean) "🌐 AI 인식 언어: $languageDisplayTitle" else if (isIndonesian) "🌐 Bahasa AI: $languageDisplayTitle" else "🌐 AI Language: $languageDisplayTitle",
+                                text = if (isKorean) "🌐 AI 인식 언어: $languageDisplayTitle" else if (isIndonesian) "🌐 Bahasa: $languageDisplayTitle" else "🌐 AI Language: $languageDisplayTitle",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = DearTalkSecondary
@@ -557,11 +563,11 @@ fun MainOnDeviceScreen(
                             Text(
                                 text = if (isModelLoaded) {
                                     if (isKorean) "🧠 탑재 AI 모델: Qwen 0.5B Nano (100% On-Device)"
-                                    else if (isIndonesian) "🧠 Model AI: Qwen 0.5B Nano (100% On-Device)"
+                                    else if (isIndonesian) "🧠 Model: Qwen 0.5B (On-Device)"
                                     else "🧠 AI Model: Qwen 0.5B Nano (100% On-Device)"
                                 } else {
                                     if (isKorean) "⚡ 기본 모드: 고속 로컬 STT (경량 온디바이스)"
-                                    else if (isIndonesian) "⚡ Mode Dasar: STT Lokal Cepat (On-Device Ringan)"
+                                    else if (isIndonesian) "⚡ Mode Dasar: STT Lokal"
                                     else "⚡ Base Mode: Fast Local STT (Lightweight On-Device)"
                                 },
                                 fontSize = 12.sp,
@@ -712,7 +718,7 @@ fun MainOnDeviceScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = if (isKorean) "🔄 AI 엔진 다시 감지 및 연결" else if (isIndonesian) "🔄 Deteksi Ulang & Hubungkan Mesin AI" else "🔄 Rescan & Connect AI Engine",
+                                            text = if (isKorean) "🔄 AI 엔진 다시 감지 및 연결" else if (isIndonesian) "🔄 Deteksi Ulang Mesin AI" else "🔄 Rescan & Connect AI Engine",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.Black
@@ -728,7 +734,7 @@ fun MainOnDeviceScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = if (isKorean) "🔍 AI 엔진 작동 상태" else if (isIndonesian) "🔍 Status Mesin AI" else "🔍 AI Engine Status",
+                        text = if (isKorean) "🔍 AI 엔진 작동 상태" else if (isIndonesian) "🔍 Status AI" else "🔍 AI Engine Status",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = DearTalkText
@@ -755,17 +761,17 @@ fun MainOnDeviceScreen(
                     val modelFiles = modelFiles1 + modelFiles2
 
                     DiagnosticRow(
-                        label = if (isKorean) "AI 엔진 상태" else if (isIndonesian) "Status Mesin AI" else "Engine Status",
+                        label = if (isKorean) "AI 엔진 상태" else if (isIndonesian) "Status AI" else "Engine Status",
                         value = if (isModelLoaded) (if (isKorean) "✅ 온디바이스 AI 정상 작동 중" else if (isIndonesian) "✅ AI On-Device Aktif Normal" else "✅ On-Device AI Active") else (if (isKorean) "⏳ 오프라인 음성인식 모드 가동" else if (isIndonesian) "⏳ Mode Suara Offline Aktif" else "⏳ Offline Voice Mode"),
                         valueColor = if (isModelLoaded) Color(0xFF4ADE80) else Color(0xFFFBBF24)
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "설치된 모델" else if (isIndonesian) "Model Terpasang" else "Installed Model",
+                        label = if (isKorean) "설치된 모델" else if (isIndonesian) "Model AI" else "Installed Model",
                         value = if (modelFiles.isNotEmpty()) modelFiles.joinToString(", ") { "${it.name} (${it.length() / 1024 / 1024}MB)" } else (if (isKorean) "기본 내장 엔진" else if (isIndonesian) "Mesin Bawaan Standar" else "Default Engine"),
                         valueColor = if (modelFiles.isNotEmpty()) DearTalkText else Color(0xFFFCA5A5)
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "개인정보 보호" else if (isIndonesian) "Perlindungan Privasi" else "Privacy",
+                        label = if (isKorean) "개인정보 보호" else if (isIndonesian) "Privasi" else "Privacy",
                         value = if (isKorean) "🔒 100% 안전 (외부 서버 통신 0%)" else if (isIndonesian) "🔒 100% Aman (Nol Trafik Cloud)" else "🔒 100% Safe (Zero Cloud Traffic)",
                         valueColor = Color(0xFF4ADE80)
                     )
@@ -782,14 +788,14 @@ fun MainOnDeviceScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = if (isKorean) "🎙️ 실시간 음성 & AI 체험하기" else if (isIndonesian) "🎙️ Uji Coba Suara & AI Langsung" else "🎙️ Real-time Voice & AI Sandbox",
+                        text = if (isKorean) "🎙️ 실시간 음성 & AI 체험하기" else if (isIndonesian) "🎙️ Uji Coba Suara & AI" else "🎙️ Real-time Voice & AI Sandbox",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = DearTalkText
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = if (isKorean) "마이크를 누르고 말씀하시거나 아래 예시를 터치하여 AI가 문장을 어떻게 다듬는지 바로 확인해 보세요." else if (isIndonesian) "Ketuk mikrofon dan bicaralah, atau ketuk contoh kalimat untuk melihat bagaimana AI merapikannya secara langsung." else "Tap the mic and speak, or tap sample sentences to see how AI polishes them in real time.",
+                        text = if (isKorean) "마이크를 누르고 말씀하시거나 아래 예시를 터치하여 AI가 문장을 어떻게 다듬는지 바로 확인해 보세요." else if (isIndonesian) "Bicara lewat mikrofon atau ketuk contoh kalimat di bawah." else "Tap the mic and speak, or tap sample sentences to see how AI polishes them in real time.",
                         fontSize = 11.sp,
                         color = DearTalkTextDim
                     )
@@ -919,11 +925,11 @@ fun MainOnDeviceScreen(
                             )
                         } else if (isIndonesian) {
                             listOf(
-                                "Saya sedang di jalan tapi macet sekali mungkin terlambat 15 menit maaf ya",
-                                "Proposal yang sudah diperbarui sudah saya kirim tolong dicek ya",
-                                "Bisa tolong beri tahu kapan waktu luang untuk makan siang besok?",
-                                "Di mana letak ruang rapat lantai dua tolong beri tahu",
-                                "Terima kasih banyak atas bantuan dan kerja samanya hari ini"
+                                "Macet sekali, mungkin telat 15 menit ya",
+                                "Proposal sudah saya kirim, tolong dicek ya",
+                                "Ada waktu makan siang bareng besok?",
+                                "Ruang rapat di lantai berapa ya?",
+                                "Terima kasih banyak atas bantuannya"
                             )
                         } else {
                             listOf(
@@ -991,8 +997,8 @@ fun MainOnDeviceScreen(
                     OutlinedTextField(
                         value = testInputText,
                         onValueChange = { testInputText = it },
-                        label = { Text(if (isKorean) "키보드로 직접 써보기 (여기를 터치)" else if (isIndonesian) "Coba ketik langsung di sini (Ketuk di sini)" else "Type directly to test keyboard (Tap here)") },
-                        placeholder = { Text(if (isKorean) "키보드 자판에서 음성과 말투 변환을 직접 써보세요" else if (isIndonesian) "Uji suara dan perubahan gaya nada langsung di papan ketik" else "Test voice and tone directly on keyboard") },
+                        label = { Text(if (isKorean) "키보드로 직접 써보기 (여기를 터치)" else if (isIndonesian) "Coba ketik langsung di sini" else "Type directly to test keyboard (Tap here)") },
+                        placeholder = { Text(if (isKorean) "키보드 자판에서 음성과 말투 변환을 직접 써보세요" else if (isIndonesian) "Coba suara dan gaya bicara di papan ketik" else "Test voice and tone directly on keyboard") },
                         trailingIcon = {
                             if (testInputText.isNotBlank()) {
                                 IconButton(onClick = { testInputText = "" }) {
@@ -1099,13 +1105,13 @@ fun MainOnDeviceScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = if (isKorean) "🎙️ 말 끝남 자동 감지 시간" else if (isIndonesian) "🎙️ Waktu Jeda Deteksi Selesai Bicara" else "🎙️ Speech Pause Wait Time",
+                        text = if (isKorean) "🎙️ 말 끝남 자동 감지 시간" else if (isIndonesian) "🎙️ Waktu Jeda Bicara" else "🎙️ Speech Pause Wait Time",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = DearTalkText
                     )
                     Text(
-                        text = if (isKorean) "말씀이 끝난 후 자동으로 입력을 완료할 때까지의 대기 시간 (${String.format("%.1f", silenceTimeoutMs / 1000f)}초)" else if (isIndonesian) "Waktu tunggu setelah Anda berhenti bicara sebelum selesai otomatis (${String.format("%.1f", silenceTimeoutMs / 1000f)} dtk)" else "Wait time after you stop speaking (${String.format("%.1f", silenceTimeoutMs / 1000f)}s)",
+                        text = if (isKorean) "말씀이 끝난 후 자동으로 입력을 완료할 때까지의 대기 시간 (${String.format("%.1f", silenceTimeoutMs / 1000f)}초)" else if (isIndonesian) "Waktu tunggu setelah jeda bicara (${String.format("%.1f", silenceTimeoutMs / 1000f)} dtk)" else "Wait time after you stop speaking (${String.format("%.1f", silenceTimeoutMs / 1000f)}s)",
                         fontSize = 11.sp,
                         color = DearTalkTextDim
                     )
@@ -1244,7 +1250,7 @@ fun MainOnDeviceScreen(
                     )
                     DiagnosticRow(
                         label = UiStrings.appVersionLabel,
-                        value = "v${packageInfo?.versionName ?: "1.0.0"} (빌드 ${packageInfo?.longVersionCode ?: 1})",
+                        value = "v${packageInfo?.versionName ?: "1.0.0"} (${if (isKorean) "빌드" else "Build"} ${packageInfo?.longVersionCode ?: 1})",
                         valueColor = DearTalkText
                     )
                     DiagnosticRow(
@@ -1253,7 +1259,7 @@ fun MainOnDeviceScreen(
                         valueColor = DearTalkText
                     )
                     DiagnosticRow(
-                        label = if (isKorean) "보안 등급" else if (isIndonesian) "Tingkat Keamanan" else "Security",
+                        label = if (isKorean) "보안 등급" else if (isIndonesian) "Keamanan" else "Security",
                         value = if (isKorean) "🔒 100% 온디바이스 (외부 유출 0%)" else if (isIndonesian) "🔒 100% On-Device (Nol Kebocoran)" else "🔒 100% On-Device (Zero Cloud Leak)",
                         valueColor = DearTalkSecondary
                     )
@@ -1315,7 +1321,7 @@ private fun DiagnosticRow(
             fontSize = 11.sp,
             color = DearTalkTextDim,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.width(92.dp)
+            modifier = Modifier.widthIn(min = 80.dp, max = 110.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(

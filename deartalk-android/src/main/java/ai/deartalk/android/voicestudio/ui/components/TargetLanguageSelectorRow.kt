@@ -81,7 +81,8 @@ fun TargetLanguageSelectorRow(
                         text = UiStrings.conversationPairBadge(myLabel, targetLabel),
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DearTalkPrimary
+                        color = DearTalkPrimary,
+                        maxLines = 1
                     )
                 }
             }
@@ -115,7 +116,8 @@ fun TargetLanguageSelectorRow(
                             text = label,
                             fontSize = 11.5.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else DearTalkText
+                            color = if (isSelected) Color.White else DearTalkText,
+                            maxLines = 1
                         )
                     }
                 }

@@ -49,23 +49,14 @@ class DearTalkIntentEngine(
             private set
 
         /**
-         * 입력 텍스트에 한글이 포함되어 있는지 판별
+         * 입력 텍스트에 한글이 포함되어 있는지 판별 (LanguageLocaleHelper 단일 소스 위임)
          */
-        fun hasKorean(text: String): Boolean {
-            return text.any { ch ->
-                (ch in '\uAC00'..'\uD7A3') || (ch in '\u1100'..'\u11FF') || (ch in '\u3130'..'\u318F')
-            }
-        }
+        fun hasKorean(text: String): Boolean = ai.deartalk.android.util.LanguageLocaleHelper.hasKorean(text)
 
         /**
-         * 입력 텍스트가 순수 영문 위주인지 판별
+         * 입력 텍스트가 순수 영문 위주인지 판별 (LanguageLocaleHelper 단일 소스 위임)
          */
-        fun isEnglish(text: String): Boolean {
-            if (hasKorean(text)) return false
-            val letters = text.filter { it.isLetter() }
-            if (letters.isEmpty()) return false
-            return letters.all { it in 'a'..'z' || it in 'A'..'Z' }
-        }
+        fun isEnglish(text: String): Boolean = ai.deartalk.android.util.LanguageLocaleHelper.isEnglish(text)
     }
 
     val isModelLoaded: Boolean
@@ -211,8 +202,31 @@ class DearTalkIntentEngine(
     }
 
     /**
+     * 🛡️ 단일 인스턴스/세션 안전 추론 실행기
+     */
+    private suspend fun executeInference(prompt: String): String? = withContext(Dispatchers.IO) {
+        sharedLiteRtEngine?.let { engine ->
+            val session = engine.createSession()
+            try {
+                val response = session.generateContent(listOf(InputData.Text(prompt))).trim()
+                val cleaned = cleanLlmOutput(response)
+                cleaned.takeIf { it.isNotBlank() }
+            } catch (e: Throwable) {
+                Log.e(TAG, "❌ [온디바이스 LLM 추론 오류]: ${e.message}")
+                null
+            } finally {
+                try {
+                    session.close()
+                } catch (e: Throwable) {
+                    Log.w(TAG, "⚠️ [LiteRT 세션 종료 예외]: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
      * 1. 실시간 음성 문장 교정 (오탈자 수정, 물음표/느낌표/마침표 문맥 부착)
-     * - 입력 텍스트의 언어(한국어 / 영어 / 다국어)를 감지하여 원문 언어를 100% 유지
+     * - 말끝 피치 억양(음의 높낮이 상승) 및 문맥 분석을 기반으로 의문문('?')을 자동 판별하여 완성
      */
     suspend fun process(
         voiceInput: String,
@@ -230,14 +244,20 @@ class DearTalkIntentEngine(
             } catch (_: Throwable) {}
         }
 
+        val isInputKorean = hasKorean(trimmed)
+        val isIndonesianLocale = context?.let {
+            val lang = ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(it).language.lowercase()
+            lang == "id" || lang == "in"
+        } ?: false
+        val detectedLangCode = if (isInputKorean) "KO" else if (isIndonesianLocale) "ID" else "EN"
+        val isExplicitQuestion = ai.deartalk.android.stt.IntonationAnalyzer.isLikelyQuestion(
+            text = trimmed,
+            languageCode = detectedLangCode
+        )
+
         if (isModelLoaded) {
             try {
-                val isInputKorean = hasKorean(trimmed)
                 val isInputEnglish = isEnglish(trimmed)
-                val isIndonesianLocale = context?.let {
-                    val lang = ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(it).language.lowercase()
-                    lang == "id" || lang == "in"
-                } ?: false
 
                 // 🌟 앱별 격리 대화 맥락 캐시 조회
                 val priorContext = if (packageName.isNotBlank()) {
@@ -259,58 +279,80 @@ class DearTalkIntentEngine(
                             priorContext.joinToString("\n") { "- $it" } + "\n\n"
                 } else ""
 
+                val questionHintKorean = if (isExplicitQuestion) {
+                    "[문맥 분석: 질문/의문사 감지됨]\n" +
+                            "- 질문 문장이므로 문맥에 맞게 의문문('?')으로 정돈하세요.\n\n"
+                } else ""
+
+                val questionHintIndonesian = if (isExplicitQuestion) {
+                    "[Analisis Konteks: Kalimat tanya terdeteksi]\n" +
+                            "- Pastikan diakhiri dengan tanda tanya ('?') yang tepat.\n\n"
+                } else ""
+
+                val questionHintEnglish = if (isExplicitQuestion) {
+                    "[Context Analysis: Question pattern detected]\n" +
+                            "- Ensure appropriate question punctuation ('?') is applied.\n\n"
+                } else ""
+
                 val prompt = if (isInputKorean) {
                     "<start_of_turn>user\n" +
-                            "당신은 모바일 키보드의 '실시간 음성 문장 교정 및 다듬기 AI'입니다.\n" +
-                            "⚠️ 중요: 당신은 챗봇이 아니므로 절대로 사용자의 말에 대답하거나 대화를 나누지 마세요!\n" +
-                            "당신의 유일한 임무는 사용자가 말한 거칠거나 불완전한 음성 내용을, 상대방에게 즉시 보낼 수 있도록 맞춤법/오탈자를 완벽히 교정하고, 문맥에 부합하는 올바른 문장 부호('?', '!', '.')를 반드시 완성하여 자연스럽고 정돈된 문장으로 세련되게 다듬어 주는 것입니다.\n\n" +
+                            "당신은 모바일 키보드의 '실시간 음성 문장 교정 AI'입니다.\n" +
+                            "⚠️ 3대 불변 원칙:\n" +
+                            "1. [원형 보존]: 사용자의 어조와 말투(반말은 반말로, 존댓말은 존댓말로)를 100% 유지하세요. 원문에 없는 새로운 완곡어/질문사를 덧붙이거나 문장을 다른 의미로 치환하지 마세요.\n" +
+                            "2. [최소 교정]: 오직 오탈자, 맞춤법, 띄어쓰기, 문맥에 맞는 문장부호('.', '?', '!')만 교정하세요.\n" +
+                            "3. [문장부호 판별]: 명백한 질문/의문사가 있는 경우만 물음표('?')를 붙이고, 의견/추측(~것 같아, ~듯), 허용/단정(~돼), 서술문은 반드시 평서문('.')으로 마침표를 찍으세요.\n\n" +
+                            (if (currentEditorText.isNotBlank()) "[입력창 이전 맥락]: $currentEditorText\n\n" else "") +
                             contextBlockKorean +
-                            "[변환 예시]\n" +
-                            "- \"금요일 제외한 매일 11시에서 11시30분까지는 Privacy 스크럼이니 절대로 잊지마\" -> 금요일을 제외한 매일 11시부터 11시 30분까지는 Privacy 스크럼 일정이니 꼭 기억해 주세요.\n" +
-                            "- \"지금 가고 있는데 차 막혀서 늦을듯 미안\" -> 지금 이동 중인데 도로가 정체되어 조금 늦을 것 같습니다.\n" +
-                            "- \"자료 보냈으니 확인해보고 알려줘\" -> 송부드린 자료 확인 후 회신 부탁드립니다.\n" +
-                            "- \"내일 몇 시에 만날까\" -> 내일 몇 시에 만날까요?\n" +
-                            "- \"혹시 언제 시간 괜찮으세요\" -> 혹시 언제 시간 괜찮으신가요?\n" +
-                            "- \"이 방향 어떻게 생각해\" -> 이 방향에 대해 어떻게 생각하시나요?\n" +
-                            "- \"오늘 정말 고마웠어\" -> 오늘 정말 감사했습니다!\n\n" +
+                            "[교정 예시]\n" +
+                            "- \"너도 괜찬을 것 같아\" -> 너도 괜찮을 것 같아.\n" +
+                            "- \"넌 몰라도 돼\" -> 넌 몰라도 돼.\n" +
+                            "- \"나 지금 밥 머것어\" -> 나 지금 밥 먹었어.\n" +
+                            "- \"너 지금 밥 머것어\" -> 너 지금 밥 먹었어?\n" +
+                            "- \"오늘 날씨 진짜 조타\" -> 오늘 날씨 진짜 좋다!\n" +
+                            "- \"지금 어디 가고 계신가요\" -> 지금 어디 가고 계신가요?\n" +
+                            "- \"자료 보냈으니 확인해보고 알려줘\" -> 자료 보냈으니 확인해보고 알려줘.\n" +
+                            "- \"금요일 제외한 매일 11시에서 11시30분까지는 Privacy 스크럼이니 잊지마\" -> 금요일 제외한 매일 11시부터 11시 30분까지는 Privacy 스크럼 일정이니 잊지 마.\n\n" +
                             "[출력 규칙]\n" +
-                            "1. 질문 문장이더라도 절대 답하지 말고, 질문 문장 자체를 정돈하여 출력하세요.\n" +
-                            "2. 의문문(질문/확인)에는 반드시 물음표('?'), 감사/감탄에는 느낌표('!'), 서술문에는 마침표('.') 등 문맥에 부합하는 올바른 문장 부호를 부착하세요.\n" +
-                            "3. 외래어, 고유명사 및 보편적 약어는 문맥에 부합하는 표준 표기법을 준수하여 정돈하세요.\n" +
-                            "4. 설명, 따옴표, 마크다운 기호 없이 오직 상대방에게 전송할 한 줄의 다듬어진 한국어 문장만 평문으로 출력하세요.\n\n" +
+                            "설명, 따옴표 없이 오직 교정된 한 줄의 한국어 문장만 평문으로 출력하세요.\n\n" +
                             "음성 원문: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else if (isIndonesianLocale) {
                     "<start_of_turn>user\n" +
-                            "Anda adalah AI perapih dan pengoreksi tata bahasa pesan teks suara untuk papan ketik ponsel.\n" +
-                            "⚠️ PENTING: Anda BUKAN chatbot. JANGAN menjawab pertanyaan atau mengobrol dengan pengguna!\n" +
-                            "Tugas tunggal Anda adalah memperbaiki kesalahan ketik/tata bahasa, memberikan tanda baca yang tepat ('?', '!', '.', ','), dan merapikan kalimat masukan menjadi bahasa Indonesia yang baik, alami, dan sopan agar siap dikirim sebagai pesan.\n\n" +
+                            "Anda adalah AI perapih tata bahasa dan tanda baca pesan suara untuk papan ketik ponsel.\n" +
+                            "⚠️ 3 ATURAN UTAMA:\n" +
+                            "1. [Pertahankan Bentuk Asli]: Pertahankan nada bahasa pengguna (santai tetap santai, sopan tetap sopan). JANGAN menambahkan kata-kata baru atau mengganti kalimat dengan kata lain.\n" +
+                            "2. [Koreksi Minimal]: Hanya perbaiki salah ketik, spasi, dan tambahkan tanda baca yang tepat ('.', '?', '!').\n" +
+                            "3. [Tanda Tanya]: Gunakan '?' HANYA jika masukan berupa pertanyaan atau memiliki kata tanya. Kalimat opini/pernyataan harus diakhiri titik ('.').\n\n" +
+                            (if (currentEditorText.isNotBlank()) "[Konteks Input]: $currentEditorText\n\n" else "") +
                             contextBlockIndonesian +
-                            "[Contoh]\n" +
-                            "- \"saya lagi di jalan tapi macet bgt mungkin telat 15 menit maaf ya\" -> Saya sedang di jalan tetapi lalu lintas sangat macet, mungkin terlambat 15 menit. Maaf ya.\n" +
-                            "- \"proposal yg udah diperbarui udh dikirim tolong dicek ya\" -> Proposal yang sudah diperbarui sudah saya kirim, tolong dicek ya.\n" +
-                            "- \"besok makan siang jam berapa enaknya tolong kabari\" -> Besok makan siang jam berapa enaknya? Tolong kabari ya.\n" +
-                            "- \"terima kasih banyak atas bantuannya hari ini\" -> Terima kasih banyak atas bantuannya hari ini!\n\n" +
-                            "[Aturan Output]\n" +
-                            "1. Jika masukan berupa pertanyaan, JANGAN jawab pertanyaan tersebut, cukup rapikan kalimat pertanyaannya.\n" +
-                            "2. Keluarkan HANYA satu baris kalimat hasil perapian dalam bahasa Indonesia tanpa tanda kutip, markdown, atau salam pembuka.\n\n" +
-                            "Masukan: \"$trimmed\"<end_of_turn>\n" +
+                            "[Contoh Koreksi]\n" +
+                            "- \"kamu juga bakal oke kok\" -> Kamu juga bakal oke kok.\n" +
+                            "- \"kamu gak perlu tahu\" -> Kamu gak perlu tahu.\n" +
+                            "- \"saya lagi di jalan\" -> Saya lagi di jalan.\n" +
+                            "- \"kamu sudah makan siang\" -> Kamu sudah makan siang?\n" +
+                            "- \"terima kasih banyak atas bantuannya\" -> Terima kasih banyak atas bantuannya!\n\n" +
+                            "[Aturan Keluaran]\n" +
+                            "HANYA keluarkan satu baris teks bahasa Indonesia hasil koreksi tanpa penjelasan tambahan.\n\n" +
+                            "Teks Suara: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else if (isInputEnglish) {
                     "<start_of_turn>user\n" +
-                            "You are a mobile keyboard's 'speech-to-text grammar & punctuation corrector'.\n" +
-                            "⚠️ CRITICAL: You are NOT a chatbot. Do NOT answer questions or converse with the user!\n" +
-                            "⚠️ ABSOLUTE RULE: The input is in English. Keep it strictly in ENGLISH. Do NOT translate to Korean or any other language!\n" +
-                            "Your ONLY duty is to correct typos, fix grammar, and attach appropriate punctuation marks ('?', '!', '.', ',') in English so the user can send it as a clean message.\n\n" +
+                            "You are a mobile keyboard's speech-to-text sentence refinement & punctuation AI.\n" +
+                            "⚠️ 3 CORE RULES:\n" +
+                            "1. [Preserve Tone & Register]: Keep the user's exact words and tone (informal remains informal, formal remains formal). Do NOT substitute with other phrases.\n" +
+                            "2. [Minimal Edit]: Correct ONLY typos, spelling, spacing, and appropriate punctuation ('.', '?', '!').\n" +
+                            "3. [Punctuation Rule]: Apply '?' ONLY if it is an explicit question. Opinions, estimations, and statements must end with a period ('.').\n\n" +
+                            (if (currentEditorText.isNotBlank()) "[Editor Context]: $currentEditorText\n\n" else "") +
                             contextBlockEnglish +
-                            "[Examples]\n" +
-                            "- \"what time should we meet tomorrow\" -> What time should we meet tomorrow?\n" +
-                            "- \"i just arrived safely\" -> I just arrived safely.\n" +
-                            "- \"thank you so much for your help\" -> Thank you so much for your help!\n" +
-                            "- \"where is the meeting room please tell me\" -> Where is the meeting room? Please tell me.\n\n" +
+                            "[Correction Examples]\n" +
+                            "- \"i think you will be fine too\" -> I think you will be fine too.\n" +
+                            "- \"you dont need to know\" -> You don't need to know.\n" +
+                            "- \"i ate lunch already\" -> I ate lunch already.\n" +
+                            "- \"did you eat lunch\" -> Did you eat lunch?\n" +
+                            "- \"what time are we meeting\" -> What time are we meeting?\n" +
+                            "- \"thank you so much for your help\" -> Thank you so much for your help!\n\n" +
                             "[Output Rules]\n" +
-                            "1. If the input is a question, do NOT answer it. Just refine the English question itself.\n" +
-                            "2. Output ONLY the refined single-line English text without quotes, markdown, or greetings.\n\n" +
+                            "Output ONLY the corrected single-line English text without quotes, markdown, or greetings.\n\n" +
                             "Input: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else {
@@ -323,15 +365,9 @@ class DearTalkIntentEngine(
                             "<start_of_turn>model\n"
                 }
 
-                var output = ""
-                sharedLiteRtEngine?.let { engine ->
-                    val session = engine.createSession()
-                    val response = session.generateContent(listOf(InputData.Text(prompt))).trim()
-                    try { session.close() } catch (_: Throwable) {}
-                    output = cleanLlmOutput(response)
-                }
+                val output = executeInference(prompt)
 
-                if (output.isNotBlank()) {
+                if (!output.isNullOrBlank()) {
                     try {
                         Log.d(TAG, "✨ [온디바이스 LLM 생성 완료]: '$trimmed' ➔ '$output'")
                     } catch (_: Throwable) {}
@@ -345,10 +381,17 @@ class DearTalkIntentEngine(
             }
         }
 
-        if (packageName.isNotBlank()) {
-            AppScopedUtteranceCache.shared.addUtterance(packageName, trimmed)
+        // 🌟 LLM 미로드 또는 폴백 시: 명백한 의문사/의문어미일 때만 물음표 보정
+        val fallbackText = if (isExplicitQuestion && !trimmed.endsWith("?")) {
+            trimmed.removeSuffix(".").removeSuffix("!").trim() + "?"
+        } else {
+            trimmed
         }
-        return@withContext IntentResult.Success(trimmed, UiStrings.sttRawResult)
+
+        if (packageName.isNotBlank()) {
+            AppScopedUtteranceCache.shared.addUtterance(packageName, fallbackText)
+        }
+        return@withContext IntentResult.Success(fallbackText, UiStrings.sttRawResult)
     }
 
     /**
@@ -371,7 +414,11 @@ class DearTalkIntentEngine(
         if (isModelLoaded) {
             try {
                 val isInputKorean = hasKorean(trimmed)
-                val isInputEnglish = isEnglish(trimmed)
+                val isIndonesianLocale = context?.let {
+                    val lang = ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(it).language.lowercase()
+                    lang == "id" || lang == "in"
+                } ?: false
+                val isInputIndonesian = !isInputKorean && (isIndonesianLocale || ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(trimmed) == "ID")
 
                 val examples = if (isInputKorean) {
                     when (tone.id) {
@@ -409,6 +456,41 @@ class DearTalkIntentEngine(
                         else -> """
                             [변환 예시]
                             - 원문: "식사 같이 하실래요?" -> 식사 같이 하실래요?
+                        """.trimIndent()
+                    }
+                } else if (isInputIndonesian) {
+                    when (tone.id) {
+                        "tone_polite", "공손하게", "sopan" -> """
+                            [Contoh]
+                            - Masukan: "Besok jam berapa ketemu?" -> Besok kira-kira kita bisa bertemu jam berapa ya?
+                            - Masukan: "Kirim filenya ya" -> Mohon kirimkan dokumen yang diminta jika ada waktu luang.
+                            - Masukan: "Mau makan siang bareng?" -> Apakah berkenan untuk makan siang bersama hari ini?
+                        """.trimIndent()
+                        "tone_casual", "친근하게", "santai" -> """
+                            [Contoh]
+                            - Masukan: "Mau makan siang bareng?" -> Yuk makan siang bareng! 😊
+                            - Masukan: "Besok ada waktu?" -> Besok kamu senggang nggak? 😊
+                            - Masukan: "Hari ini seru banget" -> Hari ini seru banget makasih ya! 😊
+                        """.trimIndent()
+                        "tone_business", "비즈니스", "formal" -> """
+                            [Contoh]
+                            - Masukan: "Mau makan siang bareng?" -> Mohon konfirmasi apakah Anda berkenan untuk makan siang bersama hari ini.
+                            - Masukan: "Kirim filenya ya" -> Mohon tinjau dan kirimkan dokumen tersebut pada kesempatan pertama.
+                            - Masukan: "Besok meeting jam berapa?" -> Mohon koordinasi mengenai jadwal rapat besok.
+                        """.trimIndent()
+                        "tone_funny", "재미있게", "lucu" -> """
+                            [Contoh]
+                            - Masukan: "Mau makan siang bareng?" -> Perut udah demo nih, nggak ikut makan siang awas ya! 🤣
+                            - Masukan: "Hari ini seru banget" -> Seru banget hari ini, ketawa mulu sampai sakit perut 🤣
+                        """.trimIndent()
+                        "tone_cheeky", "건방지게", "당당하게", "percaya diri" -> """
+                            [Contoh]
+                            - Masukan: "Mau makan siang bareng?" -> Makan siang bareng aku itu kesempatan langka lho, bangga dong 😼
+                            - Masukan: "Temani aku besok" -> Kosongkan jadwalmu, besok aku izinkan kamu menemani aku 😼
+                        """.trimIndent()
+                        else -> """
+                            [Contoh]
+                            - Masukan: "Mau makan siang bareng?" -> Mau makan siang bareng?
                         """.trimIndent()
                     }
                 } else {
@@ -461,6 +543,18 @@ class DearTalkIntentEngine(
                             "4. 설명, 인사말, 따옴표, 라벨 접두어 없이 오직 변환된 한국어 텍스트만 평문으로 출력하세요.\n\n" +
                             "변환할 원문: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
+                } else if (isInputIndonesian) {
+                    "<start_of_turn>user\n" +
+                            "Anda adalah 'pengubah nada & gaya pesan teks' untuk papan ketik ponsel.\n" +
+                            "⚠️ PENTING: Anda BUKAN chatbot. JANGAN menjawab pertanyaan atau mengobrol dengan pengguna!\n" +
+                            "⚠️ ATURAN MUTLAK: Tetap gunakan bahasa Indonesia. JANGAN menerjemahkannya ke bahasa lain!\n" +
+                            "Ubah nada pesan dalam bahasa Indonesia agar sesuai dengan gaya '${tone.name}' (${tone.instruction}) tanpa mengubah maksud asli kalimat.\n\n" +
+                            "$examples\n\n" +
+                            "[Aturan Output]\n" +
+                            "1. Jika masukan berupa pertanyaan, JANGAN dijawab, cukup ubah kalimat pertanyaan tersebut ke gaya ${tone.name}.\n" +
+                            "2. Keluarkan HANYA teks hasil pengubahan gaya dalam bahasa Indonesia tanpa tanda kutip, penjelasan, atau salam.\n\n" +
+                            "Masukan: \"$trimmed\"<end_of_turn>\n" +
+                            "<start_of_turn>model\n"
                 } else {
                     "<start_of_turn>user\n" +
                             "You are a mobile keyboard's 'tone & style transformer'.\n" +
@@ -475,15 +569,9 @@ class DearTalkIntentEngine(
                             "<start_of_turn>model\n"
                 }
 
-                var output = ""
-                sharedLiteRtEngine?.let { engine ->
-                    val session = engine.createSession()
-                    val response = session.generateContent(listOf(InputData.Text(prompt))).trim()
-                    try { session.close() } catch (_: Throwable) {}
-                    output = cleanLlmOutput(response)
-                }
+                val output = executeInference(prompt)
 
-                if (output.isNotBlank()) {
+                if (!output.isNullOrBlank()) {
                     return@withContext IntentResult.Success(output, UiStrings.toneComplete(tone.icon, tone.name))
                 }
             } catch (e: Throwable) {
@@ -495,7 +583,8 @@ class DearTalkIntentEngine(
     }
 
     /**
-     * 3. 실시간 온디바이스 다국어 번역
+     * 3. 실시간 온디바이스 다국어 번역 (TranslationTarget 기반)
+     * - 내부적으로 핵심 번역 엔진 translate()를 단일 위임 호출하여 중복 제거
      */
     suspend fun processWithTranslation(
         voiceInput: String,
@@ -506,59 +595,43 @@ class DearTalkIntentEngine(
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext IntentResult.Success("")
 
-        if (!isModelLoaded && sharedInitJob?.isActive == true) {
-            try { sharedInitJob?.join() } catch (_: Throwable) {}
+        val targetLangCode = when {
+            target.id.contains("en") || target.name.contains("영어") || target.name.contains("English") -> "EN"
+            target.id.contains("ja") || target.name.contains("일본어") || target.name.contains("Japanese") -> "JA"
+            target.id.contains("zh") || target.name.contains("중국어") || target.name.contains("Chinese") -> "ZH"
+            target.id.contains("fr") || target.name.contains("프랑스") || target.name.contains("French") -> "FR"
+            target.id.contains("es") || target.name.contains("스페인") || target.name.contains("Spanish") -> "ES"
+            target.id.contains("de") || target.name.contains("독일") || target.name.contains("German") -> "DE"
+            target.id.contains("vi") || target.name.contains("베트남") || target.name.contains("Vietnamese") -> "VI"
+            target.id.contains("id") || target.name.contains("인도네시아") || target.name.contains("Indonesian") -> "ID"
+            target.id.contains("th") || target.name.contains("태국") || target.name.contains("Thai") -> "TH"
+            target.id.contains("tl") || target.id.contains("fil") || target.name.contains("필리핀") || target.name.contains("Filipino") -> "TL"
+            target.id.contains("ms") || target.name.contains("말레이") || target.name.contains("Malay") -> "MS"
+            else -> target.id.replace("trans_", "").uppercase()
         }
 
-        if (isModelLoaded) {
+        val translated = translate(
+            voiceInput = trimmed,
+            targetLangCode = targetLangCode,
+            sourceLangCode = "AUTO",
+            packageName = packageName
+        )
+
+        if (translated.isNotBlank() && translated != trimmed) {
             try {
-                val targetLangInstruction = when {
-                    target.id.contains("en") || target.name.contains("영어") || target.name.contains("English") -> "natural, fluent English"
-                    target.id.contains("ja") || target.name.contains("일본어") || target.name.contains("Japanese") -> "natural, polite Japanese (日本語)"
-                    target.id.contains("zh") || target.name.contains("중국어") || target.name.contains("Chinese") -> "natural Simplified Chinese (简体中文)"
-                    target.id.contains("fr") || target.name.contains("프랑스") || target.name.contains("French") -> "natural French (Français)"
-                    target.id.contains("es") || target.name.contains("스페인") || target.name.contains("Spanish") -> "natural Spanish (Español)"
-                    target.id.contains("de") || target.name.contains("독일") || target.name.contains("German") -> "natural German (Deutsch)"
-                    target.id.contains("vi") || target.name.contains("베트남") || target.name.contains("Vietnamese") -> "natural Vietnamese (Tiếng Việt)"
-                    target.id.contains("id") || target.name.contains("인도네시아") || target.name.contains("Indonesian") -> "natural Bahasa Indonesia"
-                    else -> target.targetLanguage
-                }
-
-                val prompt = "<start_of_turn>user\n" +
-                        "Translate the following text into $targetLangInstruction.\n" +
-                        "CRITICAL RULES:\n" +
-                        "1. You are a translator. Do NOT answer questions or converse with the user.\n" +
-                        "2. Output ONLY the direct translated sentence in the target language.\n" +
-                        "3. Do NOT include quotes, pronunciation guides, explanations, markdown, or greetings.\n\n" +
-                        "Text: \"$trimmed\"<end_of_turn>\n" +
-                        "<start_of_turn>model\n"
-
-                var output = ""
-                sharedLiteRtEngine?.let { engine ->
-                    val session = engine.createSession()
-                    val response = session.generateContent(listOf(InputData.Text(prompt))).trim()
-                    try { session.close() } catch (_: Throwable) {}
-                    output = cleanLlmOutput(response)
-                }
-
-                if (output.isNotBlank()) {
-                    try {
-                        Log.d(TAG, "✨ [온디바이스 LLM 다국어 번역 완료]: '$trimmed' ➔ '$output' (${target.name})")
-                    } catch (_: Throwable) {}
-                    return@withContext IntentResult.Success(output, UiStrings.translationComplete(target.flag, target.name))
-                }
-            } catch (e: Throwable) {
-                Log.e(TAG, "❌ 다국어 번역 실행 오류: ${e.message}")
-            }
+                Log.d(TAG, "✨ [온디바이스 LLM 다국어 번역 완료]: '$trimmed' ➔ '$translated' (${target.name})")
+            } catch (_: Throwable) {}
+            IntentResult.Success(translated, UiStrings.translationComplete(target.flag, target.name))
+        } else {
+            process(voiceInput, currentEditorText, packageName)
         }
-
-        return@withContext process(voiceInput, currentEditorText, packageName)
     }
 
     internal fun cleanLlmOutput(raw: String): String {
         var text = raw
             .replace(Regex("""<(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>\s*(model|user|assistant)?""", RegexOption.IGNORE_CASE), "")
             .replace(Regex("""</(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)>""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""<\|(im_start|im_end|endoftext)[^|>]*\|>\s*(assistant|user|system)?""", RegexOption.IGNORE_CASE), "")
             .replace(Regex("""</?[a-zA-Z0-9_-]+(\s+[^>]*)?>"""), "")
             .trim()
 
@@ -583,7 +656,10 @@ class DearTalkIntentEngine(
         return text.trim()
     }
 
-    suspend fun processIntent(voiceInput: String, packageName: String = ""): IntentResult =
+    suspend fun processIntent(
+        voiceInput: String,
+        packageName: String = ""
+    ): IntentResult =
         process(voiceInput = voiceInput, packageName = packageName)
 
     suspend fun applyTone(voiceInput: String, toneName: String, packageName: String = ""): IntentResult {
@@ -604,7 +680,8 @@ class DearTalkIntentEngine(
         targetLangCode: String,
         sourceLangCode: String = "KO",
         tone: String? = null,
-        packageName: String = ""
+        packageName: String = "",
+        conversationContext: List<String> = emptyList()
     ): String = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext ""
@@ -629,7 +706,13 @@ class DearTalkIntentEngine(
             else -> targetLangCode
         }
 
-        val sourceLangName = when (sourceLangCode.uppercase()) {
+        val effectiveSourceLangCode = if (sourceLangCode.equals("AUTO", ignoreCase = true)) {
+            ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(trimmed, fallback = "KO")
+        } else {
+            sourceLangCode
+        }
+
+        val sourceLangName = when (effectiveSourceLangCode.uppercase()) {
             "EN" -> "English"
             "ES" -> "Spanish"
             "FR" -> "French"
@@ -642,42 +725,43 @@ class DearTalkIntentEngine(
             "TL", "FIL" -> "Filipino"
             "TH" -> "Thai"
             "MS" -> "Malay"
-            else -> sourceLangCode
+            else -> effectiveSourceLangCode
         }
 
         val toneInstruction = if (!tone.isNullOrBlank()) " Adapt the translated sentence to have a '$tone' tone." else ""
 
-        // 🌟 앱별 격리 직전 대화 맥락 조회 (대명사/주어 생략 복원용)
-        val priorContext = if (packageName.isNotBlank()) {
+        // 🌟 1. 실시간 대화 세션 맥락 (DearTalk Live) 우선, 없으면 2. 앱별 격리 캐시 활용
+        val combinedContext = if (conversationContext.isNotEmpty()) {
+            conversationContext
+        } else if (packageName.isNotBlank()) {
             AppScopedUtteranceCache.shared.getRecentContext(packageName)
         } else emptyList()
 
-        val contextBlock = if (priorContext.isNotEmpty()) {
-            "Prior conversation context (for pronoun/subject resolution, do NOT translate this):\n" +
-                    priorContext.joinToString("\n") { "- $it" } + "\n\n"
+        val contextBlock = if (combinedContext.isNotEmpty()) {
+            "Recent conversation flow (use this context to understand situation, pronouns, and repair misheard words):\n" +
+                    combinedContext.joinToString("\n") { "- $it" } + "\n\n"
         } else ""
 
-        if (isModelLoaded) {
+        val asrRepairInstruction = if (combinedContext.isNotEmpty()) {
+            "3. SPEECH RECOGNITION (ASR) CORRECTION: The input was transcribed by voice STT and might contain phonetic slips, misheard words, homophones, or noise corruptions (e.g., mishearing '포함' as '포항', 'W hotel' as 'double hotel', numbers, or names). Analyze the preceding conversation flow carefully. If an obvious transcription mistake or contextual mismatch is present, SMARTLY REPAIR the intended meaning into natural $targetLangName.\n"
+        } else ""
+
+        if (isModelLoaded || sharedInitJob?.isActive == true) {
             try {
                 val prompt = "<start_of_turn>user\n" +
-                        "You are an expert real-time simultaneous interpreter.\n" +
+                        "You are an expert real-time simultaneous interpreter and conversational speech repair assistant.\n" +
                         "Translate the spoken speech from $sourceLangName into natural, accurate $targetLangName.$toneInstruction\n" +
                         "CRITICAL INSTRUCTIONS:\n" +
                         "1. Output ONLY the single-line translated sentence in $targetLangName.\n" +
-                        "2. Do NOT add notes, explanations, romanization, conversational fillers, or quotes.\n\n" +
+                        "2. Do NOT add notes, explanations, romanization, conversational fillers, or quotes.\n" +
+                        asrRepairInstruction + "\n" +
                         contextBlock +
                         "Input text to translate: \"$trimmed\"<end_of_turn>\n" +
                         "<start_of_turn>model\n"
 
-                var output = ""
-                sharedLiteRtEngine?.let { engine ->
-                    val session = engine.createSession()
-                    val response = session.generateContent(listOf(InputData.Text(prompt))).trim()
-                    try { session.close() } catch (_: Throwable) {}
-                    output = cleanLlmOutput(response)
-                }
+                val output = executeInference(prompt)
 
-                if (output.isNotBlank()) {
+                if (!output.isNullOrBlank()) {
                     Log.d(TAG, "✨ [온디바이스 번역 성공] '$trimmed' ($sourceLangName) ➔ '$output' ($targetLangName)")
                     if (packageName.isNotBlank()) {
                         AppScopedUtteranceCache.shared.addUtterance(packageName, output)
@@ -696,24 +780,8 @@ class DearTalkIntentEngine(
     }
 
     suspend fun processCustomPrompt(promptText: String): String = withContext(Dispatchers.IO) {
-        if (!isModelLoaded && sharedInitJob?.isActive == true) {
-            try { sharedInitJob?.join() } catch (_: Throwable) {}
-        }
-        if (isModelLoaded) {
-            try {
-                val formatted = "<start_of_turn>user\n$promptText<end_of_turn>\n<start_of_turn>model\n"
-                var output = ""
-                sharedLiteRtEngine?.let { engine ->
-                    val session = engine.createSession()
-                    val response = session.generateContent(listOf(InputData.Text(formatted))).trim()
-                    try { session.close() } catch (_: Throwable) {}
-                    output = cleanLlmOutput(response)
-                }
-                if (output.isNotBlank()) return@withContext output
-            } catch (e: Throwable) {
-                Log.e(TAG, "❌ processCustomPrompt 오류: ${e.message}")
-            }
-        }
-        return@withContext ""
+        val formatted = "<start_of_turn>user\n$promptText<end_of_turn>\n<start_of_turn>model\n"
+        val output = executeInference(formatted)
+        return@withContext output ?: ""
     }
 }

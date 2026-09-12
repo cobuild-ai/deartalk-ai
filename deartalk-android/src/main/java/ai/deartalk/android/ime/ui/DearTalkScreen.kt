@@ -161,7 +161,7 @@ fun DearTalkScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Keyboard, contentDescription = UiStrings.keyboardContentDesc, tint = Color.White, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.height(1.dp))
-                        Text(UiStrings.keyboard, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(UiStrings.keyboard, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
 
@@ -421,7 +421,7 @@ fun DearTalkScreen(
                         ) {
                             Icon(Icons.Default.Check, contentDescription = UiStrings.applyContentDesc, tint = Color.White, modifier = Modifier.size(15.dp))
                             Spacer(modifier = Modifier.width(3.dp))
-                            Text(UiStrings.apply, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(UiStrings.apply, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                         }
 
                         // [✕ 취소] (AI Text 비우기)
@@ -439,7 +439,7 @@ fun DearTalkScreen(
                         ) {
                             Icon(Icons.Default.Close, contentDescription = UiStrings.cancelContentDesc, tint = Color(0xFFFCA5A5), modifier = Modifier.size(13.dp))
                             Spacer(modifier = Modifier.width(3.dp))
-                            Text(UiStrings.cancel, color = Color(0xFFFCA5A5), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Text(UiStrings.cancel, color = Color(0xFFFCA5A5), fontSize = 11.sp, fontWeight = FontWeight.Medium, maxLines = 1)
                         }
                     }
                 }
@@ -485,7 +485,8 @@ fun DearTalkScreen(
                                 text = tone.name,
                                 color = if (isSelected) Color.White else DearTalkText,
                                 fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                maxLines = 1
                             )
                         }
                     }
@@ -531,7 +532,7 @@ fun DearTalkScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = UiStrings.deleteSentenceContentDesc, tint = Color(0xFFFCA5A5), modifier = Modifier.size(15.dp))
                         Spacer(modifier = Modifier.width(3.dp))
-                        Text(UiStrings.deleteSentence, color = Color(0xFFFCA5A5), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(UiStrings.deleteSentence, color = Color(0xFFFCA5A5), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
 

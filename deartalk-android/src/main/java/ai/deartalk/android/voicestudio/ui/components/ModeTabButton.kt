@@ -19,9 +19,14 @@ import ai.deartalk.android.ime.ui.theme.DearTalkPrimary
 import ai.deartalk.android.ime.ui.theme.DearTalkTextDim
 
 @Composable
-fun ModeTabButton(title: String, isSelected: Boolean, onClick: () -> Unit) {
+fun ModeTabButton(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) DearTalkPrimary else Color.Transparent)
             .selectable(
@@ -29,14 +34,15 @@ fun ModeTabButton(title: String, isSelected: Boolean, onClick: () -> Unit) {
                 role = Role.Tab,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
             fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.White else DearTalkTextDim
+            color = if (isSelected) Color.White else DearTalkTextDim,
+            maxLines = 1
         )
     }
 }

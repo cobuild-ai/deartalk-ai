@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.9` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 보이스 스튜디오 하단 고정 UI, 모드 전환 자동 재번역, TalkBack 접근성(Semantics), 온디바이스 Qwen 0.5B Nano, Target SDK 36 지원 |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.0` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | DearTalk Live 1:1 대면 실시간 통역 메신저, 100% 오프라인 SQLite 저장소, 대화 맥락 기반 ASR 음성 오인식 복원, 10초 무음 확장 및 ⏹️ 즉시 완료 토글, 2단 반응형 언어 카드 UI |
 
 ---
 

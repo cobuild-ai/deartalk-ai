@@ -19,7 +19,7 @@ object DearTalkSettings {
     val SUPPORTED_LANGUAGES = listOf(
         SupportedLanguage("ko", "한국어", "Korean", "🇰🇷"),
         SupportedLanguage("en", "English", "English", "🇺🇸"),
-        SupportedLanguage("id", "Bahasa Indonesia", "Indonesian", "🇮🇩"),
+        SupportedLanguage("id", "Indonesia", "Indonesian", "🇮🇩"),
         SupportedLanguage("ja", "日本語", "Japanese", "🇯🇵"),
         SupportedLanguage("zh-CN", "简体中文", "Simplified Chinese", "🇨🇳"),
         SupportedLanguage("zh-TW", "繁體中文", "Traditional Chinese", "🇹🇼"),
@@ -78,11 +78,12 @@ object DearTalkSettings {
         val locale = getEffectiveLocale(context)
         val targetLang = SUPPORTED_LANGUAGES.firstOrNull { it.code.startsWith(locale.language) }
         val name = targetLang?.let { "${it.flag} ${it.nativeName}" } ?: locale.displayLanguage
-        val isKorean = Locale.getDefault().language == "ko"
+        val isKorean = UiStrings.isKo
+        val isIndonesian = UiStrings.isId
         return if (isAuto) {
-            if (isKorean) "$name (시스템 기본)" else "$name (System Auto)"
+            if (isKorean) "$name (시스템 기본)" else if (isIndonesian) "$name (Otomatis)" else "$name (Auto)"
         } else {
-            if (isKorean) "$name (사용자 지정)" else "$name (Custom)"
+            if (isKorean) "$name (사용자 지정)" else if (isIndonesian) "$name (Manual)" else "$name (Custom)"
         }
     }
 

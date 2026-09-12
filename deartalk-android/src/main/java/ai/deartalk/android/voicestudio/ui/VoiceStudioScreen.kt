@@ -103,7 +103,11 @@ fun VoiceStudioScreen(
     val isListening = micUiState == MicUiState.LISTENING
 
     // 💡 클린코드: 중복 호출 제거용 헬퍼 함수
-    fun executePipeline(text: String, tgtLang: String = targetLanguage, tone: String? = selectedTone) {
+    fun executePipeline(
+        text: String,
+        tgtLang: String = targetLanguage,
+        tone: String? = selectedTone
+    ) {
         if (text.isBlank()) return
         voicePipeline.processVoiceInput(
             voiceText = text,
@@ -327,9 +331,10 @@ fun VoiceStudioScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .background(DearTalkSurface)
                     .padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 ModeTabButton(
+                    modifier = Modifier.weight(1f),
                     title = UiStrings.modeToneTransform,
                     isSelected = selectedMode == 0,
                     onClick = {
@@ -342,6 +347,7 @@ fun VoiceStudioScreen(
                     }
                 )
                 ModeTabButton(
+                    modifier = Modifier.weight(1f),
                     title = UiStrings.modeLiveTranslation,
                     isSelected = selectedMode == 1,
                     onClick = {

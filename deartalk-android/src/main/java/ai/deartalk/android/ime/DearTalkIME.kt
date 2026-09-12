@@ -20,6 +20,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import ai.deartalk.android.agent.DearTalkIntentEngine
+import ai.deartalk.android.crash.CrashLogger
 import ai.deartalk.android.agent.IntentResult
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.CustomToneManager
@@ -35,7 +36,9 @@ import ai.deartalk.android.stt.VoiceState
 import ai.deartalk.android.tts.TextToSpeechManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -63,6 +66,12 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private var isStandardKeyboardModeState by mutableStateOf(false)
     private var koreanKeyboardTypeState by mutableStateOf(KoreanKeyboardType.DUBEOLSIK)
     private var clipboardTextState by mutableStateOf<String?>(null)
+    private var lastPastedClipText: String? = null
+    private var lastDismissedClipText: String? = null
+    private var lastObservedClipText: String? = null
+    private var firstObservedClipTime: Long = 0L
+    private var clipboardDismissJob: Job? = null
+
     private val hangulComposer = HangulComposer()
     private val cheonjiinComposer = CheonjiinComposer()
 
@@ -105,22 +114,131 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         aiModesState = CustomToneManager.getAllAiModes(this)
     }
 
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        dismissClipboard()
+        hangulComposer.reset()
+        cheonjiinComposer.reset()
+        if (micUiState == MicUiState.LISTENING || micUiState == MicUiState.PREPARING) {
+            sttManager.cancelListening()
+            micUiState = MicUiState.IDLE
+        }
+    }
+
+    /**
+     * 사용자가 텍스트 중간을 터치하거나 커서/선택영역을 이동했을 때 호출되는 핵심 안드로이드 IME 콜백.
+     * 활성 조합 영역(Composing Span) 밖으로 커서가 이동하면 즉시 조합을 완료(finishComposingText)하고
+     * 오토마타(CheonjiinComposer / HangulComposer) 상태를 리셋하여 이전 글자가 중간에 합쳐지거나
+     * 끝으로 커서가 튀는 버그를 원천 차단합니다.
+     */
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+
+        val isComposing = cheonjiinComposer.isComposing || hangulComposer.isComposing
+        if (!isComposing) return
+
+        val hasComposingSpan = candidatesStart >= 0 && candidatesEnd >= 0
+        val isCursorOutside = if (hasComposingSpan) {
+            newSelStart < candidatesStart || newSelEnd > candidatesEnd
+        } else {
+            oldSelStart != newSelStart || oldSelEnd != newSelEnd
+        }
+
+        if (isCursorOutside) {
+            runCatching {
+                currentInputConnection?.finishComposingText()
+            }
+            cheonjiinComposer.reset()
+            hangulComposer.reset()
+        }
+    }
+
+    /**
+     * 클립보드 제안 스트립 새로고침 및 라이프사이클 관리:
+     * 1) 3분 TTL 만료 검증 (오래된 클립 무한 노출 방지)
+     * 2) 1회 붙여넣기(소비) 또는 수동 닫기 텍스트 재노출 방지
+     * 3) 15초 미사용 시 자동 숨김 타이머 연동
+     */
     private fun refreshClipboard() {
         try {
             val cm = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
             if (cm != null && cm.hasPrimaryClip()) {
                 val clip = cm.primaryClip
                 if (clip != null && clip.itemCount > 0) {
-                    val text = clip.getItemAt(0).coerceToText(this)?.toString()
-                    clipboardTextState = if (!text.isNullOrBlank()) text else null
+                    val rawText = clip.getItemAt(0).coerceToText(this)?.toString()?.trim()
+                    if (rawText.isNullOrBlank()) {
+                        dismissClipboard()
+                        return
+                    }
+
+                    // 1. 이미 붙여넣었거나 수동으로 닫은 텍스트는 재노출 방지
+                    if (rawText == lastPastedClipText || rawText == lastDismissedClipText) {
+                        dismissClipboard()
+                        return
+                    }
+
+                    // 2. TTL (3분) 검증
+                    val now = System.currentTimeMillis()
+                    val timestamp = clip.description?.timestamp ?: 0L
+                    val isExpired = if (timestamp > 0L) {
+                        (now - timestamp) > CLIPBOARD_TTL_MS
+                    } else {
+                        if (rawText != lastObservedClipText) {
+                            lastObservedClipText = rawText
+                            firstObservedClipTime = now
+                            false
+                        } else {
+                            (now - firstObservedClipTime) > CLIPBOARD_TTL_MS
+                        }
+                    }
+
+                    if (isExpired) {
+                        dismissClipboard()
+                        return
+                    }
+
+                    if (rawText != lastObservedClipText) {
+                        lastObservedClipText = rawText
+                        firstObservedClipTime = now
+                    }
+
+                    clipboardTextState = rawText
+                    scheduleClipboardAutoDismiss()
                 } else {
-                    clipboardTextState = null
+                    dismissClipboard()
                 }
             } else {
-                clipboardTextState = null
+                dismissClipboard()
             }
         } catch (e: Exception) {
+            dismissClipboard()
+        }
+    }
+
+    private fun dismissClipboard() {
+        clipboardDismissJob?.cancel()
+        clipboardDismissJob = null
+        clipboardTextState = null
+    }
+
+    private fun scheduleClipboardAutoDismiss() {
+        clipboardDismissJob?.cancel()
+        clipboardDismissJob = serviceScope.launch {
+            delay(CLIPBOARD_AUTO_DISMISS_MS)
             clipboardTextState = null
+        }
+    }
+
+    private fun onUserKeyTyped() {
+        if (clipboardTextState != null) {
+            dismissClipboard()
         }
     }
 
@@ -161,41 +279,85 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                             clipboardText = clipboardTextState,
                             onPasteClick = { text ->
                                 currentInputConnection?.commitText(text, 1)
-                                clipboardTextState = null
+                                lastPastedClipText = text
+                                dismissClipboard()
+                            },
+                            onDismissClipboardClick = {
+                                lastDismissedClipText = clipboardTextState
+                                dismissClipboard()
                             },
                             onCharClick = { char ->
-                                hangulComposer.inputJamo(currentInputConnection, char)
+                                onUserKeyTyped()
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.commit(currentInputConnection)
+                                        currentInputConnection?.commitText(char.toString(), 1)
+                                    } else {
+                                        hangulComposer.inputJamo(currentInputConnection, char)
+                                    }
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCharClick($char)", "IME character input exception", e)
+                                }
                             },
                             onCheonjiinConsonantClick = { key ->
-                                cheonjiinComposer.inputConsonantKey(currentInputConnection, key)
+                                onUserKeyTyped()
+                                runCatching {
+                                    cheonjiinComposer.inputConsonantKey(currentInputConnection, key)
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCheonjiinConsonantClick($key)", "Cheonjiin consonant input exception", e)
+                                    cheonjiinComposer.reset()
+                                }
                             },
                             onCheonjiinVowelClick = { key ->
-                                cheonjiinComposer.inputVowelKey(currentInputConnection, key)
+                                onUserKeyTyped()
+                                runCatching {
+                                    cheonjiinComposer.inputVowelKey(currentInputConnection, key)
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCheonjiinVowelClick($key)", "Cheonjiin vowel input exception", e)
+                                    cheonjiinComposer.reset()
+                                }
                             },
                             onDeleteClick = {
-                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
-                                    cheonjiinComposer.delete(currentInputConnection)
-                                } else {
-                                    if (!hangulComposer.delete(currentInputConnection)) {
-                                        currentInputConnection?.deleteSurroundingText(1, 0)
+                                onUserKeyTyped()
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.delete(currentInputConnection)
+                                    } else {
+                                        if (!hangulComposer.delete(currentInputConnection)) {
+                                            currentInputConnection?.deleteSurroundingText(1, 0)
+                                        }
                                     }
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onDeleteClick", "Delete action exception", e)
+                                    currentInputConnection?.deleteSurroundingText(1, 0)
                                 }
                             },
                             onSpaceClick = {
-                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
-                                    cheonjiinComposer.space(currentInputConnection)
-                                } else {
-                                    hangulComposer.commit(currentInputConnection)
+                                onUserKeyTyped()
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.space(currentInputConnection)
+                                    } else {
+                                        hangulComposer.commit(currentInputConnection)
+                                        currentInputConnection?.commitText(" ", 1)
+                                    }
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onSpaceClick", "Space action exception", e)
                                     currentInputConnection?.commitText(" ", 1)
                                 }
                             },
                             onEnterClick = {
-                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
-                                    cheonjiinComposer.commit(currentInputConnection)
-                                } else {
-                                    hangulComposer.commit(currentInputConnection)
+                                onUserKeyTyped()
+                                runCatching {
+                                    if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                        cheonjiinComposer.commit(currentInputConnection)
+                                    } else {
+                                        hangulComposer.commit(currentInputConnection)
+                                    }
+                                    handleEnter()
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onEnterClick", "Enter action exception", e)
                                 }
-                                handleEnter()
                             },
                             onSwitchToAiModeClick = {
                                 if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
@@ -236,7 +398,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                                 startActivity(intent)
                             },
                             onVoiceStudioClick = {
-                                val intent = android.content.Intent(this@DearTalkIME, ai.deartalk.android.VoiceStudioActivity::class.java).apply {
+                                val intent = android.content.Intent(this@DearTalkIME, ai.deartalk.android.live.DearTalkLiveActivity::class.java).apply {
                                     addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 startActivity(intent)
@@ -274,6 +436,9 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                         micUiState = MicUiState.IDLE
                         if (aiTextState.isBlank() && recognizedTextState.isNotBlank()) {
                             aiTextState = recognizedTextState
+                        }
+                        if (recognizedTextState.isBlank() && aiTextState.isBlank()) {
+                            statusMessageState = UiStrings.noSpeechDetected
                         }
                     }
                     else -> Unit
@@ -420,11 +585,15 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private fun handleApplyAiText(text: String) {
         val textToCommit = text.ifBlank { aiTextState.ifBlank { recognizedTextState } }
         if (textToCommit.isNotBlank()) {
-            currentInputConnection?.commitText(textToCommit, 1)
-            aiTextState = ""
-            recognizedTextState = ""
-            micUiState = MicUiState.IDLE
-            statusMessageState = UiStrings.textApplied
+            val ic = currentInputConnection
+            if (ic != null && ic.commitText(textToCommit, 1)) {
+                aiTextState = ""
+                recognizedTextState = ""
+                micUiState = MicUiState.IDLE
+                statusMessageState = UiStrings.textApplied
+            } else {
+                statusMessageState = "⚠️ 입력 대상 앱 연결 단절"
+            }
         }
     }
 
@@ -474,6 +643,9 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     }
 
     companion object {
+        private const val CLIPBOARD_TTL_MS = 180_000L // 3분 (180초)
+        private const val CLIPBOARD_AUTO_DISMISS_MS = 15_000L // 15초 자동 숨김
+
         /**
          * 문장의 마지막 경계(잘라낼 시작 인덱스)를 계산
          * 예: "안녕하세요. 반갑습니다." -> "안녕하세요." 뒤의 인덱스 반환

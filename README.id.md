@@ -27,7 +27,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME** | `v1.0.9` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Voice Studio Navigasi Lengket, Penerjemahan Ulang Otomatis Ganti Mode, Semantik Aksesibilitas TalkBack, On-Device Qwen 0.5B Nano, Kepatuhan Target SDK 36 |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.0` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | DearTalk Live Messenger Suara 1:1 Real-Time, SQLite 100% Offline, Perbaikan Suara ASR Sadar Konteks, Perpanjangan Hening 10 Detik & Terjemahan Instan, Kartu Bahasa Responsif 2 Tingkat |
 
 ---
 
