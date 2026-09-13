@@ -113,6 +113,27 @@ class LiveSessionRepository(context: Context) {
     }
 
     /**
+     * 🧹 만료된 세션 자동 삭제 (보관 주기 초과)
+     */
+    suspend fun purgeExpiredSessions(cutoffTimestamp: Long): Int = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        db.delete(
+            LiveDatabaseHelper.TABLE_SESSIONS,
+            "${LiveDatabaseHelper.COL_SESSION_CREATED_AT} < ?",
+            arrayOf(cutoffTimestamp.toString())
+        )
+    }
+
+    /**
+     * 🗑️ 모든 세션 및 대화 기록 전체 삭제
+     */
+    suspend fun deleteAllSessions(): Int = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        db.delete(LiveDatabaseHelper.TABLE_MESSAGES, null, null)
+        db.delete(LiveDatabaseHelper.TABLE_SESSIONS, null, null)
+    }
+
+    /**
      * 💬 메시지 저장
      */
     suspend fun insertMessage(message: LiveMessage): Boolean = withContext(Dispatchers.IO) {
@@ -127,9 +148,29 @@ class LiveSessionRepository(context: Context) {
             put(LiveDatabaseHelper.COL_MSG_TARGET_LANG, message.targetLang)
             put(LiveDatabaseHelper.COL_MSG_TONE, message.tone)
             put(LiveDatabaseHelper.COL_MSG_CREATED_AT, message.createdAt)
+            put(LiveDatabaseHelper.COL_MSG_ORIGINAL_RAW_TEXT, message.originalRawText)
         }
         val rowId = db.insert(LiveDatabaseHelper.TABLE_MESSAGES, null, values)
         rowId != -1L
+    }
+
+    /**
+     * 💬 기존 메시지 업데이트
+     */
+    suspend fun updateMessage(message: LiveMessage): Boolean = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(LiveDatabaseHelper.COL_MSG_RAW_TEXT, message.rawText)
+            put(LiveDatabaseHelper.COL_MSG_REFINED_TEXT, message.refinedText)
+            put(LiveDatabaseHelper.COL_MSG_TONE, message.tone)
+        }
+        val rows = db.update(
+            LiveDatabaseHelper.TABLE_MESSAGES,
+            values,
+            "${LiveDatabaseHelper.COL_MSG_ID} = ?",
+            arrayOf(message.id)
+        )
+        rows > 0
     }
 
     /**
@@ -157,19 +198,23 @@ class LiveSessionRepository(context: Context) {
             val tgtIdx = it.getColumnIndexOrThrow(LiveDatabaseHelper.COL_MSG_TARGET_LANG)
             val toneIdx = it.getColumnIndexOrThrow(LiveDatabaseHelper.COL_MSG_TONE)
             val createdIdx = it.getColumnIndexOrThrow(LiveDatabaseHelper.COL_MSG_CREATED_AT)
+            val origRawIdx = it.getColumnIndex(LiveDatabaseHelper.COL_MSG_ORIGINAL_RAW_TEXT)
 
             while (it.moveToNext()) {
+                val raw = it.getString(rawIdx)
+                val originalRaw = if (origRawIdx != -1 && !it.isNull(origRawIdx)) it.getString(origRawIdx) else raw
                 list.add(
                     LiveMessage(
                         id = it.getString(idIdx),
                         sessionId = it.getString(sessionIdx),
                         sender = LiveSender.valueOf(it.getString(senderIdx)),
-                        rawText = it.getString(rawIdx),
+                        rawText = raw,
                         refinedText = it.getString(refinedIdx),
                         sourceLang = it.getString(srcIdx),
                         targetLang = it.getString(tgtIdx),
                         tone = it.getString(toneIdx),
-                        createdAt = it.getLong(createdIdx)
+                        createdAt = it.getLong(createdIdx),
+                        originalRawText = originalRaw
                     )
                 )
             }

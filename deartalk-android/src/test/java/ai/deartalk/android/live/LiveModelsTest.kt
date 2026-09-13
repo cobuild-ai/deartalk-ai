@@ -3,6 +3,9 @@ package ai.deartalk.android.live
 import ai.deartalk.android.live.data.LiveMessage
 import ai.deartalk.android.live.data.LiveSender
 import ai.deartalk.android.live.data.LiveSession
+import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.live.data.formatSourcePunctuation
+import ai.deartalk.android.live.data.getLabel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -17,7 +20,7 @@ class LiveModelsTest {
     fun testLiveSessionCreation() {
         val session = LiveSession(myLang = "KO", partnerLang = "EN")
         assertNotNull(session.id)
-        assertTrue(session.title.contains("Live Voice"))
+        assertTrue(session.title.contains("DearTalk-Live"))
         assertEquals("KO", session.myLang)
         assertEquals("EN", session.partnerLang)
         assertTrue(session.createdAt > 0)
@@ -119,5 +122,96 @@ class LiveModelsTest {
         assertEquals(45, downloading.progress)
         val error = states[6] as ai.deartalk.android.stt.LanguageModelStatus.Error
         assertEquals(13, error.code)
+    }
+
+    @Test
+    fun testSpeechIntentValuesAndLabels() {
+        val intents = ai.deartalk.android.live.data.SpeechIntent.values()
+        assertEquals(5, intents.size)
+
+        assertEquals("auto", ai.deartalk.android.live.data.SpeechIntent.AUTO.id)
+        assertEquals("question", ai.deartalk.android.live.data.SpeechIntent.QUESTION.id)
+        assertEquals("statement", ai.deartalk.android.live.data.SpeechIntent.STATEMENT.id)
+        assertEquals("request", ai.deartalk.android.live.data.SpeechIntent.REQUEST.id)
+        assertEquals("confirm", ai.deartalk.android.live.data.SpeechIntent.CONFIRM.id)
+
+        intents.forEach { intent ->
+            val label = intent.getLabel()
+            assertTrue(label.isNotBlank())
+        }
+
+        // 🌐 다국어 지원 검증 (KO, EN, ID, JA, ZH)
+        assertEquals("✨ 스마트", ai.deartalk.android.live.data.SpeechIntent.AUTO.getLabel("KO"))
+        assertEquals("✨ Smart", ai.deartalk.android.live.data.SpeechIntent.AUTO.getLabel("EN"))
+        assertEquals("✨ Cerdas", ai.deartalk.android.live.data.SpeechIntent.AUTO.getLabel("ID"))
+        assertEquals("✨ スマート", ai.deartalk.android.live.data.SpeechIntent.AUTO.getLabel("JA"))
+        assertEquals("✨ 智能", ai.deartalk.android.live.data.SpeechIntent.AUTO.getLabel("ZH"))
+
+        assertEquals("❓ 질문?", ai.deartalk.android.live.data.SpeechIntent.QUESTION.getLabel("KO"))
+        assertEquals("❓ Question", ai.deartalk.android.live.data.SpeechIntent.QUESTION.getLabel("EN"))
+        assertEquals("❓ Tanya?", ai.deartalk.android.live.data.SpeechIntent.QUESTION.getLabel("ID"))
+
+        assertEquals("💬 설명.", ai.deartalk.android.live.data.SpeechIntent.STATEMENT.getLabel("KO"))
+        assertEquals("💬 Statement", ai.deartalk.android.live.data.SpeechIntent.STATEMENT.getLabel("EN"))
+        assertEquals("💬 Jawaban.", ai.deartalk.android.live.data.SpeechIntent.STATEMENT.getLabel("ID"))
+
+        assertEquals("🙏 부탁!", ai.deartalk.android.live.data.SpeechIntent.REQUEST.getLabel("KO"))
+        assertEquals("🙏 Request", ai.deartalk.android.live.data.SpeechIntent.REQUEST.getLabel("EN"))
+        assertEquals("🙏 Mohon!", ai.deartalk.android.live.data.SpeechIntent.REQUEST.getLabel("ID"))
+
+        assertEquals("🔁 확인?", ai.deartalk.android.live.data.SpeechIntent.CONFIRM.getLabel("KO"))
+        assertEquals("🔁 Confirm", ai.deartalk.android.live.data.SpeechIntent.CONFIRM.getLabel("EN"))
+        assertEquals("🔁 Benarkah?", ai.deartalk.android.live.data.SpeechIntent.CONFIRM.getLabel("ID"))
+    }
+
+    @Test
+    fun testLiveUiHelperLocalization() {
+        val helper = ai.deartalk.android.live.data.LiveUiHelper
+
+        // Title
+        assertEquals("🗣️ 말하기", helper.getSpeakTitle("KO"))
+        assertEquals("🗣️ Speak", helper.getSpeakTitle("EN"))
+        assertEquals("🗣️ Bicara", helper.getSpeakTitle("ID"))
+        assertEquals("🗣️ 話す", helper.getSpeakTitle("JA"))
+        assertEquals("🗣️ 说话", helper.getSpeakTitle("ZH"))
+
+        // Finish
+        assertEquals("🛑 완료 (전송)", helper.getFinishTitle("KO"))
+        assertEquals("🛑 Finish (Send)", helper.getFinishTitle("EN"))
+        assertEquals("🛑 Selesai (Kirim)", helper.getFinishTitle("ID"))
+
+        // Processing
+        assertEquals("⏳ 번역/보정 중", helper.getProcessingTitle("KO"))
+        assertEquals("⏳ Processing", helper.getProcessingTitle("EN"))
+        assertEquals("⏳ Menerjemahkan", helper.getProcessingTitle("ID"))
+    }
+
+    @Test
+    fun testFormatSourcePunctuation() {
+        val format = ::formatSourcePunctuation
+
+        // 1. SLM 문맥 판별 결과가 의문문(translationHasQuestion = true)인 경우:
+        //    (모호한 문장에서 의문문 인텐트가 반영되었거나 자연스러운 질문인 경우 원문 카드에도 '?' 동기화)
+        assertEquals("밥 먹었어?", format("밥 먹었어", SpeechIntent.QUESTION, true))
+        assertEquals("식사하셨어요?", format("식사하셨어요", SpeechIntent.QUESTION, true))
+        assertEquals("어디 가?", format("어디 가", SpeechIntent.AUTO, true))
+        assertEquals("몇 시예요?", format("몇 시예요", SpeechIntent.AUTO, true))
+
+        // 2. 사용자가 실수로 질문 버튼을 눌렀으나 명백한 평서문이라 의문문이 필요하지 않은 경우(translationHasQuestion = false):
+        //    (문장 맥락상 의문문이 아니므로 억지로 '?'를 붙이지 않음)
+        assertEquals("오늘 날씨가 정말 좋습니다", format("오늘 날씨가 정말 좋습니다", SpeechIntent.QUESTION, false))
+        assertEquals("나 지금 도서관에 가고 있어", format("나 지금 도서관에 가고 있어", SpeechIntent.QUESTION, false))
+
+        // 3. 평서문 스마트(AUTO) 모드 역시 '?' 없이 원문 보존
+        assertEquals("진짜 맛있어", format("진짜 맛있어", SpeechIntent.AUTO, false))
+        assertEquals("집에 가는 중이야", format("집에 가는 중이야", SpeechIntent.AUTO, false))
+
+        // 4. 💬 설명. (STATEMENT) 인텐트 선택 시 '.' 자동 부가
+        assertEquals("밥 먹었어.", format("밥 먹었어", SpeechIntent.STATEMENT, false))
+
+        // 5. 이미 종결 부호(?, !, .)가 있으면 원형 100% 보존
+        assertEquals("밥 먹었어?", format("밥 먹었어?", SpeechIntent.QUESTION, true))
+        assertEquals("정말 대단해!", format("정말 대단해!", SpeechIntent.QUESTION, false))
+        assertEquals("끝났습니다.", format("끝났습니다.", SpeechIntent.QUESTION, false))
     }
 }

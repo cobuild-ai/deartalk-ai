@@ -25,12 +25,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Hearing
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -44,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,10 +73,18 @@ import ai.deartalk.android.ime.ui.theme.DearTalkText
 import ai.deartalk.android.live.ActiveSpeaker
 import ai.deartalk.android.live.DearTalkLiveController
 import ai.deartalk.android.live.ui.components.DualActionMicBar
+import ai.deartalk.android.live.ui.components.FullScreenSymmetricStage
 import ai.deartalk.android.live.ui.components.LiveMessengerTimeline
 import ai.deartalk.android.live.ui.components.LiveSessionListSheet
+import ai.deartalk.android.live.ui.components.LiveSettingsBottomSheet
+import ai.deartalk.android.live.ui.components.SymmetricActionMicBar
 import ai.deartalk.android.stt.LanguageModelStatus
 import ai.deartalk.android.util.LanguageLocaleHelper
+
+import ai.deartalk.android.agent.DearTalkIntentEngine
+import ai.deartalk.android.data.ModelLifecycleManager
+import ai.deartalk.android.data.ModelPackState
+import ai.deartalk.android.data.SystemDiagnosticManager
 
 /**
  * 🎙️ DearTalk Live: 1:1 실시간 대면 대화 & 지능형 보이스 레코더 메인 화면
@@ -78,6 +93,12 @@ import ai.deartalk.android.util.LanguageLocaleHelper
 @Composable
 fun DearTalkLiveScreen(
     controller: DearTalkLiveController,
+    modelLifecycleManager: ModelLifecycleManager,
+    diagnosticManager: SystemDiagnosticManager,
+    intentEngine: DearTalkIntentEngine,
+    autoStartDownload: Boolean = false,
+    openSettings: Boolean = false,
+    initialFlipView: Boolean = false,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -85,8 +106,45 @@ fun DearTalkLiveScreen(
     val messages by controller.messages.collectAsState()
     val sessions by controller.sessions.collectAsState()
     val activeSpeaker by controller.activeSpeaker.collectAsState()
-    val streamingText by controller.streamingText.collectAsState()
+    val processingSpeaker by controller.processingSpeaker.collectAsState()
+    val rawStreamingText by controller.streamingText.collectAsState()
+
+    val packState by modelLifecycleManager.packState.collectAsState()
+
+    LaunchedEffect(autoStartDownload) {
+        if (autoStartDownload && packState !is ModelPackState.Installed && packState !is ModelPackState.Downloading) {
+            Toast.makeText(context, "📥 AI 팩 다운로드를 즉시 시작합니다...", Toast.LENGTH_SHORT).show()
+            modelLifecycleManager.startDownload(
+                onSuccess = { intentEngine.reloadModel() }
+            )
+        }
+    }
+    
+    val currentActiveIntent = remember(activeSpeaker, processingSpeaker, controller.myIntent, controller.partnerIntent) {
+        if (activeSpeaker == ActiveSpeaker.ME || processingSpeaker == ActiveSpeaker.ME) {
+            controller.myIntent
+        } else if (activeSpeaker == ActiveSpeaker.PARTNER || processingSpeaker == ActiveSpeaker.PARTNER) {
+            controller.partnerIntent
+        } else {
+            ai.deartalk.android.live.data.SpeechIntent.AUTO
+        }
+    }
+
+    val streamingText = remember(rawStreamingText, currentActiveIntent) {
+        if (rawStreamingText.isNotBlank()) {
+            if (currentActiveIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION && !rawStreamingText.trim().endsWith("?")) {
+                "${rawStreamingText.trim()}?"
+            } else if (currentActiveIntent == ai.deartalk.android.live.data.SpeechIntent.STATEMENT && !rawStreamingText.trim().endsWith(".")) {
+                "${rawStreamingText.trim()}."
+            } else {
+                rawStreamingText
+            }
+        } else {
+            rawStreamingText
+        }
+    }
     val isProcessing by controller.isProcessing.collectAsState()
+    val rephrasingMessageId by controller.rephrasingMessageId.collectAsState()
     val isContinuousListening by controller.isContinuousListening.collectAsState()
     val rmsDb by controller.rmsDb.collectAsState()
     val modelDownloadStatus by controller.modelDownloadStatus.collectAsState()
@@ -103,32 +161,44 @@ fun DearTalkLiveScreen(
     var showSessionSheet by remember { mutableStateOf(false) }
     var showMyLangMenu by remember { mutableStateOf(false) }
     var showPartnerLangMenu by remember { mutableStateOf(false) }
-    var showMoreMenu by remember { mutableStateOf(false) }
-    var isFlipViewEnabled by remember { mutableStateOf(false) }
+    var showLiveSettingsSheet by remember { mutableStateOf(openSettings) }
+    var isFlipViewEnabled by remember { mutableStateOf(initialFlipView) }
+    var showToneMenu by remember { mutableStateOf(false) }
+
+    val tones = remember(UiStrings.currentLocale) {
+        listOf(
+            "✨ " + UiStrings.toneRefine,
+            "🙇 " + UiStrings.tonePolite,
+            "😊 " + UiStrings.toneCasual,
+            "💼 " + UiStrings.toneBusiness,
+            "😆 " + UiStrings.toneFunny,
+            "😼 " + UiStrings.toneCheeky
+        )
+    }
 
     // 🌟 1. 공식 지원 3대 언어 (KO, EN, ID)
-    val officialLangs = remember {
+    val officialLangs = remember(UiStrings.currentLocale) {
         listOf(
-            "KO" to "🇰🇷 한국어",
-            "EN" to "🇺🇸 English",
-            "ID" to "🇮🇩 인도네시아어"
+            "KO" to (if (UiStrings.isKo) "🇰🇷 한국어" else if (UiStrings.isId) "🇰🇷 Korea" else "🇰🇷 Korean"),
+            "EN" to (if (UiStrings.isKo) "🇺🇸 English" else if (UiStrings.isId) "🇺🇸 Inggris" else "🇺🇸 English"),
+            "ID" to (if (UiStrings.isKo) "🇮🇩 인도네시아어" else if (UiStrings.isId) "🇮🇩 Indonesia" else "🇮🇩 Indonesian")
         )
     }
 
     // 🌐 2. 글로벌 교차 통역 지원 언어
-    val crossLangs = remember {
+    val crossLangs = remember(UiStrings.currentLocale) {
         listOf(
-            "JA" to "🇯🇵 일본어",
-            "ZH" to "🇨🇳 중국어",
-            "ES" to "🇪🇸 스페인어",
-            "FR" to "🇫🇷 프랑스어",
-            "DE" to "🇩🇪 독일어",
-            "VI" to "🇻🇳 베트남어",
-            "TH" to "🇹🇭 태국어"
+            "JA" to (if (UiStrings.isKo) "🇯🇵 일본어" else if (UiStrings.isId) "🇯🇵 Jepang" else "🇯🇵 Japanese"),
+            "ZH" to (if (UiStrings.isKo) "🇨🇳 중국어" else if (UiStrings.isId) "🇨🇳 Mandarin" else "🇨🇳 Chinese"),
+            "ES" to (if (UiStrings.isKo) "🇪🇸 스페인어" else if (UiStrings.isId) "🇪🇸 Spanyol" else "🇪🇸 Spanish"),
+            "FR" to (if (UiStrings.isKo) "🇫🇷 프랑스어" else if (UiStrings.isId) "🇫🇷 Prancis" else "🇫🇷 French"),
+            "DE" to (if (UiStrings.isKo) "🇩🇪 독일어" else if (UiStrings.isId) "🇩🇪 Jerman" else "🇩🇪 German"),
+            "VI" to (if (UiStrings.isKo) "🇻🇳 베트남어" else if (UiStrings.isId) "🇻🇳 Vietnam" else "🇻🇳 Vietnamese"),
+            "TH" to (if (UiStrings.isKo) "🇹🇭 태국어" else if (UiStrings.isId) "🇹🇭 Thailand" else "🇹🇭 Thai")
         )
     }
 
-    val allSupportedLangs = remember { officialLangs + crossLangs }
+    val allSupportedLangs = remember(officialLangs, crossLangs) { officialLangs + crossLangs }
 
     // 마이크 권한 요청 런처
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -150,6 +220,17 @@ fun DearTalkLiveScreen(
         } else {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
+    }
+
+    if (showLiveSettingsSheet) {
+        LiveSettingsBottomSheet(
+            controller = controller,
+            modelLifecycleManager = modelLifecycleManager,
+            diagnosticManager = diagnosticManager,
+            intentEngine = intentEngine,
+            onOpenHistory = { showSessionSheet = true },
+            onDismiss = { showLiveSettingsSheet = false }
+        )
     }
 
     if (showSessionSheet) {
@@ -194,125 +275,51 @@ fun DearTalkLiveScreen(
                     }
                 },
                 actions = {
-                    // 1. 새 대화 시작 (Add)
+                    // 1. 대면 180° 대칭 모드 즉각 전환 (ScreenRotation)
                     IconButton(onClick = {
-                        controller.createNewSession()
-                        Toast.makeText(context, "새로운 대화 세션이 시작되었습니다.", Toast.LENGTH_SHORT).show()
+                        isFlipViewEnabled = !isFlipViewEnabled
+                        val toastMsg = if (isFlipViewEnabled) UiStrings.liveMenuFlipOn else UiStrings.liveMenuFlipOff
+                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "새 대화",
-                            tint = DearTalkPrimary
+                            imageVector = Icons.Default.ScreenRotation,
+                            contentDescription = if (isFlipViewEnabled) UiStrings.liveMenuFlipOff else UiStrings.liveMenuFlipOn,
+                            tint = if (isFlipViewEnabled) DearTalkPrimary else DearTalkText
                         )
                     }
 
-                    // 2. 세션 히스토리 목록 (Folder)
-                    IconButton(onClick = { showSessionSheet = true }) {
+                    // 2. 통합 설정 바텀 시트 (Settings)
+                    IconButton(onClick = { showLiveSettingsSheet = true }) {
                         Icon(
-                            imageVector = Icons.Default.Folder,
-                            contentDescription = "대화 기록 목록",
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = UiStrings.liveSettingsTitle,
                             tint = DearTalkText
                         )
-                    }
-
-                    // 3. 더보기 오버플로우 메뉴 (플립뷰, 연속청취, 공유)
-                    Box {
-                        IconButton(onClick = { showMoreMenu = true }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "추가 옵션",
-                                tint = DearTalkText
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showMoreMenu,
-                            onDismissRequest = { showMoreMenu = false }
-                        ) {
-                            // 대면 180도 플립 뷰
-                            DropdownMenuItem(
-                                text = {
-                                    Text(if (isFlipViewEnabled) UiStrings.liveMenuFlipOff else UiStrings.liveMenuFlipOn)
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.ScreenRotation,
-                                        contentDescription = null,
-                                        tint = if (isFlipViewEnabled) DearTalkPrimary else DearTalkText
-                                    )
-                                },
-                                onClick = {
-                                    isFlipViewEnabled = !isFlipViewEnabled
-                                    showMoreMenu = false
-                                    val toastMsg = if (isFlipViewEnabled) UiStrings.liveMenuFlipOn else UiStrings.liveMenuFlipOff
-                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                                }
-                            )
-
-                            // 연속 청취 / 강의 레코더 모드
-                            DropdownMenuItem(
-                                text = {
-                                    Text(if (isContinuousListening) UiStrings.liveMenuContinuousOff else UiStrings.liveMenuContinuousOn)
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Repeat,
-                                        contentDescription = null,
-                                        tint = if (isContinuousListening) Color(0xFFEF4444) else DearTalkText
-                                    )
-                                },
-                                onClick = {
-                                    showMoreMenu = false
-                                    checkAndExecute {
-                                        controller.toggleContinuousListening()
-                                        val toastMsg = if (!isContinuousListening) UiStrings.liveMenuContinuousOn else UiStrings.liveMenuContinuousOff
-                                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            )
-
-                            // 대화록 공유
-                            DropdownMenuItem(
-                                text = { Text(UiStrings.liveMenuExport) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Share,
-                                        contentDescription = null,
-                                        tint = DearTalkText
-                                    )
-                                },
-                                onClick = {
-                                    showMoreMenu = false
-                                    val markdown = controller.exportCurrentSessionAsMarkdown()
-                                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_SUBJECT, "DearTalk Live")
-                                        putExtra(Intent.EXTRA_TEXT, markdown)
-                                    }
-                                    val shareIntent = Intent.createChooser(sendIntent, UiStrings.liveMenuExport)
-                                    context.startActivity(shareIntent)
-                                }
-                            )
-                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DearTalkBackground)
             )
         },
         bottomBar = {
-            DualActionMicBar(
-                activeSpeaker = activeSpeaker,
-                isProcessing = isProcessing,
-                rmsDb = rmsDb,
-                selectedTone = controller.selectedTone,
-                onToneSelected = { controller.selectedTone = it },
-                onSpeakMeClick = {
-                    checkAndExecute { controller.toggleSpeakMe() }
-                },
-                onListenPartnerClick = {
-                    checkAndExecute { controller.toggleListenPartner() }
-                },
-                modifier = Modifier.navigationBarsPadding()
-            )
+            if (!isFlipViewEnabled) {
+                DualActionMicBar(
+                    activeSpeaker = activeSpeaker,
+                    processingSpeaker = processingSpeaker,
+                    isProcessing = isProcessing,
+                    rmsDb = rmsDb,
+                    currentIntent = controller.myIntent,
+                    detectedIntent = controller.myDetectedIntent,
+                    langCode = controller.myLang,
+                    onIntentSelected = { controller.setIntentByUser(ai.deartalk.android.live.ActiveSpeaker.ME, it) },
+                    onSpeakMeClick = {
+                        checkAndExecute { controller.toggleSpeakMe() }
+                    },
+                    onListenPartnerClick = {
+                        checkAndExecute { controller.toggleListenPartner() }
+                    },
+                    modifier = Modifier.navigationBarsPadding()
+                )
+            }
         },
         containerColor = DearTalkBackground
     ) { innerPadding ->
@@ -321,15 +328,48 @@ fun DearTalkLiveScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // 🌐 슬림 컴팩트 언어 바 (높이 및 패딩을 대폭 축소하여 타임라인 영역 확보)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(DearTalkSurface.copy(alpha = 0.6f))
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (isFlipViewEnabled) {
+                // 🔄 [상대방 180° 대면 대칭 마이크 바]
+                // 180도 회전 배치되어 맞은편 상대방 시야에서 완벽한 정방향 대칭 조작 제공
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer { rotationZ = 180f }
+                ) {
+                    SymmetricActionMicBar(
+                        speakerType = ActiveSpeaker.PARTNER,
+                        langCode = controller.partnerLang,
+                        languageLabel = allSupportedLangs.firstOrNull { it.first == controller.partnerLang }?.second ?: controller.partnerLang,
+                        onLanguageSelect = { code ->
+                            controller.setLanguages(my = controller.myLang, partner = code)
+                        },
+                        supportedOfficialLangs = officialLangs,
+                        supportedCrossLangs = crossLangs,
+                        isActive = activeSpeaker == ActiveSpeaker.PARTNER,
+                        isProcessing = isProcessing && (activeSpeaker == ActiveSpeaker.PARTNER || processingSpeaker == ActiveSpeaker.PARTNER),
+                        rmsDb = if (activeSpeaker == ActiveSpeaker.PARTNER) rmsDb else 0f,
+                        currentIntent = controller.partnerIntent,
+                        detectedIntent = controller.partnerDetectedIntent,
+                        onIntentSelected = { controller.setIntentByUser(ai.deartalk.android.live.ActiveSpeaker.PARTNER, it) },
+                        onActionClick = {
+                            checkAndExecute { controller.toggleListenPartner() }
+                        },
+                        accentColor = Color(0xFF6366F1),
+                        icon = if (activeSpeaker == ActiveSpeaker.PARTNER) Icons.Default.Stop else Icons.Default.Hearing
+                    )
+                }
+            }
+
+            if (!isFlipViewEnabled) {
+                // 🌐 슬림 컴팩트 언어 바 (핸드헬드 일반 모드 전용 - 180도 대면 모드에서는 상하 대칭 마이크 바로 흡수되어 타임라인 공간 극대화)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(DearTalkSurface.copy(alpha = 0.6f))
+                        .padding(horizontal = 10.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                 // 내 언어 캡슐 칩 (2단 모던 카드 구조: 화자/상태 + 언어명)
                 Box(
                     modifier = Modifier
@@ -338,7 +378,7 @@ fun DearTalkLiveScreen(
                         .background(DearTalkBackground)
                         .border(1.dp, DearTalkPrimary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                         .clickable { showMyLangMenu = true }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -447,7 +487,7 @@ fun DearTalkLiveScreen(
                         .background(DearTalkBackground)
                         .border(1.dp, Color(0xFF818CF8).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                         .clickable { showPartnerLangMenu = true }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -536,22 +576,134 @@ fun DearTalkLiveScreen(
                 }
             }
 
-            // 💬 중앙 카카오톡/Continuum 스타일 2-Way 대화 타임라인
-            LiveMessengerTimeline(
-                messages = messages,
-                streamingText = streamingText,
-                activeSpeaker = activeSpeaker,
-                isProcessing = isProcessing,
-                isFlipViewEnabled = isFlipViewEnabled,
-                onReplayClick = { controller.replayMessage(it) },
-                modifier = Modifier.weight(1f)
-            )
+            // 💼 내 발화 스타일(톤앤매너) 스트립 (IME 키보드와 100% 동일한 비주얼 & 실시간 재점검 연동)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DearTalkSurface)
+                            .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                            .clickable { showToneMenu = true }
+                            .padding(horizontal = 8.dp, vertical = 3.5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = controller.selectedTone,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DearTalkPrimary
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "▾",
+                            fontSize = 10.sp,
+                            color = Color.Gray
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showToneMenu,
+                        onDismissRequest = { showToneMenu = false }
+                    ) {
+                        tones.forEach { toneItem ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = toneItem,
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (controller.selectedTone == toneItem) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (controller.selectedTone == toneItem) DearTalkPrimary else DearTalkText
+                                    )
+                                },
+                                onClick = {
+                                    controller.setTone(toneItem)
+                                    showToneMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // 우측: 신규 대화 빠른 생성 버튼
+                IconButton(
+                    onClick = { controller.createNewSession() },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "새 대화",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
+            }
+        }
+
+            if (isFlipViewEnabled) {
+                // 🪞 180° 대면 모드: 화면을 50:50으로 꽉 채우는 대형 대칭 스테이지 (풀스크린 고가독성 모드)
+                FullScreenSymmetricStage(
+                    messages = messages,
+                    streamingText = streamingText,
+                    activeSpeaker = activeSpeaker,
+                    processingSpeaker = processingSpeaker,
+                    isProcessing = isProcessing,
+                    rephrasingMessageId = rephrasingMessageId,
+                    onReplayClick = { controller.replayMessage(it) },
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                // 💬 핸드헬드 일반 모드: 카카오톡/메신저 스타일 2-Way 대화 타임라인
+                LiveMessengerTimeline(
+                    messages = messages,
+                    streamingText = streamingText,
+                    activeSpeaker = activeSpeaker,
+                    processingSpeaker = processingSpeaker,
+                    isProcessing = isProcessing,
+                    isFlipViewEnabled = false,
+                    rephrasingMessageId = rephrasingMessageId,
+                    onReplayClick = { controller.replayMessage(it) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (isFlipViewEnabled) {
+                // 🙋 [내 0° 대면 대칭 마이크 바]
+                // 내 시야에서 정방향으로 버튼이 손가락 쪽, 칩이 화면 중앙 쪽으로 배치
+                SymmetricActionMicBar(
+                    speakerType = ActiveSpeaker.ME,
+                    langCode = controller.myLang,
+                    languageLabel = allSupportedLangs.firstOrNull { it.first == controller.myLang }?.second ?: controller.myLang,
+                    onLanguageSelect = { code ->
+                        controller.setLanguages(my = code, partner = controller.partnerLang)
+                    },
+                    supportedOfficialLangs = officialLangs,
+                    supportedCrossLangs = crossLangs,
+                    isActive = activeSpeaker == ActiveSpeaker.ME,
+                    isProcessing = isProcessing && (activeSpeaker == ActiveSpeaker.ME || processingSpeaker == ActiveSpeaker.ME),
+                    rmsDb = if (activeSpeaker == ActiveSpeaker.ME) rmsDb else 0f,
+                    currentIntent = controller.myIntent,
+                    detectedIntent = controller.myDetectedIntent,
+                    onIntentSelected = { controller.setIntentByUser(ai.deartalk.android.live.ActiveSpeaker.ME, it) },
+                    onActionClick = {
+                        checkAndExecute { controller.toggleSpeakMe() }
+                    },
+                    accentColor = Color(0xFF10B981),
+                    icon = if (activeSpeaker == ActiveSpeaker.ME) Icons.Default.Stop else Icons.Default.Mic,
+                    modifier = Modifier.navigationBarsPadding()
+                )
+            }
         }
     }
 }
 
 /**
- * 🌐 온디바이스 언어팩 다운로드 및 가용성 뱃지 (심리스 컴팩트 태그)
+ * 🌐 온디바이스 언어팩 가용성 뱃지 (심플 & 신뢰 중심 UX: 사용 가능 / 사용 불가)
  */
 @Composable
 private fun LanguageStatusBadge(status: LanguageModelStatus?) {
@@ -578,53 +730,30 @@ private fun LanguageStatusBadge(status: LanguageModelStatus?) {
                 )
             }
         }
-        is LanguageModelStatus.Scheduled -> {
+        is LanguageModelStatus.Error -> {
             Text(
-                text = UiStrings.liveBadgeDownloading,
-                fontSize = 7.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFFF59E0B),
+                text = UiStrings.liveBadgeUnavailable,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFFEF4444),
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFFF59E0B).copy(alpha = 0.15f))
-                    .padding(horizontal = 3.dp, vertical = 1.dp)
+                    .background(Color(0xFFEF4444).copy(alpha = 0.15f))
+                    .padding(horizontal = 4.dp, vertical = 1.5.dp)
             )
         }
-        is LanguageModelStatus.Installed -> {
+        else -> {
+            // 🌟 Installed, SupportedOnline, Scheduled, Checking 등 모든 정상 동작 상태는 🟢 사용 가능으로 단일화!
             Text(
-                text = UiStrings.liveBadgeOffline,
-                fontSize = 7.5.sp,
-                fontWeight = FontWeight.Bold,
+                text = UiStrings.liveBadgeReady,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF10B981),
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
                     .background(Color(0xFF10B981).copy(alpha = 0.15f))
-                    .padding(horizontal = 3.dp, vertical = 1.dp)
+                    .padding(horizontal = 4.dp, vertical = 1.5.dp)
             )
         }
-        is LanguageModelStatus.SupportedOnline -> {
-            Text(
-                text = UiStrings.liveBadgeStreaming,
-                fontSize = 7.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF6366F1),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFF6366F1).copy(alpha = 0.15f))
-                    .padding(horizontal = 3.dp, vertical = 1.dp)
-            )
-        }
-        is LanguageModelStatus.Checking -> {
-            Text(
-                text = if (UiStrings.isKo) "확인중..." else if (UiStrings.isId) "Memeriksa..." else "Checking...",
-                fontSize = 7.5.sp,
-                color = Color.Gray,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color.Gray.copy(alpha = 0.15f))
-                    .padding(horizontal = 3.dp, vertical = 1.dp)
-            )
-        }
-        else -> {}
     }
 }

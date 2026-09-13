@@ -38,6 +38,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -63,6 +65,12 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private var aiTextState by mutableStateOf("")
     private var tonesState by mutableStateOf<List<CustomTone>>(emptyList())
     private var aiModesState by mutableStateOf<List<ai.deartalk.android.data.pref.AiModeItem>>(emptyList())
+    private var isTranslationModeState by mutableStateOf(false)
+    private var selectedTargetLanguageState by mutableStateOf(ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TRANSLATIONS.first())
+    private var selectedToneState by mutableStateOf(ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES.first())
+    private var selectedSpeechIntentState by mutableStateOf(ai.deartalk.android.live.data.SpeechIntent.AUTO)
+    private var detectedSpeechIntentState by mutableStateOf<ai.deartalk.android.live.data.SpeechIntent?>(null)
+    private var isRetransformingState by mutableStateOf(false)
     private var isStandardKeyboardModeState by mutableStateOf(false)
     private var koreanKeyboardTypeState by mutableStateOf(KoreanKeyboardType.DUBEOLSIK)
     private var clipboardTextState by mutableStateOf<String?>(null)
@@ -71,6 +79,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private var lastObservedClipText: String? = null
     private var firstObservedClipTime: Long = 0L
     private var clipboardDismissJob: Job? = null
+    private var retransformJob: Job? = null
 
     private val hangulComposer = HangulComposer()
     private val cheonjiinComposer = CheonjiinComposer()
@@ -377,6 +386,32 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                             aiText = aiTextState,
                             tones = tonesState,
                             aiModes = aiModesState,
+                            isTranslationMode = isTranslationModeState,
+                            selectedTargetLanguage = selectedTargetLanguageState,
+                            availableLanguages = ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TRANSLATIONS,
+                            onToggleTranslationMode = {
+                                isTranslationModeState = !isTranslationModeState
+                                retransformCurrentText(newTranslationMode = isTranslationModeState)
+                            },
+                            onSelectTargetLanguage = { target ->
+                                selectedTargetLanguageState = target
+                                isTranslationModeState = true
+                                retransformCurrentText(newTranslationMode = true, newTargetLang = target)
+                            },
+                            selectedTone = selectedToneState,
+                            availableTones = if (tonesState.isNotEmpty()) tonesState else ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES,
+                            onSelectTone = { tone ->
+                                selectedToneState = tone
+                                retransformCurrentText(newTone = tone)
+                            },
+                            selectedSpeechIntent = selectedSpeechIntentState,
+                            detectedSpeechIntent = detectedSpeechIntentState,
+                            onSelectSpeechIntent = { intent ->
+                                val newIntent = if (selectedSpeechIntentState == intent) ai.deartalk.android.live.data.SpeechIntent.AUTO else intent
+                                selectedSpeechIntentState = newIntent
+                                retransformCurrentText(newIntent = newIntent)
+                            },
+                            isRetransforming = isRetransformingState,
                             onApplyTone = { tone -> handleApplyTone(tone) },
                             onApplyAiMode = { mode -> handleApplyAiMode(mode) },
                             onMainMicClick = {
@@ -397,9 +432,17 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                                 }
                                 startActivity(intent)
                             },
-                            onVoiceStudioClick = {
+                            onLiveClick = {
                                 val intent = android.content.Intent(this@DearTalkIME, ai.deartalk.android.live.DearTalkLiveActivity::class.java).apply {
                                     addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                            },
+                            onDownloadPackClick = {
+                                val intent = android.content.Intent(this@DearTalkIME, ai.deartalk.android.live.DearTalkLiveActivity::class.java).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                    putExtra("auto_start_download", true)
+                                    putExtra("open_settings", true)
                                 }
                                 startActivity(intent)
                             }
@@ -469,15 +512,30 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         val ic = currentInputConnection
         val currentText = ic?.getTextBeforeCursor(200, 0)?.toString() ?: ""
 
+        val effectiveIntent = selectedSpeechIntentState
+
         serviceScope.launch {
             statusMessageState = UiStrings.aiProcessing
 
             val result = try {
-                intentEngine.process(
-                    voiceInput = voicePrompt,
-                    currentEditorText = currentText,
-                    packageName = currentPackageName
-                )
+                if (isTranslationModeState) {
+                    intentEngine.processWithTranslation(
+                        voiceInput = voicePrompt,
+                        target = selectedTargetLanguageState,
+                        currentEditorText = currentText,
+                        packageName = currentPackageName,
+                        tone = selectedToneState.name,
+                        speechIntent = effectiveIntent
+                    )
+                } else {
+                    intentEngine.processWithTone(
+                        voiceInput = voicePrompt,
+                        tone = selectedToneState,
+                        currentEditorText = currentText,
+                        packageName = currentPackageName,
+                        speechIntent = effectiveIntent
+                    )
+                }
             } catch (e: Throwable) {
                 IntentResult.Error(voicePrompt, UiStrings.errorOccurred)
             }
@@ -489,11 +547,86 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                         val text = result.text.ifBlank { voicePrompt }
                         aiTextState = text
                         statusMessageState = result.message.ifBlank { UiStrings.aiTextComplete }
+                        detectedSpeechIntentState = result.detectedIntent
                     }
                     is IntentResult.Error -> {
                         aiTextState = result.fallbackText.ifBlank { voicePrompt }
                         statusMessageState = UiStrings.sttComplete
                     }
+                }
+            }
+        }
+    }
+
+    private fun retransformCurrentText(
+        newTranslationMode: Boolean = isTranslationModeState,
+        newTargetLang: ai.deartalk.android.data.pref.TranslationTarget = selectedTargetLanguageState,
+        newTone: CustomTone = selectedToneState,
+        newIntent: ai.deartalk.android.live.data.SpeechIntent = selectedSpeechIntentState
+    ) {
+        // 🛡️ [원문 보존 불변 원칙]: 최초 발화 원문(recognizedTextState)을 항상 최우선 기준으로 유지
+        val textToTransform = recognizedTextState.ifBlank {
+            // recognizedTextState가 비어있다면 에디터 텍스트나 aiTextState를 가져오되,
+            // 캔버스 상단 마이크 행에 즉시 채워넣어 사용자가 말한 내용이 화면에서 절대 사라지지 않도록 영구 보존!
+            val editorFallback = currentInputConnection?.getTextBeforeCursor(2000, 0)?.toString()?.trim() ?: ""
+            val base = if (editorFallback.isNotBlank()) editorFallback else aiTextState.trim()
+            if (base.isNotBlank() && recognizedTextState.isBlank()) {
+                recognizedTextState = base
+            }
+            base
+        }.trim()
+
+        if (textToTransform.isBlank()) return
+
+        // 🌟 [화면 깜빡임 원천 방지]: micUiState(전체 화면 모드)를 건드리지 않고 인라인 상태(isRetransformingState)만 활성화
+        isRetransformingState = true
+        statusMessageState = UiStrings.aiProcessing
+
+        // 🛡️ [동시성 보호 & 즉시 반응]: 기존 진행 중인 변환 작업이 있다면 즉각 취소하여 지연 및 결과 덮어쓰기 원천 방지
+        retransformJob?.cancel()
+        retransformJob = serviceScope.launch {
+            try {
+                val result = if (newTranslationMode) {
+                    intentEngine.processWithTranslation(
+                        voiceInput = textToTransform,
+                        target = newTargetLang,
+                        packageName = currentPackageName,
+                        tone = newTone.name,
+                        speechIntent = newIntent
+                    )
+                } else {
+                    intentEngine.processWithTone(
+                        voiceInput = textToTransform,
+                        tone = newTone,
+                        packageName = currentPackageName,
+                        speechIntent = newIntent
+                    )
+                }
+
+                ensureActive()
+
+                withContext(Dispatchers.Main) {
+                    isRetransformingState = false
+                    when (result) {
+                        is IntentResult.Success -> {
+                            aiTextState = result.text.ifBlank { textToTransform }
+                            statusMessageState = result.message.ifBlank { UiStrings.aiTextComplete }
+                            if (newIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                                detectedSpeechIntentState = result.detectedIntent
+                            }
+                        }
+                        is IntentResult.Error -> {
+                            aiTextState = result.fallbackText.ifBlank { textToTransform }
+                        }
+                    }
+                }
+            } catch (_: CancellationException) {
+                // 이전 작업이 취소된 경우 아무 작업도 하지 않음 (새로운 작업이 UI 갱신 담당)
+            } catch (e: Throwable) {
+                withContext(Dispatchers.Main) {
+                    isRetransformingState = false
+                    aiTextState = textToTransform
+                    statusMessageState = UiStrings.errorOccurred
                 }
             }
         }

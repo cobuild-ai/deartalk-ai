@@ -159,4 +159,113 @@ class DearTalkIntentEngineTest {
         assertTrue(result5 is IntentResult.Success)
         assertEquals("지금 출발했습니다", (result5 as IntentResult.Success).text)
     }
+
+    @Test
+    fun `의도_재작성_폴백_구두점_및_의도_변환_테스트`() = runBlocking {
+        // 모델 미로드 폴백 환경에서 의도에 따른 기본 부호 및 변환 검증
+        val rewrittenQuestion = intentEngine.rewriteSentenceIntent(
+            text = "이거 복잡한 문제야",
+            langCode = "KO",
+            targetIntent = ai.deartalk.android.live.data.SpeechIntent.QUESTION
+        )
+        assertEquals("이거 복잡한 문제야?", rewrittenQuestion)
+
+        val rewrittenStatement = intentEngine.rewriteSentenceIntent(
+            text = "이거 너는 복잡한 문제라고 생각하니?",
+            langCode = "KO",
+            targetIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        )
+        assertEquals("이거 너는 복잡한 문제라고 생각하니.", rewrittenStatement)
+
+        // rephraseMessageWithIntent 통합 파이프라인 테스트
+        val (raw, refined) = intentEngine.rephraseMessageWithIntent(
+            rawSourceText = "이거 복잡한 문제야",
+            sourceLangCode = "KO",
+            targetLangCode = "KO",
+            targetIntent = ai.deartalk.android.live.data.SpeechIntent.QUESTION
+        )
+        assertEquals("이거 복잡한 문제야?", raw)
+        assertEquals("이거 복잡한 문제야?", refined)
+    }
+
+    @Test
+    fun `cleanLlmOutput_말미_스파클_및_장식_기호_정제_테스트`() {
+        val rawWithSparkle = "I am at home?✨"
+        assertEquals("I am at home?", intentEngine.cleanLlmOutput(rawWithSparkle))
+
+        val rawWithStars = "Are you going to eat today? ✨⭐"
+        assertEquals("Are you going to eat today?", intentEngine.cleanLlmOutput(rawWithStars))
+    }
+
+    @Test
+    fun `영어_의도_재작성_폴백_부호_보존_테스트`() = runBlocking {
+        val question = intentEngine.rewriteSentenceIntent(
+            text = "You are at home",
+            langCode = "EN",
+            targetIntent = ai.deartalk.android.live.data.SpeechIntent.QUESTION
+        )
+        assertEquals("You are at home?", question)
+
+        val statement = intentEngine.rewriteSentenceIntent(
+            text = "Are you at home?",
+            langCode = "EN",
+            targetIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        )
+        assertEquals("You are at home.", statement)
+    }
+
+    @Test
+    fun `parseIntentTagAndClean_의도_태그_파싱_및_본문_분리_테스트`() {
+        // 1. QUESTION 태그 파싱
+        val rawQuestion = "[INTENT: QUESTION]\n오늘은 며칠이야?"
+        val (intentQ, textQ) = DearTalkIntentEngine.parseIntentTagAndClean(rawQuestion)
+        assertEquals(ai.deartalk.android.live.data.SpeechIntent.QUESTION, intentQ)
+        assertEquals("오늘은 며칠이야?", textQ)
+
+        // 2. REQUEST 태그 파싱 (대소문자 무시)
+        val rawRequest = "[intent: request] 이 문서 좀 검토해줘."
+        val (intentR, textR) = DearTalkIntentEngine.parseIntentTagAndClean(rawRequest)
+        assertEquals(ai.deartalk.android.live.data.SpeechIntent.REQUEST, intentR)
+        assertEquals("이 문서 좀 검토해줘.", textR)
+
+        // 3. CONFIRM 태그 파싱
+        val rawConfirm = "[INTENT: CONFIRM]\n내일 3시 맞지?"
+        val (intentC, textC) = DearTalkIntentEngine.parseIntentTagAndClean(rawConfirm)
+        assertEquals(ai.deartalk.android.live.data.SpeechIntent.CONFIRM, intentC)
+        assertEquals("내일 3시 맞지?", textC)
+
+        // 4. STATEMENT 태그 파싱
+        val rawStatement = "[INTENT: STATEMENT] 나 지금 가고 있어."
+        val (intentS, textS) = DearTalkIntentEngine.parseIntentTagAndClean(rawStatement)
+        assertEquals(ai.deartalk.android.live.data.SpeechIntent.STATEMENT, intentS)
+        assertEquals("나 지금 가고 있어.", textS)
+
+        // 5. 태그 부재 시 fallback 반환
+        val rawNoTag = "그냥 일반 텍스트입니다."
+        val (intentFallback, textFallback) = DearTalkIntentEngine.parseIntentTagAndClean(
+            rawNoTag,
+            fallbackIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        )
+        assertEquals(ai.deartalk.android.live.data.SpeechIntent.STATEMENT, intentFallback)
+        assertEquals("그냥 일반 텍스트입니다.", textFallback)
+    }
+
+    @Test
+    fun `cleanLlmOutput_태그_포함_문장_완벽_정제_테스트`() {
+        val raw = "[INTENT: QUESTION]\n오늘은 며칠이야?"
+        val cleaned = intentEngine.cleanLlmOutput(raw)
+        assertEquals("오늘은 며칠이야?", cleaned)
+    }
+
+    @Test
+    fun `translateWithIntent_단일패스_화행_분류_및_원문보존_테스트`() = runBlocking {
+        val (output, intent) = intentEngine.translateWithIntent(
+            voiceInput = "너는 어떻게 생각해",
+            targetLangCode = "EN",
+            sourceLangCode = "KO"
+        )
+        assertEquals("너는 어떻게 생각해", output)
+        assertEquals(ai.deartalk.android.live.data.SpeechIntent.QUESTION, intent)
+    }
 }
+

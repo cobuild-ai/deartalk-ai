@@ -14,8 +14,8 @@ android {
         applicationId = "ai.deartalk.android"
         minSdk = 26
         targetSdk = 36
-        versionCode = 14
-        versionName = "1.1.0"
+        versionCode = 16
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

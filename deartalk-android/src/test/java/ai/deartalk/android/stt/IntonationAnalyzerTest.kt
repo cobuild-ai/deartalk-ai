@@ -16,6 +16,11 @@ class IntonationAnalyzerTest {
         assertTrue(IntonationAnalyzer.isLikelyQuestion("어떻게 생각해", "KO"))
         assertTrue(IntonationAnalyzer.isLikelyQuestion("언제 출발해", "KO"))
         assertTrue(IntonationAnalyzer.isLikelyQuestion("이거 어때요", "KO"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("오늘은 며칠이야", "KO"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("며칠에 만날까", "KO"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("지금 몇시야", "KO"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("그게 뭐야", "KO"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("오늘이 월요일인가", "KO"))
 
         // 🌟 평서문 및 1인칭 진술은 의문문으로 오판되지 않아야 함 (False Positive 방지)
         assertFalse(IntonationAnalyzer.isLikelyQuestion("나 괜찮아", "KO"))
@@ -47,8 +52,26 @@ class IntonationAnalyzerTest {
         assertTrue(IntonationAnalyzer.isLikelyQuestion("what time do we meet", "EN"))
         assertTrue(IntonationAnalyzer.isLikelyQuestion("are you ready", "EN"))
         assertTrue(IntonationAnalyzer.isLikelyQuestion("can you help me", "EN"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("can't we do it all with the rear camera", "EN"))
+        assertTrue(IntonationAnalyzer.isLikelyQuestion("don't you think so", "EN"))
 
         assertFalse(IntonationAnalyzer.isLikelyQuestion("i am leaving now", "EN"))
         assertFalse(IntonationAnalyzer.isLikelyQuestion("thank you very much", "EN"))
+    }
+
+    @Test
+    fun `영어_의문문_평서문_도치_변환_테스트`() {
+        org.junit.Assert.assertEquals(
+            "We can't just handle it with the rear camera.",
+            IntonationAnalyzer.convertToDeclarativeEnglish("Can't we just handle it with the rear camera.")
+        )
+        org.junit.Assert.assertEquals(
+            "You are at home.",
+            IntonationAnalyzer.convertToDeclarativeEnglish("Are you at home?")
+        )
+        org.junit.Assert.assertEquals(
+            "We cannot do this.",
+            IntonationAnalyzer.convertToDeclarativeEnglish("We cannot do this.")
+        )
     }
 }

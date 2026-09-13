@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.2] - 2026-09-13
+
+### Fixed & Improved
+- **🌐 3개 국어(KO, EN, ID) 완벽 다국어 로컬라이제이션 & 텍스트 잘림 방지 (Zero-Truncation Multilingual Polish)**:
+  - Jetpack Compose 의도 칩(`softWrap = false`, `TextOverflow.Ellipsis`, 최적 폰트 크기 `10.sp`) 줄바꿈으로 인한 단어 실종 결함 원천 해결.
+  - `FullScreenSymmetricStage`, `DearTalkLiveScreen`, `LiveSettingsBottomSheet` 내 잔여 하드코딩 문자열(화자 헤더, 상태 메시지, 다국어 드롭다운) 100% `UiStrings` 동적 다국어화 완료.
+- **🔄 대면 180° 플립 뷰(Face-to-Face 180° Flip View) 완성 및 실기기 스토어 자산 확보**:
+  - 상하 50:50 대칭 화면에서 맞은편 파트너를 위한 180도 역방향 뷰와 사용자 시야 정방향 뷰 간 완벽한 다국어 동기화.
+  - 한국어, 영어, 인도네시아어 3개 언어 환경의 실제 Galaxy S22 Ultra 실기기 캡처 완결.
+- **⚡ AI 문맥 의도 자동 인식 및 렌더링 안정화 (Stabilized Intent Chips & Zero Jitter)**:
+  - 발화 의도(질문/설명/부탁/확인) 실시간 판별 및 렌더링 흔들림(Jitter) 현상 제거.
+
+---
+
+## [1.1.1] - 2026-09-13
+
+### Added
+- **🔄 180° 대면 회전 뷰 및 다국어 실시간 쇼케이스 검증**:
+  - 맞은편 상대방을 위한 상하 대칭 회전 모드(`flip_view`) 및 3개 국어(한국어, 영어, 인도네시아어) 무결성 검증.
+- **🛡️ 최초 발화 원음(`originalRawText`) 보존 아키텍처**:
+  - SQLite `live_messages`에 `original_raw_text` 컬럼 신설(DB v2 마이그레이션)하여 사후 의도(질문/설명) 재작성 시에도 최초 발화 원음 영구 보존.
+- **💬 영어 평서문 조동사 도치 보정 (`convertToDeclarativeEnglish`)**:
+  - 온디바이스 SLM의 의문문 도치 편향을 교정하여 `STATEMENT` 선택 시 완벽한 평서문 어순 보장.
+
+### Changed
+- **🧹 레거시 `VoiceStudio` 완전 제거 및 `DearTalk Live` 단일화**:
+  - 구버전 단일 마이크 화면(`VoiceStudioActivity`) 및 관련 서브시스템을 영구 삭제하고 `DearTalk Live`로 단일화.
+  - 온디바이스 AI 모델 팩(Qwen) 관리 및 하드웨어 사양 진단을 `DearTalk Live` 설정 바텀시트(`LiveSettingsBottomSheet`)로 완전 흡수.
+- **⚡ 키보드 AI 팩 원클릭 자동 다운로드**:
+  - 키보드 배너 클릭 시 `DearTalk Live` 설정 시트로 직행하여 다운로드가 즉시 자동 시작되도록 사용자 경험(UX) 개선.
+
+---
+
 ## [1.1.0] - 2026-09-12
 
 ### Added

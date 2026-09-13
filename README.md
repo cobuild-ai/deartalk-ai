@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.0` | **Android 16 (API 36)** | **Production Stable** | DearTalk Live 1:1 Voice Messenger, 100% Offline SQLite, Context-Aware ASR Speech Repair, 10s Extended Silence & Instant Translate, 2-Tier Responsive Language Card |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.2` | **Android 16 (API 36)** | **Production Stable** | DearTalk Live 1:1 Voice Messenger, 180° Face-to-Face Flip View, Multilingual Zero-Truncation UI, 100% Offline SQLite, Context-Aware ASR Speech Repair |
 
 ---
 
@@ -43,12 +43,12 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 ## 🌟 Key Platform Features
 
-### 🎙️ AI Voice Studio & Live Interpreter (`VoiceStudioActivity`)
-- **Memory-Isolated Full-Screen Studio:** Independent activity executing sequential STT ➔ LLM ➔ TTS pipelines safely away from the IME memory space.
-- **2-Way Language Selector & 1-Tap Reverse:** `[ 🗣️ Spoken Input ] ⇄ [ 🌐 Target Output ]` architecture with instant conversation swap.
-- **Zero-Hardcoding Dynamic Translation:** Context-aware simultaneous interpreter engine supporting 12 languages with custom acoustic model bindings.
-- **Voice Customizer & Pitch Control:** Female/Male vocal selector and 4-tier pitch calibration (`Normal`, `Deep Low`, `Warm Mid`, `Bright High`).
-- **Zero-Latency Audio Replay:** Instant audio replay on speaker tap bypassing LLM re-computation.
+### 🎙️ 1:1 Real-Time Face-to-Face Live Interpreter & Recorder (`DearTalkLiveActivity`)
+- **Memory-Isolated Full-Screen Session:** Dedicated activity executing 1:1 bidirectional real-time interpretation with SQLite persistent history safely outside IME memory space.
+- **2-Way Dual Mic & 180° Face-to-Face Stage:** Symmetric top-down rotation view for counterparty conversations and `[🙋 Speak]` / `[👂 Listen]` dual action bars.
+- **On-Device AI Pack & Hardware Diagnostics:** Integrated inside Settings bottom sheet for device RAM/storage diagnostics and Qwen local AI pack (1.2GB) download/purge management.
+- **Zero-Hardcoding Post-Hoc Intent Rewriting:** Real-time conversational tone tuning into Questions, Declarative Statements, or Requests preserving core context.
+- **Zero-Latency Audio Replay & Multilingual TTS:** Instant natural voice synthesis and playback for counterparties.
 
 ### 📱 Android Custom Keyboard (`deartalk-android`)
 - **Android 15 & Target SDK 35 Ready:** Built on modern modular Jetpack Compose UI architecture.

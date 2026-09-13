@@ -1,25 +1,35 @@
 package ai.deartalk.android.live
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.Date
 import ai.deartalk.android.agent.DearTalkIntentEngine
 import ai.deartalk.android.agent.IntentResult
 import ai.deartalk.android.live.data.LiveMessage
 import ai.deartalk.android.live.data.LiveSender
 import ai.deartalk.android.live.data.LiveSession
 import ai.deartalk.android.live.data.LiveSessionRepository
+import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.live.data.formatSourcePunctuation
+import ai.deartalk.android.live.data.getLabel
 import ai.deartalk.android.stt.SpeechRecognitionManager
 import ai.deartalk.android.stt.VoiceState
 import ai.deartalk.android.tts.TextToSpeechManager
 import ai.deartalk.android.tts.VoiceGender
 import ai.deartalk.android.util.LanguageLocaleHelper
+import ai.deartalk.android.data.pref.UiStrings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -49,10 +59,27 @@ class DearTalkLiveController(
     companion object {
         private const val TAG = "DearTalkLiveController"
         const val DEFAULT_TTS_PITCH = 1.0f
+        private const val PREFS_NAME = "deartalk_live_prefs"
+        private const val PREF_RETENTION_DAYS = "live_retention_days"
+        const val DEFAULT_RETENTION_DAYS = 10
+    }
+
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    // 🗓️ 대화 내역 보관 주기 (일 단위: 3, 7, 10(기본), 30, 0=수동 영구 보관)
+    var retentionDays: Int by mutableStateOf(prefs.getInt(PREF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS))
+        private set
+
+    fun updateRetentionDays(days: Int) {
+        retentionDays = days
+        prefs.edit().putInt(PREF_RETENTION_DAYS, days).apply()
+        purgeExpiredSessions()
     }
 
     private val scope = CoroutineScope(Dispatchers.Main)
     private var processJob: Job? = null
+    private var lastProcessedText: String = ""
+    private var lastProcessedTime: Long = 0L
 
     // UI 관찰 상태
     private val _currentSession = MutableStateFlow<LiveSession?>(null)
@@ -67,11 +94,18 @@ class DearTalkLiveController(
     private val _activeSpeaker = MutableStateFlow(ActiveSpeaker.NONE)
     val activeSpeaker: StateFlow<ActiveSpeaker> = _activeSpeaker.asStateFlow()
 
+    private val _processingSpeaker = MutableStateFlow(ActiveSpeaker.NONE)
+    val processingSpeaker: StateFlow<ActiveSpeaker> = _processingSpeaker.asStateFlow()
+
     private val _streamingText = MutableStateFlow("")
     val streamingText: StateFlow<String> = _streamingText.asStateFlow()
 
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
+
+    // 🔄 사용자가 의도/톤 변경 시 AI가 문장 구조를 재점검 중인 메시지 ID (UI 흐림 및 이탤릭 피드백용)
+    private val _rephrasingMessageId = MutableStateFlow<String?>(null)
+    val rephrasingMessageId: StateFlow<String?> = _rephrasingMessageId.asStateFlow()
 
     private val _isContinuousListening = MutableStateFlow(false)
     val isContinuousListening: StateFlow<Boolean> = _isContinuousListening.asStateFlow()
@@ -86,10 +120,87 @@ class DearTalkLiveController(
         private set
     var partnerLang: String by mutableStateOf("EN")
         private set
-    var selectedTone: String by mutableStateOf("✨ 기본다듬기")
+    var selectedTone: String by mutableStateOf("✨ " + UiStrings.toneRefine)
+
+    fun setTone(newTone: String) {
+        selectedTone = newTone
+        val lastMsg = _messages.value.lastOrNull()
+        if (lastMsg != null && lastMsg.sender == LiveSender.ME && !_isProcessing.value) {
+            scope.launch(Dispatchers.IO) {
+                _rephrasingMessageId.value = lastMsg.id
+                try {
+                    val recentContext = _messages.value.takeLast(5).map { msg ->
+                        val senderTag = if (msg.sender == LiveSender.ME) "User (${msg.sourceLang})" else "Partner (${msg.sourceLang})"
+                        "$senderTag: \"${msg.rawText}\" -> \"${msg.refinedText}\""
+                    }
+                    val cleanTone = selectedTone.replace(Regex("""[^\p{L}\p{N}\s]"""), "").trim()
+                    val baseSourceText = if (lastMsg.originalRawText.isNotBlank()) lastMsg.originalRawText else lastMsg.rawText
+                    val (newRaw, newRefined) = intentEngine.rephraseMessageWithIntent(
+                        rawSourceText = baseSourceText,
+                        sourceLangCode = lastMsg.sourceLang,
+                        targetLangCode = lastMsg.targetLang,
+                        targetIntent = myIntent,
+                        tone = cleanTone,
+                        packageName = "ai.deartalk.android.live",
+                        conversationContext = recentContext
+                    )
+                    val updatedMsg = lastMsg.copy(
+                        rawText = baseSourceText,
+                        refinedText = newRefined,
+                        tone = selectedTone,
+                        originalRawText = baseSourceText
+                    )
+                    repository.updateMessage(updatedMsg)
+                    withContext(Dispatchers.Main) {
+                        val updatedList = _messages.value.toMutableList()
+                        val lastIdx = updatedList.indexOfLast { it.id == updatedMsg.id }
+                        if (lastIdx != -1) {
+                            updatedList[lastIdx] = updatedMsg
+                            _messages.value = updatedList
+                        }
+                    }
+                    Log.d(TAG, "✨ [Live] 톤 변경 AI 재작성 완료: '${lastMsg.refinedText}' ➔ '$newRefined' (톤: $selectedTone)")
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ [Live] 톤 변경 재작성 실패: ${e.message}", e)
+                } finally {
+                    _rephrasingMessageId.value = null
+                }
+            }
+        }
+    }
+
+    // 🎯 실시간 대화 발화 의도 (Speech Pragmatics / 화행)
+    // 1회성(One-shot)으로 적용되며, 발화 완료 후 각각 자동으로 AUTO(스마트)로 복귀
+    var myIntent: SpeechIntent by mutableStateOf(SpeechIntent.AUTO)
+    var partnerIntent: SpeechIntent by mutableStateOf(SpeechIntent.AUTO)
+
+    // 🤖 AI 온디바이스 SLM이 감지한 최근 화행 의도 (UI 칩 실시간 하이라이팅용)
+    var myDetectedIntent: SpeechIntent? by mutableStateOf(null)
+    var partnerDetectedIntent: SpeechIntent? by mutableStateOf(null)
+
+    // 하위 호환성 프로퍼티 (기존 단일 myIntent 바인딩 유지)
+    var currentIntent: SpeechIntent
+        get() = myIntent
+        set(value) {
+            myIntent = value
+        }
+
+    // 🔊 자동 TTS 읽기 토글 (기본값: false - 화면 텍스트 우선 표시 & 스피커 버튼 온디맨드 재생)
+    var isAutoSpeakEnabled: Boolean by mutableStateOf(false)
+        private set
+
+    fun toggleAutoSpeak() {
+        isAutoSpeakEnabled = !isAutoSpeakEnabled
+    }
+
+    // 🛡️ 더블 탭 및 STT 자동 종료 직후 토글 바운스(Stop->Start 오작동) 방지 가드
+    private var lastActionTime = 0L
+    private var lastSttFinishTime = 0L
+    private val ACTION_COOLDOWN_MS = 600L
 
     init {
         observeStt()
+        purgeExpiredSessions()
         refreshSessions()
         prewarmAndDownloadLanguages(myLang, partnerLang)
     }
@@ -112,11 +223,13 @@ class DearTalkLiveController(
                         _streamingText.value = ""
                         _activeSpeaker.value = ActiveSpeaker.NONE
                         _isProcessing.value = false
+                        lastSttFinishTime = System.currentTimeMillis()
                     }
                     is VoiceState.Idle -> {
                         if (!_isProcessing.value) {
                             _activeSpeaker.value = ActiveSpeaker.NONE
                         }
+                        lastSttFinishTime = System.currentTimeMillis()
                     }
                     else -> {}
                 }
@@ -128,16 +241,31 @@ class DearTalkLiveController(
      * 🗣️ '내가 말하기' 토글 (내 언어로 청취)
      */
     fun toggleSpeakMe() {
+        val now = System.currentTimeMillis()
         if (_activeSpeaker.value == ActiveSpeaker.ME) {
+            // 이미 말하기 중이면 중지
+            lastActionTime = now
+            lastSttFinishTime = now
             sttManager.stopListening()
         } else {
+            // 🛡️ 쿨다운 가드: AI 처리 중이거나, 종료/이전 액션 직후 600ms 이내 재진입 원천 차단 (Stop->Start 바운스 방지)
+            if (_isProcessing.value) {
+                Log.w(TAG, "🛡️ [Live 토글 가드]: 이전 발화 처리 중(_isProcessing=true)이므로 '내가 말하기' 시작 요청 무시")
+                return
+            }
+            if ((now - lastSttFinishTime) < ACTION_COOLDOWN_MS || (now - lastActionTime) < ACTION_COOLDOWN_MS) {
+                Log.w(TAG, "🛡️ [Live 토글 가드]: 직전 STT 종료/액션 후 쿨다운(${ACTION_COOLDOWN_MS}ms) 미달로 '내가 말하기' 시작 요청 무시 (경과: ${now - lastSttFinishTime}ms)")
+                return
+            }
+            lastActionTime = now
             sttManager.cancelListening()
             ttsManager.stop()
             _activeSpeaker.value = ActiveSpeaker.ME
             _streamingText.value = ""
             ensureActiveSession()
             val locale = LanguageLocaleHelper.getLocaleForCode(myLang)
-            sttManager.startListening(locale)
+            // 🌟 내가 말하기 시에도 문장 중간의 호흡/생각으로 인한 조기 끊김 방지를 위해 장문 모드(isLongSpeech = true) 적용
+            sttManager.startListening(locale, isLongSpeech = true)
         }
     }
 
@@ -145,9 +273,23 @@ class DearTalkLiveController(
      * 👂 '상대방 듣기' 토글 (상대방 언어로 청취)
      */
     fun toggleListenPartner() {
+        val now = System.currentTimeMillis()
         if (_activeSpeaker.value == ActiveSpeaker.PARTNER) {
+            // 이미 듣기 중이면 중지
+            lastActionTime = now
+            lastSttFinishTime = now
             sttManager.stopListening()
         } else {
+            // 🛡️ 쿨다운 가드: AI 처리 중이거나, 종료/이전 액션 직후 600ms 이내 재진입 원천 차단 (Stop->Start 바운스 방지)
+            if (_isProcessing.value) {
+                Log.w(TAG, "🛡️ [Live 토글 가드]: 이전 발화 처리 중(_isProcessing=true)이므로 '상대방 듣기' 시작 요청 무시")
+                return
+            }
+            if ((now - lastSttFinishTime) < ACTION_COOLDOWN_MS || (now - lastActionTime) < ACTION_COOLDOWN_MS) {
+                Log.w(TAG, "🛡️ [Live 토글 가드]: 직전 STT 종료/액션 후 쿨다운(${ACTION_COOLDOWN_MS}ms) 미달로 '상대방 듣기' 시작 요청 무시 (경과: ${now - lastSttFinishTime}ms)")
+                return
+            }
+            lastActionTime = now
             sttManager.cancelListening()
             ttsManager.stop()
             _activeSpeaker.value = ActiveSpeaker.PARTNER
@@ -160,15 +302,119 @@ class DearTalkLiveController(
     }
 
     /**
+     * 사용자가 명시적으로 발화 의도를 선택/변경할 때 호출됩니다.
+     * 번역 중(isProcessing)에 덮어씌우기가 발생하면 즉시 번역을 재시작하고,
+     * 이미 완료된 메시지일 경우 온디바이스 SLM을 통해 원문과 번역문 모두 완전한 문장 구조로 재작성합니다.
+     */
+    fun setIntentByUser(speakerType: ActiveSpeaker, intent: SpeechIntent) {
+        val targetSender = if (speakerType == ActiveSpeaker.ME) LiveSender.ME else LiveSender.PARTNER
+        if (speakerType == ActiveSpeaker.ME) {
+            myIntent = intent
+            if (intent != SpeechIntent.AUTO) {
+                myDetectedIntent = intent
+            }
+        } else if (speakerType == ActiveSpeaker.PARTNER) {
+            partnerIntent = intent
+            if (intent != SpeechIntent.AUTO) {
+                partnerDetectedIntent = intent
+            }
+        }
+        
+        if (_isProcessing.value) {
+            Log.d(TAG, "🔄 [Live] 사용자 사후 교정 발생! 기존 번역 중단 후 재개: $intent")
+            processJob?.cancel()
+            val textToReprocess = lastProcessedText
+            if (textToReprocess.isNotBlank()) {
+                handleSttResult(textToReprocess, isReprocessing = true)
+            }
+        } else {
+            // 🔄 번역이 이미 완료된 후 버튼을 눌렀을 경우:
+            // 단순 부호 땜질이 아닌 온디바이스 SLM을 통한 원문 및 번역문 온전한 문장 재작성 (Whole-Sentence Rewrite)
+            val lastMsg = _messages.value.lastOrNull()
+            if (lastMsg != null && lastMsg.sender == targetSender && intent != SpeechIntent.AUTO) {
+                scope.launch(Dispatchers.IO) {
+                    _rephrasingMessageId.value = lastMsg.id
+                    try {
+                        val recentContext = _messages.value.takeLast(5).map { msg ->
+                            val senderTag = if (msg.sender == LiveSender.ME) "User (${msg.sourceLang})" else "Partner (${msg.sourceLang})"
+                            "$senderTag: \"${msg.rawText}\" -> \"${msg.refinedText}\""
+                        }
+
+                        val cleanTone = if (targetSender == LiveSender.ME) selectedTone.replace(Regex("""[^\p{L}\p{N}\s]"""), "").trim() else null
+                        
+                        // 🌟 최초 발화 원음(originalRawText)을 기준 삼아 의도를 재작성 (연쇄 변형 왜곡 원천 차단)
+                        val baseSourceText = if (lastMsg.originalRawText.isNotBlank()) lastMsg.originalRawText else lastMsg.rawText
+                        val (newRaw, newRefined) = intentEngine.rephraseMessageWithIntent(
+                            rawSourceText = baseSourceText,
+                            sourceLangCode = lastMsg.sourceLang,
+                            targetLangCode = lastMsg.targetLang,
+                            targetIntent = intent,
+                            tone = cleanTone,
+                            packageName = "ai.deartalk.android.live",
+                            conversationContext = recentContext
+                        )
+
+                        val updatedMsg = lastMsg.copy(
+                            rawText = baseSourceText,
+                            refinedText = newRefined,
+                            tone = intent.getLabel(),
+                            originalRawText = baseSourceText
+                        )
+
+                        repository.updateMessage(updatedMsg)
+                        withContext(Dispatchers.Main) {
+                            val updatedList = _messages.value.toMutableList()
+                            val lastIdx = updatedList.indexOfLast { it.id == updatedMsg.id }
+                            if (lastIdx != -1) {
+                                updatedList[lastIdx] = updatedMsg
+                                _messages.value = updatedList
+                            }
+                        }
+                        Log.d(TAG, "✨ [Live] AI 문장 전체 재작성 완료 (원음 기준: '$baseSourceText'): '${lastMsg.rawText}' ➔ '$newRaw' / '${lastMsg.refinedText}' ➔ '$newRefined'")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ [Live] 사후 의도 재작성 실패: ${e.message}", e)
+                    } finally {
+                        _rephrasingMessageId.value = null
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * 🧠 STT 완료 후 온디바이스 SLM 추론 및 DB 저장, TTS 분기
      */
-    private fun handleSttResult(rawText: String) {
-        val speaker = _activeSpeaker.value
-        if (speaker == ActiveSpeaker.NONE || rawText.isBlank()) {
-            _activeSpeaker.value = ActiveSpeaker.NONE
+    private fun handleSttResult(rawText: String, isReprocessing: Boolean = false) {
+        lastSttFinishTime = System.currentTimeMillis()
+        val speaker = if (isReprocessing) _processingSpeaker.value else _activeSpeaker.value
+        val cleanText = rawText.trim()
+
+        // 🌟 1. 상태 즉시 선점 (Atomic State Lock) - 후속 중복 콜백의 재진입 원천 차단
+        _activeSpeaker.value = ActiveSpeaker.NONE
+
+        if (speaker == ActiveSpeaker.NONE || cleanText.isBlank()) {
             _streamingText.value = ""
+            _processingSpeaker.value = ActiveSpeaker.NONE
             return
         }
+
+        // 🌟 2. 디바운스 및 중복 방지 가드 (1.5초 이내 동일 텍스트 무시)
+        val now = System.currentTimeMillis()
+        if (!isReprocessing && cleanText == lastProcessedText && (now - lastProcessedTime) < 1500L) {
+            Log.w(TAG, "🛡️ [Live 중복 억제]: 동일한 발화가 1.5초 내 중복 인입되어 무시됨: '$cleanText'")
+            _streamingText.value = ""
+            _processingSpeaker.value = ActiveSpeaker.NONE
+            return
+        }
+        lastProcessedText = cleanText
+        lastProcessedTime = now
+
+        // 🌟 3. 부드러운 핸드오프: 번역 중에도 인식된 텍스트가 사라지지 않고 임시 버블에 유지됨
+        _streamingText.value = cleanText
+        _processingSpeaker.value = speaker
+
+        // 🎯 1회성 발화 의도(Speech Pragmatics) 선점 (화자별 개별 인텐트 적용)
+        val appliedIntent = if (speaker == ActiveSpeaker.PARTNER) partnerIntent else myIntent
 
         val previousJob = processJob
         processJob = scope.launch(Dispatchers.IO) {
@@ -186,53 +432,106 @@ class DearTalkLiveController(
 
                 val (refined, srcLang, tgtLang, sender) = when (speaker) {
                     ActiveSpeaker.ME -> {
-                        // 내가 말함: 내 언어 -> 상대방 언어로 번역 (대화 맥락 기반 ASR 오류 자동 보정)
-                        val translation = intentEngine.translate(
-                            voiceInput = rawText,
+                        // 내가 말함: 내 언어 -> 상대방 언어로 번역 (대화 맥락 & 발화 의도 기반 단일 패스 번역)
+                        val cleanTone = if (partnerLang.equals(myLang, ignoreCase = true)) selectedTone.replace(Regex("""[^\p{L}\p{N}\s]"""), "").trim() else null
+                        val (translation, detectedIntent) = intentEngine.translateWithIntent(
+                            voiceInput = cleanText,
                             targetLangCode = partnerLang,
                             sourceLangCode = myLang,
-                            tone = if (partnerLang.equals(myLang, ignoreCase = true)) selectedTone else null,
+                            tone = cleanTone,
                             packageName = "ai.deartalk.android.live",
-                            conversationContext = recentContext
+                            conversationContext = recentContext,
+                            speechIntent = appliedIntent
                         )
-                        val resultText = if (translation.isNotBlank()) translation else rawText
+                        if (appliedIntent == SpeechIntent.AUTO) {
+                            myDetectedIntent = detectedIntent
+                        }
+                        val resultText = if (translation.isNotBlank()) translation else cleanText
                         Quadruple(resultText, myLang, partnerLang, LiveSender.ME)
                     }
                     ActiveSpeaker.PARTNER -> {
-                        // 상대방이 말함: 상대방 언어 -> 내 언어로 번역 (대화 맥락 기반 ASR 오류 자동 보정)
-                        val translation = intentEngine.translate(
-                            voiceInput = rawText,
+                        // 상대방이 말함: 상대방 언어 -> 내 언어로 번역 (대화 맥락 & 발화 의도 기반 단일 패스 번역)
+                        val (translation, detectedIntent) = intentEngine.translateWithIntent(
+                            voiceInput = cleanText,
                             targetLangCode = myLang,
                             sourceLangCode = partnerLang,
                             tone = null,
                             packageName = "ai.deartalk.android.live",
-                            conversationContext = recentContext
+                            conversationContext = recentContext,
+                            speechIntent = appliedIntent
                         )
-                        val resultText = if (translation.isNotBlank()) translation else rawText
+                        if (appliedIntent == SpeechIntent.AUTO) {
+                            partnerDetectedIntent = detectedIntent
+                        }
+                        val resultText = if (translation.isNotBlank()) translation else cleanText
                         Quadruple(resultText, partnerLang, myLang, LiveSender.PARTNER)
                     }
                     ActiveSpeaker.NONE -> return@launch
                 }
 
+                // 🎯 처리 완료 시점의 최신 인텐트를 확인하여 검증 및 필요 시 전체 문장 재작성 (Whole-Sentence Rewrite)
+                val detected = if (speaker == ActiveSpeaker.PARTNER) partnerDetectedIntent else myDetectedIntent
+                val finalIntent = if (speaker == ActiveSpeaker.PARTNER) {
+                    if (partnerIntent != SpeechIntent.AUTO) partnerIntent else detected ?: SpeechIntent.STATEMENT
+                } else {
+                    if (myIntent != SpeechIntent.AUTO) myIntent else detected ?: SpeechIntent.STATEMENT
+                }
+
+                val finalRefined = if (finalIntent == SpeechIntent.QUESTION && !refined.trim().trim('"', '\'', '`').endsWith("?")) {
+                    // 번역 결과가 의문문 구조가 아닐 경우 단순 ? 부착 대신 온전한 의문문 어순으로 SLM 재작성
+                    intentEngine.rewriteSentenceIntent(
+                        text = refined,
+                        langCode = tgtLang,
+                        targetIntent = SpeechIntent.QUESTION,
+                        packageName = "ai.deartalk.android.live"
+                    )
+                } else if (finalIntent == SpeechIntent.STATEMENT && (refined.trim().trim('"', '\'', '`').endsWith("?") || !refined.trim().trim('"', '\'', '`').endsWith(".") || (tgtLang == "EN" && ai.deartalk.android.stt.IntonationAnalyzer.isLikelyQuestion(refined, "EN")))) {
+                    // 번역 결과가 평서문 구조가 아닐 경우 온전한 평서문으로 SLM 재작성 및 영어 도치 보정
+                    val rewritten = intentEngine.rewriteSentenceIntent(
+                        text = refined,
+                        langCode = tgtLang,
+                        targetIntent = SpeechIntent.STATEMENT,
+                        packageName = "ai.deartalk.android.live"
+                    )
+                    if (tgtLang == "EN" && ai.deartalk.android.stt.IntonationAnalyzer.isLikelyQuestion(rewritten, "EN")) {
+                        ai.deartalk.android.stt.IntonationAnalyzer.convertToDeclarativeEnglish(rewritten)
+                    } else {
+                        rewritten
+                    }
+                } else {
+                    refined
+                }
+
+                val isTranslationInterrogative = finalRefined.trim().trim('"', '\'', '`').trim().endsWith("?")
+
+                val formattedSourceText = formatSourcePunctuation(
+                    text = cleanText,
+                    intent = finalIntent,
+                    translationHasQuestion = isTranslationInterrogative
+                )
+
                 val message = LiveMessage(
                     sessionId = session.id,
                     sender = sender,
-                    rawText = rawText,
-                    refinedText = refined,
+                    rawText = formattedSourceText,
+                    refinedText = finalRefined,
                     sourceLang = srcLang,
                     targetLang = tgtLang,
-                    tone = if (sender == LiveSender.ME) selectedTone else null
+                    tone = if (finalIntent != SpeechIntent.AUTO) finalIntent.getLabel() else if (sender == LiveSender.ME) selectedTone else null,
+                    originalRawText = cleanText
                 )
 
                 // 1. SQLite 저장
                 repository.insertMessage(message)
 
-                // 2. UI 타임라인 갱신
+                // 2. UI 타임라인 갱신 (완성된 메시지 등록과 동시에 임시 스트리밍 버블 해제 -> 깜빡임 0%)
                 val updatedList = _messages.value + message
                 _messages.value = updatedList
+                _streamingText.value = ""
+                _processingSpeaker.value = ActiveSpeaker.NONE
 
-                // 3. 내가 말한 경우 상대방 언어로 자동 TTS 발화
-                if (sender == LiveSender.ME && refined.isNotBlank()) {
+                // 3. 자동 TTS 읽기 옵션이 활성화된 경우에만 상대방 언어로 자동 발화 (기본값: OFF, 온디맨드 스피커 버튼 권장)
+                if (isAutoSpeakEnabled && sender == LiveSender.ME && refined.isNotBlank()) {
                     val ttsLang = LanguageLocaleHelper.detectLanguageCode(refined, fallback = partnerLang)
                     ttsManager.speak(refined, ttsLang, VoiceGender.FEMALE, DEFAULT_TTS_PITCH)
                 }
@@ -241,14 +540,30 @@ class DearTalkLiveController(
                 Log.e(TAG, "❌ [Live 처리 오류]: 세션(${_currentSession.value?.id}) 발화자($speaker) 처리 중 오류: ${e.message}", e)
             } finally {
                 _isProcessing.value = false
-                _activeSpeaker.value = ActiveSpeaker.NONE
                 _streamingText.value = ""
+                _processingSpeaker.value = ActiveSpeaker.NONE
+                _activeSpeaker.value = ActiveSpeaker.NONE
+                lastSttFinishTime = System.currentTimeMillis()
+
+                // 🎯 [1회성 인텐트 자동 복귀]: 발화 및 번역 완료 후 다음 턴을 위해 '✨ 스마트' 모드로 즉각 복귀
+                if (speaker == ActiveSpeaker.PARTNER) {
+                    if (partnerIntent != SpeechIntent.AUTO) {
+                        Log.d(TAG, "✨ [Live 상대방 인텐트 리셋]: '$partnerIntent' 발화 완료 ➔ '스마트' 모드로 자동 복귀")
+                        partnerIntent = SpeechIntent.AUTO
+                    }
+                } else {
+                    if (myIntent != SpeechIntent.AUTO) {
+                        Log.d(TAG, "✨ [Live 내 인텐트 리셋]: '$myIntent' 발화 완료 ➔ '스마트' 모드로 자동 복귀")
+                        myIntent = SpeechIntent.AUTO
+                    }
+                }
 
                 // 🔁 [연속 청취/강의 모드] 처리 완료 후 상대방 발화 연속 수신 자동 재개
                 if (_isContinuousListening.value) {
                     scope.launch {
-                        kotlinx.coroutines.delay(600)
-                        if (_isContinuousListening.value && _activeSpeaker.value == ActiveSpeaker.NONE) {
+                        kotlinx.coroutines.delay(800)
+                        if (_isContinuousListening.value && _activeSpeaker.value == ActiveSpeaker.NONE && !_isProcessing.value) {
+                            lastSttFinishTime = 0L // 연속 모드는 쿨다운 초기화 후 자동 시작
                             toggleListenPartner()
                         }
                     }
@@ -393,12 +708,19 @@ class DearTalkLiveController(
      * ➕ 신규 세션 생성
      */
     fun createNewSession(my: String = myLang, partner: String = partnerLang): LiveSession {
+        myLang = my
+        partnerLang = partner
         val session = LiveSession(myLang = my, partnerLang = partner)
         _currentSession.value = session
         _messages.value = emptyList()
+        myIntent = SpeechIntent.AUTO
+        partnerIntent = SpeechIntent.AUTO
+        myDetectedIntent = null
+        partnerDetectedIntent = null
         scope.launch(Dispatchers.IO) {
             repository.createSession(session)
-            refreshSessions()
+            val list = repository.getAllSessions()
+            _sessions.value = list
         }
         prewarmAndDownloadLanguages(my, partner)
         return session
@@ -431,15 +753,94 @@ class DearTalkLiveController(
         }
     }
 
+    /**
+     * 🧹 설정된 보관 주기를 초과한 만료 세션 자동 일괄 삭제
+     */
+    fun purgeExpiredSessions() {
+        if (retentionDays <= 0) return // 0 또는 음수 = 영구/수동 보관
+        scope.launch(Dispatchers.IO) {
+            val cutoff = System.currentTimeMillis() - (retentionDays.toLong() * 24L * 60L * 60L * 1000L)
+            val count = repository.purgeExpiredSessions(cutoff)
+            if (count > 0) {
+                Log.d(TAG, "🧹 [자동 삭제] 만료된 세션 $count 건 정리 완료 (기준: ${retentionDays}일)")
+                refreshSessions()
+            }
+        }
+    }
+
+    /**
+     * ⚠️ 모든 대화 기록 즉시 일괄 삭제
+     */
+    fun deleteAllSessions() {
+        scope.launch(Dispatchers.IO) {
+            val count = repository.deleteAllSessions()
+            Log.d(TAG, "⚠️ [전체 삭제] 전체 세션 $count 건 즉시 삭제 완료")
+            _messages.value = emptyList()
+            _currentSession.value = null
+            createNewSession()
+        }
+    }
+
+    /**
+     * 💬 대화록 전문 텍스트 포맷팅 (카카오톡 및 시스템 공유용)
+     */
+    fun getFormattedTranscript(): String {
+        val session = _currentSession.value ?: return ""
+        val msgs = _messages.value
+        val sb = StringBuilder()
+        sb.appendLine("🎙️ [DearTalk Live] ${session.title}")
+        sb.appendLine("언어: ${session.myLang} ↔ ${session.partnerLang}")
+        sb.appendLine("일시: ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(session.createdAt))}")
+        sb.appendLine("----------------------------------------")
+        if (msgs.isEmpty()) {
+            sb.appendLine("(대화 내용 없음)")
+        } else {
+            val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            msgs.forEach { msg ->
+                val speakerLabel = if (msg.sender == LiveSender.ME) "👤 나 (${session.myLang})" else "👥 상대방 (${session.partnerLang})"
+                val timeStr = timeFormat.format(Date(msg.createdAt))
+                sb.appendLine("[$timeStr] $speakerLabel")
+                sb.appendLine("🗣️ ${msg.rawText}")
+                if (msg.refinedText.isNotBlank()) {
+                    sb.appendLine("✨ ${msg.refinedText}")
+                }
+                sb.appendLine()
+            }
+        }
+        sb.appendLine("----------------------------------------")
+        sb.appendLine("DearTalk AI - On-Device Live Translation")
+        return sb.toString()
+    }
+
+    /**
+     * 📤 대화록 공유 (카카오톡, 문자, 이메일 등 시스템 공유 시트)
+     */
+    fun shareTranscript(activityContext: Context = context) {
+        val text = getFormattedTranscript()
+        if (text.isBlank()) return
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, _currentSession.value?.title ?: "DearTalk Live 대화록")
+            putExtra(Intent.EXTRA_TEXT, text)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        val chooser = Intent.createChooser(sendIntent, "DearTalk Live 대화록 공유").apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        activityContext.startActivity(chooser)
+    }
+
     fun refreshSessions() {
         scope.launch(Dispatchers.IO) {
             val list = repository.getAllSessions()
-            _sessions.value = list
-            if (_currentSession.value == null) {
-                if (list.isNotEmpty()) {
-                    loadSession(list.first())
-                } else {
-                    createNewSession()
+            withContext(Dispatchers.Main) {
+                _sessions.value = list
+                if (_currentSession.value == null) {
+                    if (list.isNotEmpty()) {
+                        loadSession(list.first())
+                    } else {
+                        createNewSession()
+                    }
                 }
             }
         }
@@ -452,14 +853,14 @@ class DearTalkLiveController(
     fun stop() {
         sttManager.cancelListening()
         ttsManager.stop()
-        processJob?.cancel()
         _activeSpeaker.value = ActiveSpeaker.NONE
-        _isProcessing.value = false
         _streamingText.value = ""
     }
 
     fun destroy() {
         stop()
+        processJob?.cancel()
+        _isProcessing.value = false
     }
 
     private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

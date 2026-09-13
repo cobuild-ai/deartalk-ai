@@ -1,4 +1,4 @@
-package ai.deartalk.android.voicestudio.ui.components
+package ai.deartalk.android.live.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +47,9 @@ import ai.deartalk.android.ime.ui.theme.DearTalkText
 import ai.deartalk.android.ime.ui.theme.DearTalkTextDim
 import java.util.Locale
 
+/**
+ * 🛡️ 하드웨어 진단 및 Qwen 온디바이스 AI 팩 상태 카드
+ */
 @Composable
 fun HardwareDiagnosticCard(
     metrics: SystemMetrics,

@@ -66,9 +66,13 @@ object UiStrings {
     // DearTalkScreen.kt — 입력/취소 버튼
     // ═══════════════════════════════════════════════════
     val apply get() = if (isKo) "입력" else if (isId) "Kirim" else "Apply"
+    val applyMessage get() = if (isKo) "메시지 입력" else if (isId) "Kirim Pesan" else "Insert Message"
     val applyContentDesc get() = if (isKo) "메시지 창에 입력" else if (isId) "Masukkan ke pesan" else "Insert into message"
     val cancel get() = if (isKo) "취소" else if (isId) "Batal" else "Cancel"
     val cancelContentDesc get() = if (isKo) "입력 취소" else if (isId) "Batal" else "Cancel"
+    val clearContentDesc get() = if (isKo) "내용 비우기" else if (isId) "Kosongkan" else "Clear content"
+    val modeRefine get() = if (isKo) "✨ 다듬기" else if (isId) "✨ Rapikan" else "✨ Refine"
+    val modeTranslate get() = if (isKo) "🌐 번역" else if (isId) "🌐 Terjemah" else "🌐 Translate"
 
     // ═══════════════════════════════════════════════════
     // DearTalkScreen.kt — 번역 셀렉트박스
@@ -191,7 +195,6 @@ object UiStrings {
     // ═══════════════════════════════════════════════════
     val dearTalkLiveTitle get() = if (isKo) "🎙️ DearTalk Live" else if (isId) "🎙️ DearTalk Live" else "🎙️ DearTalk Live"
     val dearTalkLiveSubtitle get() = if (isKo) "1:1 실시간 대면 대화 & 보이스 레코더" else if (isId) "Percakapan Tatap Muka 1:1 & Perekam Suara" else "1:1 Face-to-Face Live Voice & Recorder"
-    val voiceStudioTitle get() = if (isKo) "🎙️ DearTalk Live" else if (isId) "🎙️ DearTalk Live" else "🎙️ DearTalk Live"
     val backButtonContentDesc get() = if (isKo) "뒤로가기" else if (isId) "Kembali" else "Back"
 
     // 1. 하드웨어 진단 및 모델 상태
@@ -347,12 +350,24 @@ object UiStrings {
     val liveFinishRecording get() = if (isKo) "⏹️ 말씀 완료" else if (isId) "⏹️ Selesai" else "⏹️ Done"
     val liveFinishRecordingSub get() = if (isKo) "탭하여 즉시 번역" else if (isId) "Ketuk untuk terjemah" else "Tap to translate"
 
+    val liveProcessingTitle get() = if (isKo) "⏳ 번역/보정 중" else if (isId) "⏳ Menerjemahkan" else "⏳ Processing"
+    val liveProcessingSub get() = if (isKo) "잠시만 기다려주세요" else if (isId) "Mohon tunggu sebentar" else "Please wait a moment"
+
+    // 🎯 실시간 대화 발화 의도 (Speech Pragmatics)
+    val liveIntentAuto get() = if (isKo) "✨ 스마트" else if (isId) "✨ Cerdas" else "✨ Smart"
+    val liveIntentQuestion get() = if (isKo) "❓ 질문" else if (isId) "❓ Tanya" else "❓ Question"
+    val liveIntentStatement get() = if (isKo) "💬 설명" else if (isId) "💬 Jawaban" else "💬 Statement"
+    val liveIntentRequest get() = if (isKo) "🙏 부탁" else if (isId) "🙏 Mohon" else "🙏 Request"
+    val liveIntentConfirm get() = if (isKo) "🔁 확인" else if (isId) "🔁 Benarkah" else "🔁 Confirm"
+
     val liveMePrefix get() = if (isKo) "나" else if (isId) "Saya" else "Me"
     val livePartnerPrefix get() = if (isKo) "상대" else if (isId) "Mitra" else "Partner"
 
     val liveBadgeOffline get() = if (isKo) "⚡ 오프라인" else "⚡ Offline"
     val liveBadgeDownloading get() = if (isKo) "⏳ 다운중" else if (isId) "⏳ Mengunduh" else "⏳ Downloading"
     val liveBadgeStreaming get() = if (isKo) "🌐 실시간" else "🌐 Live"
+    val liveBadgeReady get() = if (isKo) "🟢 사용 가능" else if (isId) "🟢 Siap" else "🟢 Ready"
+    val liveBadgeUnavailable get() = if (isKo) "🔴 사용 불가" else if (isId) "🔴 Tidak Tersedia" else "🔴 Unavailable"
 
     val liveMenuFlipOn get() = if (isKo) "대면 플립 뷰 (180°)" else if (isId) "Tampilan Balik (180°)" else "Face-to-face Flip (180°)"
     val liveMenuFlipOff get() = if (isKo) "대면 플립 뷰 해제" else if (isId) "Matikan Balik Layar" else "Turn off Flip View"
@@ -360,9 +375,35 @@ object UiStrings {
     val liveMenuContinuousOn get() = if (isKo) "연속 청취/강의 모드" else if (isId) "Mode Rekam Berkelanjutan" else "Continuous Listen Mode"
     val liveMenuContinuousOff get() = if (isKo) "연속 청취 모드 종료" else if (isId) "Hentikan Mode Berkelanjutan" else "End Continuous Mode"
 
+    val liveMenuAutoSpeakOn get() = if (isKo) "번역 후 자동 음성 읽기 켜기" else if (isId) "Aktifkan Suara Otomatis" else "Turn On Auto-Speak"
+    val liveMenuAutoSpeakOff get() = if (isKo) "번역 후 자동 음성 읽기 끄기" else if (isId) "Matikan Suara Otomatis" else "Turn Off Auto-Speak"
+
     val liveMenuExport get() = if (isKo) "대화록 마크다운 공유" else if (isId) "Bagikan Transkrip Markdown" else "Share Markdown Transcript"
     val liveNewSessionCreated get() = if (isKo) "새로운 대화 세션이 시작되었습니다." else if (isId) "Sesi percakapan baru telah dimulai." else "New conversation session started."
 
     val officialLangSection get() = if (isKo) "공식 지원 언어" else if (isId) "Bahasa Resmi" else "Official Languages"
     val crossLangSection get() = if (isKo) "교차 통역 언어" else if (isId) "Bahasa Terjemahan Silang" else "Cross-Translation"
+
+    val liveSettingsTitle get() = if (isKo) "DearTalk Live 설정" else if (isId) "Pengaturan DearTalk Live" else "DearTalk Live Settings"
+    val liveAutoDeleteTitle get() = if (isKo) "대화 기록 자동 삭제 주기" else if (isId) "Periode Hapus Otomatis" else "Auto-Delete Retention"
+    val liveAutoDeleteDesc get() = if (isKo) "설정된 기간이 지난 대화 기록은 로컬 DB에서 자동으로 정리됩니다." else if (isId) "Riwayat percakapan yang melewati batas akan dibersihkan otomatis dari DB lokal." else "Conversations older than the retention period will be automatically deleted from local storage."
+    val liveDays get() = if (isKo) "일" else if (isId) "hari" else "days"
+    val liveManualKeep get() = if (isKo) "수동 보관" else if (isId) "Manual" else "Manual"
+    val liveDefaultLabel get() = if (isKo) "기본" else if (isId) "Bawaan" else "Default"
+    val liveSectionSharing get() = if (isKo) "대화록 공유 및 세션" else if (isId) "Berbagi & Riwayat Sesi" else "Sharing & Sessions"
+    val liveShareTranscript get() = if (isKo) "현재 대화 공유하기" else if (isId) "Bagikan Percakapan Ini" else "Share Current Conversation"
+    val liveShareTranscriptSub get() = if (isKo) "메신저, 이메일 등으로 대화록 전문 전송" else if (isId) "Kirim transkrip ke pesan, email, dll." else "Send transcript via messages, email, etc."
+    val livePastSessions get() = if (isKo) "지난 대화 기록 보기" else if (isId) "Lihat Riwayat Percakapan" else "View Past Conversations"
+    val livePastSessionsSub get() = if (isKo) "저장된 이전 대화 목록 열람 및 선택" else if (isId) "Lihat dan pilih riwayat percakapan" else "Browse and select previous conversation logs"
+    val liveStartNewSession get() = if (isKo) "새 대화 시작하기" else if (isId) "Mulai Percakapan Baru" else "Start New Conversation"
+    val liveStartNewSessionSub get() = if (isKo) "새로운 1:1 통역 세션 즉시 생성" else if (isId) "Mulai sesi terjemahan 1:1 baru" else "Start a new 1:1 interpretation session"
+    val liveSectionConvenience get() = if (isKo) "실시간 통역 편의 옵션" else if (isId) "Opsi Kenyamanan Terjemahan" else "Convenience Options"
+    val liveAutoSpeakTitle get() = if (isKo) "자동 음성 읽기 (Auto TTS)" else if (isId) "Putar Suara Otomatis (TTS)" else "Auto-Speak (TTS)"
+    val liveAutoSpeakDesc get() = if (isKo) "번역 완료 시 자동으로 원어민 음성 재생" else if (isId) "Putar suara penutur asli otomatis setelah terjemah" else "Automatically speak aloud when translation completes"
+    val liveContinuousTitle get() = if (isKo) "연속 청취 / 강의 모드" else if (isId) "Mode Rekam Berkelanjutan" else "Continuous Listening"
+    val liveContinuousDesc get() = if (isKo) "말이 끊겨도 마이크를 계속 열어두는 모드" else if (isId) "Mikrofon tetap aktif bahkan saat ada jeda bicara" else "Keep microphone listening continuously during pauses"
+    val liveDeleteAll get() = if (isKo) "모든 대화 기록 즉시 삭제" else if (isId) "Hapus Semua Riwayat Sekarang" else "Delete All History Now"
+    val liveDeleteAllConfirmTitle get() = if (isKo) "모든 대화 기록 삭제" else if (isId) "Hapus Semua Riwayat" else "Delete All History"
+    val liveDeleteAllConfirmMsg get() = if (isKo) "저장된 모든 대화 기록과 메시지를 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다." else if (isId) "Apakah Anda yakin ingin menghapus semua riwayat percakapan dan pesan? Tindakan ini tidak dapat dibatalkan." else "Are you sure you want to permanently delete all conversation history and messages? This action cannot be undone."
+    val liveDeleteAllSuccess get() = if (isKo) "모든 대화 기록이 삭제되었습니다." else if (isId) "Semua riwayat percakapan telah dihapus." else "All conversation history has been deleted."
 }
