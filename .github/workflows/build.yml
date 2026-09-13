@@ -33,7 +33,9 @@ jobs:
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: DearTalk-Android-Debug-APK
           path: deartalk-android/build/outputs/apk/debug/*.apk
-          retention-days: 14
+          retention-days: 7
+
