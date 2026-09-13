@@ -12,7 +12,7 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     companion object {
         const val DATABASE_NAME = "deartalk_live.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
 
         // Sessions Table
         const val TABLE_SESSIONS = "live_sessions"
@@ -33,6 +33,7 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         const val COL_MSG_TARGET_LANG = "target_lang"
         const val COL_MSG_TONE = "tone"
         const val COL_MSG_CREATED_AT = "created_at"
+        const val COL_MSG_ORIGINAL_RAW_TEXT = "original_raw_text"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -57,6 +58,7 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                 $COL_MSG_TARGET_LANG TEXT NOT NULL,
                 $COL_MSG_TONE TEXT,
                 $COL_MSG_CREATED_AT INTEGER NOT NULL,
+                $COL_MSG_ORIGINAL_RAW_TEXT TEXT,
                 FOREIGN KEY($COL_MSG_SESSION_ID) REFERENCES $TABLE_SESSIONS($COL_SESSION_ID) ON DELETE CASCADE
             )
         """.trimIndent()
@@ -76,8 +78,10 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_MESSAGES")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_SESSIONS")
-        onCreate(db)
+        if (oldVersion < 2) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_MESSAGES ADD COLUMN $COL_MSG_ORIGINAL_RAW_TEXT TEXT")
+            } catch (_: Throwable) {}
+        }
     }
 }

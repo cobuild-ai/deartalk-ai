@@ -123,7 +123,9 @@ class SpeechRecognitionManager(private val context: Context) {
                 if (lastRecognizedText.isNotBlank()) {
                     isUserIntentionallyListening = false
                     retryCount = 0
-                    _voiceState.value = VoiceState.FinalResult(lastRecognizedText)
+                    val textToEmit = lastRecognizedText
+                    lastRecognizedText = ""
+                    _voiceState.value = VoiceState.FinalResult(textToEmit)
                     return
                 }
 
@@ -141,6 +143,7 @@ class SpeechRecognitionManager(private val context: Context) {
 
                 isUserIntentionallyListening = false
                 retryCount = 0
+                lastRecognizedText = ""
 
                 if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
                     _voiceState.value = VoiceState.Idle
@@ -156,6 +159,7 @@ class SpeechRecognitionManager(private val context: Context) {
 
                 isUserIntentionallyListening = false
                 retryCount = 0
+                lastRecognizedText = "" // 🌟 잔여 텍스트 즉시 비움 (이중 방출 및 onError 중복 방지)
 
                 // 결과 수신 완료 즉시 recognizer 리소스 해제하여 백그라운드 원격 서비스 타임아웃 단절 방지
                 destroyRecognizerInternal()
@@ -250,11 +254,23 @@ class SpeechRecognitionManager(private val context: Context) {
         retryCount = 0
         mainHandler.post {
             try {
-                if (lastRecognizedText.isNotBlank()) {
-                    _voiceState.value = VoiceState.FinalResult(lastRecognizedText)
+                if (speechRecognizer != null) {
+                    // 🌟 인스턴스가 활성 상태이면 안드로이드 시스템 음성 엔진에 정상 정지 요청 -> onResults 콜백으로 정식 수신 유도
+                    speechRecognizer?.stopListening()
+                } else if (lastRecognizedText.isNotBlank()) {
+                    // 🌟 recognizer가 이미 정리된 경우에만 안전 폴백으로 1회 방출
+                    val fallbackText = lastRecognizedText
+                    lastRecognizedText = ""
+                    _voiceState.value = VoiceState.FinalResult(fallbackText)
+                } else {
+                    _voiceState.value = VoiceState.Idle
                 }
-                speechRecognizer?.stopListening()
             } catch (_: Throwable) {
+                if (lastRecognizedText.isNotBlank()) {
+                    val fallbackText = lastRecognizedText
+                    lastRecognizedText = ""
+                    _voiceState.value = VoiceState.FinalResult(fallbackText)
+                }
                 destroyRecognizerInternal()
             }
         }
@@ -263,6 +279,7 @@ class SpeechRecognitionManager(private val context: Context) {
     fun cancelListening() {
         isUserIntentionallyListening = false
         retryCount = 0
+        lastRecognizedText = ""
         mainHandler.post {
             destroyRecognizerInternal()
             _voiceState.value = VoiceState.Idle

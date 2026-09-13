@@ -25,7 +25,8 @@ object IntonationAnalyzer {
                 // 2. 한국어 명시적 의문사
                 val questionKeywords = listOf(
                     "혹시", "언제", "어디", "누구", "누가", "무엇", "뭐", "왜", "어떻게",
-                    "얼마", "몇", "어느", "어떤", "무슨"
+                    "얼마", "얼마나", "몇", "며칠", "몇일", "어느", "어떤", "무슨",
+                    "어찌", "어째서"
                 )
                 val hasQuestionKeyword = questionKeywords.any { trimmed.contains(it) }
 
@@ -35,7 +36,7 @@ object IntonationAnalyzer {
                 // 3. 한국어 명백한 의문형 종결 어미 (평서문과 혼동되지 않는 전형적 질문 어미)
                 val explicitQuestionEndings = listOf(
                     "까", "습니까", "십니까", "나요", "가요", "실까요", "을까요", "ㄹ까요",
-                    "냐", "니", "나", "는가", "려나", "어때", "어때요", "맞나요", "맞죠"
+                    "냐", "니", "나", "는가", "인가", "던가", "려나", "어때", "어때요", "맞나요", "맞죠"
                 )
 
                 val lastWord = trimmed.split(Regex("\\s+")).lastOrNull() ?: trimmed
@@ -58,14 +59,16 @@ object IntonationAnalyzer {
                 if (idEndings.any { lastWord == it || lastWord.endsWith(it) }) return true
             }
             "EN" -> {
-                // 영어 의문사 및 조동사 의문문 시작
+                // 영어 의문사 및 조동사/부정조동사 의문문 시작
                 val enWords = trimmed.lowercase().split(Regex("\\s+"))
                 val firstWord = enWords.firstOrNull() ?: ""
                 val lastWord = enWords.lastOrNull() ?: ""
 
                 val questionStarters = listOf(
                     "what", "when", "where", "who", "why", "how",
-                    "is", "are", "do", "does", "did", "can", "could", "will", "would", "should"
+                    "is", "are", "do", "does", "did", "can", "could", "will", "would", "should",
+                    "can't", "couldn't", "won't", "wouldn't", "shouldn't", "don't", "doesn't", "didn't",
+                    "isn't", "aren't", "hasn't", "haven't"
                 )
                 if (questionStarters.contains(firstWord)) return true
 
@@ -75,6 +78,39 @@ object IntonationAnalyzer {
         }
 
         return false
+    }
+
+    /**
+     * 🔄 영어 도치 의문문 구조를 자연스러운 평서문(Declarative)으로 변환
+     * 예: "Can't we just handle it with the rear camera." -> "We can't just handle it with the rear camera."
+     * 예: "Are you at home?" -> "You are at home."
+     */
+    fun convertToDeclarativeEnglish(text: String): String {
+        val trimmed = text.trim().removeSuffix("?").removeSuffix(".").trim()
+        if (trimmed.isBlank()) return text
+
+        val auxPattern = Regex("""^(Can't|Couldn't|Won't|Wouldn't|Shouldn't|Don't|Doesn't|Didn't|Isn't|Aren't|Hasn't|Haven't|Can|Could|Will|Would|Should|Do|Does|Did|Are|Is|Was|Were)\s+([wW]e|[yY]ou|[iI]|[tT]hey|[hH]e|[sS]he|[iI]t|[tT]his|[tT]hat)\b\s*(.*)$""", RegexOption.IGNORE_CASE)
+        val match = auxPattern.find(trimmed)
+        if (match != null) {
+            val aux = match.groupValues[1].lowercase()
+            val subjectRaw = match.groupValues[2]
+            val rest = match.groupValues[3].trim()
+
+            val subject = if (subjectRaw.equals("i", ignoreCase = true)) "I" else subjectRaw.replaceFirstChar { it.uppercase() }
+            val auxDeclarative = when (aux) {
+                "do", "does", "did" -> "" // 일반 조동사 do/does/did는 평서문에서 생략 가능하거나 본동사 결합
+                else -> aux
+            }
+
+            val body = if (auxDeclarative.isNotBlank()) {
+                if (rest.isNotBlank()) "$subject $auxDeclarative $rest" else "$subject $auxDeclarative"
+            } else {
+                if (rest.isNotBlank()) "$subject $rest" else subject
+            }
+            return "$body."
+        }
+
+        return "$trimmed."
     }
 
     /**

@@ -5,6 +5,7 @@ import android.util.Log
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.DearTalkSettings
 import ai.deartalk.android.data.pref.UiStrings
+import ai.deartalk.android.agent.language.LanguageProfileRegistry
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
@@ -23,7 +24,11 @@ import java.io.File
 import java.util.Locale
 
 sealed interface IntentResult {
-    data class Success(val text: String, val message: String = "") : IntentResult
+    data class Success(
+        val text: String,
+        val message: String = "",
+        val detectedIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+    ) : IntentResult
     data class Error(val fallbackText: String, val error: String) : IntentResult
 }
 
@@ -57,6 +62,30 @@ class DearTalkIntentEngine(
          * 입력 텍스트가 순수 영문 위주인지 판별 (LanguageLocaleHelper 단일 소스 위임)
          */
         fun isEnglish(text: String): Boolean = ai.deartalk.android.util.LanguageLocaleHelper.isEnglish(text)
+
+        /**
+         * 🎯 SLM 출력 텍스트에서 [INTENT: ...] 메타 태그를 파싱하고 본문 텍스트를 분리 정제합니다.
+         */
+        fun parseIntentTagAndClean(
+            rawOutput: String,
+            fallbackIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        ): Pair<ai.deartalk.android.live.data.SpeechIntent, String> {
+            val intentTagRegex = Regex("""\[INTENT:\s*(STATEMENT|QUESTION|REQUEST|CONFIRM)\]""", RegexOption.IGNORE_CASE)
+            val match = intentTagRegex.find(rawOutput)
+            val parsedIntent = if (match != null) {
+                val tagStr = match.groupValues[1].uppercase()
+                try {
+                    ai.deartalk.android.live.data.SpeechIntent.valueOf(tagStr)
+                } catch (_: Throwable) {
+                    fallbackIntent
+                }
+            } else {
+                fallbackIntent
+            }
+
+            val cleaned = rawOutput.replace(intentTagRegex, "").trim()
+            return Pair(parsedIntent, cleaned)
+        }
     }
 
     val isModelLoaded: Boolean
@@ -231,7 +260,8 @@ class DearTalkIntentEngine(
     suspend fun process(
         voiceInput: String,
         currentEditorText: String = "",
-        packageName: String = ""
+        packageName: String = "",
+        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
     ): IntentResult = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) {
@@ -279,22 +309,20 @@ class DearTalkIntentEngine(
                             priorContext.joinToString("\n") { "- $it" } + "\n\n"
                 } else ""
 
-                val questionHintKorean = if (isExplicitQuestion) {
-                    "[문맥 분석: 질문/의문사 감지됨]\n" +
-                            "- 질문 문장이므로 문맥에 맞게 의문문('?')으로 정돈하세요.\n\n"
-                } else ""
-
-                val questionHintIndonesian = if (isExplicitQuestion) {
-                    "[Analisis Konteks: Kalimat tanya terdeteksi]\n" +
-                            "- Pastikan diakhiri dengan tanda tanya ('?') yang tepat.\n\n"
-                } else ""
-
-                val questionHintEnglish = if (isExplicitQuestion) {
-                    "[Context Analysis: Question pattern detected]\n" +
-                            "- Ensure appropriate question punctuation ('?') is applied.\n\n"
-                } else ""
-
                 val prompt = if (isInputKorean) {
+                    val intentRuleSection = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                        "[화행 자동 분류 및 출력 형식]\n" +
+                        "1. 문맥과 의도를 분석하여 화행을 [STATEMENT(설명), QUESTION(질문), REQUEST(부탁/요청), CONFIRM(확인/되묻기)] 중 하나로 분류하세요.\n" +
+                        "2. 출력 첫 줄에 반드시 `[INTENT: 분류된화행]` 태그를 출력하고, 다음 줄에 교정된 문장만 출력하세요.\n" +
+                        "예:\n" +
+                        "[INTENT: QUESTION]\n" +
+                        "오늘은 며칠이야?\n\n"
+                    } else {
+                        "[지정 화행 및 출력 형식]\n" +
+                        "1. 지정된 화행: ${speechIntent.name}\n" +
+                        "2. 출력 첫 줄에 반드시 `[INTENT: ${speechIntent.name}]` 태그를 출력하고, 다음 줄에 교정된 문장만 출력하세요.\n\n"
+                    }
+
                     "<start_of_turn>user\n" +
                             "당신은 모바일 키보드의 '실시간 음성 문장 교정 AI'입니다.\n" +
                             "⚠️ 3대 불변 원칙:\n" +
@@ -303,6 +331,7 @@ class DearTalkIntentEngine(
                             "3. [문장부호 판별]: 명백한 질문/의문사가 있는 경우만 물음표('?')를 붙이고, 의견/추측(~것 같아, ~듯), 허용/단정(~돼), 서술문은 반드시 평서문('.')으로 마침표를 찍으세요.\n\n" +
                             (if (currentEditorText.isNotBlank()) "[입력창 이전 맥락]: $currentEditorText\n\n" else "") +
                             contextBlockKorean +
+                            intentRuleSection +
                             "[교정 예시]\n" +
                             "- \"너도 괜찬을 것 같아\" -> 너도 괜찮을 것 같아.\n" +
                             "- \"넌 몰라도 돼\" -> 넌 몰라도 돼.\n" +
@@ -312,11 +341,19 @@ class DearTalkIntentEngine(
                             "- \"지금 어디 가고 계신가요\" -> 지금 어디 가고 계신가요?\n" +
                             "- \"자료 보냈으니 확인해보고 알려줘\" -> 자료 보냈으니 확인해보고 알려줘.\n" +
                             "- \"금요일 제외한 매일 11시에서 11시30분까지는 Privacy 스크럼이니 잊지마\" -> 금요일 제외한 매일 11시부터 11시 30분까지는 Privacy 스크럼 일정이니 잊지 마.\n\n" +
-                            "[출력 규칙]\n" +
-                            "설명, 따옴표 없이 오직 교정된 한 줄의 한국어 문장만 평문으로 출력하세요.\n\n" +
                             "음성 원문: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else if (isIndonesianLocale) {
+                    val intentRuleSection = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                        "[Aturan Klasifikasi Niat & Format Output]\n" +
+                        "1. Analisis maksud masukan: [INTENT: STATEMENT | QUESTION | REQUEST | CONFIRM].\n" +
+                        "2. Baris 1: `[INTENT: NIAT]`, Baris 2: teks hasil koreksi.\n\n"
+                    } else {
+                        "[Format Output]\n" +
+                        "1. Niat: ${speechIntent.name}\n" +
+                        "2. Baris 1: `[INTENT: ${speechIntent.name}]`, Baris 2: teks hasil koreksi.\n\n"
+                    }
+
                     "<start_of_turn>user\n" +
                             "Anda adalah AI perapih tata bahasa dan tanda baca pesan suara untuk papan ketik ponsel.\n" +
                             "⚠️ 3 ATURAN UTAMA:\n" +
@@ -325,17 +362,26 @@ class DearTalkIntentEngine(
                             "3. [Tanda Tanya]: Gunakan '?' HANYA jika masukan berupa pertanyaan atau memiliki kata tanya. Kalimat opini/pernyataan harus diakhiri titik ('.').\n\n" +
                             (if (currentEditorText.isNotBlank()) "[Konteks Input]: $currentEditorText\n\n" else "") +
                             contextBlockIndonesian +
+                            intentRuleSection +
                             "[Contoh Koreksi]\n" +
                             "- \"kamu juga bakal oke kok\" -> Kamu juga bakal oke kok.\n" +
                             "- \"kamu gak perlu tahu\" -> Kamu gak perlu tahu.\n" +
                             "- \"saya lagi di jalan\" -> Saya lagi di jalan.\n" +
                             "- \"kamu sudah makan siang\" -> Kamu sudah makan siang?\n" +
                             "- \"terima kasih banyak atas bantuannya\" -> Terima kasih banyak atas bantuannya!\n\n" +
-                            "[Aturan Keluaran]\n" +
-                            "HANYA keluarkan satu baris teks bahasa Indonesia hasil koreksi tanpa penjelasan tambahan.\n\n" +
                             "Teks Suara: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else if (isInputEnglish) {
+                    val intentRuleSection = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                        "[Intent Classification & Output Format]\n" +
+                        "1. Classify intent: [INTENT: STATEMENT | QUESTION | REQUEST | CONFIRM].\n" +
+                        "2. Line 1: `[INTENT: <INTENT>]`, Line 2: corrected text.\n\n"
+                    } else {
+                        "[Output Format]\n" +
+                        "1. Intent: ${speechIntent.name}\n" +
+                        "2. Line 1: `[INTENT: ${speechIntent.name}]`, Line 2: corrected text.\n\n"
+                    }
+
                     "<start_of_turn>user\n" +
                             "You are a mobile keyboard's speech-to-text sentence refinement & punctuation AI.\n" +
                             "⚠️ 3 CORE RULES:\n" +
@@ -344,6 +390,7 @@ class DearTalkIntentEngine(
                             "3. [Punctuation Rule]: Apply '?' ONLY if it is an explicit question. Opinions, estimations, and statements must end with a period ('.').\n\n" +
                             (if (currentEditorText.isNotBlank()) "[Editor Context]: $currentEditorText\n\n" else "") +
                             contextBlockEnglish +
+                            intentRuleSection +
                             "[Correction Examples]\n" +
                             "- \"i think you will be fine too\" -> I think you will be fine too.\n" +
                             "- \"you dont need to know\" -> You don't need to know.\n" +
@@ -351,8 +398,6 @@ class DearTalkIntentEngine(
                             "- \"did you eat lunch\" -> Did you eat lunch?\n" +
                             "- \"what time are we meeting\" -> What time are we meeting?\n" +
                             "- \"thank you so much for your help\" -> Thank you so much for your help!\n\n" +
-                            "[Output Rules]\n" +
-                            "Output ONLY the corrected single-line English text without quotes, markdown, or greetings.\n\n" +
                             "Input: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else {
@@ -368,21 +413,36 @@ class DearTalkIntentEngine(
                 val output = executeInference(prompt)
 
                 if (!output.isNullOrBlank()) {
+                    val defaultFallbackIntent = if (isExplicitQuestion) ai.deartalk.android.live.data.SpeechIntent.QUESTION else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+                    val expectedFallback = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else defaultFallbackIntent
+                    val (detectedIntent, cleanOutput) = parseIntentTagAndClean(output, expectedFallback)
+                    var refined = cleanLlmOutput(cleanOutput, detectedLangCode)
+                    if (detectedIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION && !refined.endsWith("?")) {
+                        refined = refined.removeSuffix(".").removeSuffix("!").trim() + "?"
+                    }
                     try {
-                        Log.d(TAG, "✨ [온디바이스 LLM 생성 완료]: '$trimmed' ➔ '$output'")
+                        Log.d(TAG, "✨ [온디바이스 LLM 생성 완료]: '$trimmed' ➔ '$refined' (화행: $detectedIntent)")
                     } catch (_: Throwable) {}
                     if (packageName.isNotBlank()) {
-                        AppScopedUtteranceCache.shared.addUtterance(packageName, output)
+                        AppScopedUtteranceCache.shared.addUtterance(packageName, refined)
                     }
-                    return@withContext IntentResult.Success(output, UiStrings.aiGenerationComplete)
+                    return@withContext IntentResult.Success(refined, UiStrings.aiGenerationComplete, detectedIntent)
                 }
             } catch (e: Throwable) {
                 Log.e(TAG, "❌ 온디바이스 LLM 추론 오류: ${e.message}")
             }
         }
 
-        // 🌟 LLM 미로드 또는 폴백 시: 명백한 의문사/의문어미일 때만 물음표 보정
-        val fallbackText = if (isExplicitQuestion && !trimmed.endsWith("?")) {
+        // 🌟 LLM 미로드 또는 폴백 시: 의문사/의문어미 판별 기반 폴백
+        val fallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+            speechIntent
+        } else if (isExplicitQuestion) {
+            ai.deartalk.android.live.data.SpeechIntent.QUESTION
+        } else {
+            ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        }
+
+        val fallbackText = if (fallbackIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION && !trimmed.endsWith("?")) {
             trimmed.removeSuffix(".").removeSuffix("!").trim() + "?"
         } else {
             trimmed
@@ -391,7 +451,7 @@ class DearTalkIntentEngine(
         if (packageName.isNotBlank()) {
             AppScopedUtteranceCache.shared.addUtterance(packageName, fallbackText)
         }
-        return@withContext IntentResult.Success(fallbackText, UiStrings.sttRawResult)
+        return@withContext IntentResult.Success(fallbackText, UiStrings.sttRawResult, fallbackIntent)
     }
 
     /**
@@ -402,7 +462,8 @@ class DearTalkIntentEngine(
         voiceInput: String,
         tone: CustomTone,
         currentEditorText: String = "",
-        packageName: String = ""
+        packageName: String = "",
+        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
     ): IntentResult = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext IntentResult.Success("")
@@ -530,41 +591,77 @@ class DearTalkIntentEngine(
                     }
                 }
 
+                val intentDirective = when (speechIntent) {
+                    ai.deartalk.android.live.data.SpeechIntent.QUESTION -> "화행 목표: [질문/의문문] 문맥에 맞게 질문 어미로 바꾸고 물음표('?')로 끝내세요."
+                    ai.deartalk.android.live.data.SpeechIntent.STATEMENT -> "화행 목표: [설명/평서문] 서술/설명 형태로 바꾸고 마침표('.')로 끝내세요."
+                    ai.deartalk.android.live.data.SpeechIntent.REQUEST -> "화행 목표: [부탁/요청] 공손하게 부탁하거나 요청하는 형태로 바꾸세요."
+                    ai.deartalk.android.live.data.SpeechIntent.CONFIRM -> "화행 목표: [확인/되묻기] 확인이나 동의를 구하는 형태로 바꾸고 물음표('?')로 끝내세요."
+                    ai.deartalk.android.live.data.SpeechIntent.AUTO -> ""
+                }
+
+                val intentInstruction = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                    "[화행 자동 분류 및 출력 규칙]\n" +
+                    "1. 원문의 문맥에 맞는 화행(STATEMENT, QUESTION, REQUEST, CONFIRM)을 스스로 판단하세요.\n" +
+                    "2. 출력 첫 줄에 반드시 `[INTENT: 분류된화행]` 태그를 출력하고, 둘째 줄에 ${tone.name} 어조로 변환된 문장만 출력하세요.\n\n"
+                } else {
+                    val intentName = speechIntent.name
+                    "[지정 화행 지침 및 출력 규칙]\n" +
+                    "1. 지정 화행: $intentName ($intentDirective)\n" +
+                    "2. 출력 첫 줄에 반드시 `[INTENT: $intentName]` 태그를 출력하고, 둘째 줄에 ${tone.name} 어조로 변환된 문장만 출력하세요.\n\n"
+                }
+
                 val prompt = if (isInputKorean) {
                     "<start_of_turn>user\n" +
                             "당신은 모바일 키보드의 '텍스트 어조/톤 변환기'입니다.\n" +
                             "⚠️ 중요: 당신은 챗봇이 아니므로 절대로 질문에 대답하거나 대화를 시도하지 마세요!\n" +
-                            "화자의 핵심 의도와 내용을 100% 보존하면서, 텍스트의 어조만 '${tone.name}'(${tone.instruction}) 스타일로 다시 작성하세요.\n\n" +
+                            "화자의 핵심 의도와 내용을 100% 보존하면서, 텍스트의 어조만 '${tone.name}'(${tone.instruction}) 스타일로 다시 작성하세요.\n" +
+                            intentInstruction +
                             "$examples\n\n" +
                             "[출력 규칙]\n" +
-                            "1. 원문이 질문이더라도 절대 답하지 말고, 원문 자체를 ${tone.name} 어조로 변환한 한 줄의 문장만 출력하세요.\n" +
+                            "1. 원문이 질문이더라도 절대 답하지 말고, 원문 자체를 ${tone.name} 어조로 변환하세요.\n" +
                             "2. 원문이 의문문(질문/확인)인 경우 물음표('?')를 반드시 부착하고, 문맥에 부합하는 올바른 문장 부호('?', '!', '.')를 완성하세요.\n" +
                             "3. 외래어, 고유명사 및 보편적 약어는 문맥에 부합하는 표준 표기법을 준수하여 정돈하세요.\n" +
-                            "4. 설명, 인사말, 따옴표, 라벨 접두어 없이 오직 변환된 한국어 텍스트만 평문으로 출력하세요.\n\n" +
+                            "4. 설명, 인사말, 따옴표, 라벨 접두어 없이 오직 첫 줄에 [INTENT: ...] 태그, 둘째 줄에 변환된 한국어 텍스트만 출력하세요.\n\n" +
                             "변환할 원문: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else if (isInputIndonesian) {
+                    val intentInstructionId = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                        "[Aturan Klasifikasi Niat & Format Output]\n" +
+                        "1. Analisis maksud masukan: [INTENT: STATEMENT | QUESTION | REQUEST | CONFIRM].\n" +
+                        "2. Baris 1: `[INTENT: NIAT]`, Baris 2: teks hasil pengubahan gaya.\n\n"
+                    } else {
+                        "[Format Output]\n" +
+                        "1. Niat: ${speechIntent.name}\n" +
+                        "2. Baris 1: `[INTENT: ${speechIntent.name}]`, Baris 2: teks hasil pengubahan gaya.\n\n"
+                    }
+
                     "<start_of_turn>user\n" +
                             "Anda adalah 'pengubah nada & gaya pesan teks' untuk papan ketik ponsel.\n" +
                             "⚠️ PENTING: Anda BUKAN chatbot. JANGAN menjawab pertanyaan atau mengobrol dengan pengguna!\n" +
                             "⚠️ ATURAN MUTLAK: Tetap gunakan bahasa Indonesia. JANGAN menerjemahkannya ke bahasa lain!\n" +
                             "Ubah nada pesan dalam bahasa Indonesia agar sesuai dengan gaya '${tone.name}' (${tone.instruction}) tanpa mengubah maksud asli kalimat.\n\n" +
+                            intentInstructionId +
                             "$examples\n\n" +
-                            "[Aturan Output]\n" +
-                            "1. Jika masukan berupa pertanyaan, JANGAN dijawab, cukup ubah kalimat pertanyaan tersebut ke gaya ${tone.name}.\n" +
-                            "2. Keluarkan HANYA teks hasil pengubahan gaya dalam bahasa Indonesia tanpa tanda kutip, penjelasan, atau salam.\n\n" +
                             "Masukan: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 } else {
+                    val intentInstructionEn = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                        "[Intent Classification & Output Format]\n" +
+                        "1. Classify intent: [INTENT: STATEMENT | QUESTION | REQUEST | CONFIRM].\n" +
+                        "2. Line 1: `[INTENT: <INTENT>]`, Line 2: converted text.\n\n"
+                    } else {
+                        "[Output Format]\n" +
+                        "1. Intent: ${speechIntent.name}\n" +
+                        "2. Line 1: `[INTENT: ${speechIntent.name}]`, Line 2: converted text.\n\n"
+                    }
+
                     "<start_of_turn>user\n" +
                             "You are a mobile keyboard's 'tone & style transformer'.\n" +
                             "⚠️ CRITICAL: You are NOT a chatbot. Do NOT answer questions or converse with the user!\n" +
                             "⚠️ ABSOLUTE RULE: Keep the original language (English) of the input text. Do NOT translate it into Korean or other languages!\n" +
                             "Convert the tone of the English text into the target style '${tone.name}' (${tone.instruction}) while preserving the original meaning.\n\n" +
+                            intentInstructionEn +
                             "$examples\n\n" +
-                            "[Output Rules]\n" +
-                            "1. Even if the input is a question, do NOT answer it. Just refine and convert the question itself in English.\n" +
-                            "2. Output ONLY the refined English text without explanations, greetings, quotes, or markdown.\n\n" +
                             "Input: \"$trimmed\"<end_of_turn>\n" +
                             "<start_of_turn>model\n"
                 }
@@ -572,14 +669,21 @@ class DearTalkIntentEngine(
                 val output = executeInference(prompt)
 
                 if (!output.isNullOrBlank()) {
-                    return@withContext IntentResult.Success(output, UiStrings.toneComplete(tone.icon, tone.name))
+                    val defaultFallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+                    val (detectedIntent, cleanOutput) = parseIntentTagAndClean(output, defaultFallbackIntent)
+                    var refined = cleanLlmOutput(cleanOutput)
+                    if (detectedIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION && !refined.endsWith("?")) {
+                        refined = refined.removeSuffix(".").removeSuffix("!").trim() + "?"
+                    }
+                    return@withContext IntentResult.Success(refined, UiStrings.toneComplete(tone.icon, tone.name), detectedIntent)
                 }
             } catch (e: Throwable) {
                 Log.e(TAG, "❌ 톤앤매너 실행 오류: ${e.message}")
             }
         }
 
-        return@withContext process(voiceInput, currentEditorText, packageName)
+        val fallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        return@withContext IntentResult.Success(trimmed, UiStrings.toneComplete(tone.icon, tone.name), fallbackIntent)
     }
 
     /**
@@ -590,49 +694,49 @@ class DearTalkIntentEngine(
         voiceInput: String,
         target: ai.deartalk.android.data.pref.TranslationTarget,
         currentEditorText: String = "",
-        packageName: String = ""
+        packageName: String = "",
+        tone: String? = null,
+        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
     ): IntentResult = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext IntentResult.Success("")
 
-        val targetLangCode = when {
-            target.id.contains("en") || target.name.contains("영어") || target.name.contains("English") -> "EN"
-            target.id.contains("ja") || target.name.contains("일본어") || target.name.contains("Japanese") -> "JA"
-            target.id.contains("zh") || target.name.contains("중국어") || target.name.contains("Chinese") -> "ZH"
-            target.id.contains("fr") || target.name.contains("프랑스") || target.name.contains("French") -> "FR"
-            target.id.contains("es") || target.name.contains("스페인") || target.name.contains("Spanish") -> "ES"
-            target.id.contains("de") || target.name.contains("독일") || target.name.contains("German") -> "DE"
-            target.id.contains("vi") || target.name.contains("베트남") || target.name.contains("Vietnamese") -> "VI"
-            target.id.contains("id") || target.name.contains("인도네시아") || target.name.contains("Indonesian") -> "ID"
-            target.id.contains("th") || target.name.contains("태국") || target.name.contains("Thai") -> "TH"
-            target.id.contains("tl") || target.id.contains("fil") || target.name.contains("필리핀") || target.name.contains("Filipino") -> "TL"
-            target.id.contains("ms") || target.name.contains("말레이") || target.name.contains("Malay") -> "MS"
-            else -> target.id.replace("trans_", "").uppercase()
-        }
+        val targetLangCode = LanguageProfileRegistry.resolveCode(target)
 
         val translated = translate(
             voiceInput = trimmed,
             targetLangCode = targetLangCode,
             sourceLangCode = "AUTO",
-            packageName = packageName
+            tone = tone,
+            packageName = packageName,
+            speechIntent = speechIntent
         )
+
+        val effectiveIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+            speechIntent
+        } else if (translated.trim().endsWith("?")) {
+            ai.deartalk.android.live.data.SpeechIntent.QUESTION
+        } else {
+            ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        }
 
         if (translated.isNotBlank() && translated != trimmed) {
             try {
                 Log.d(TAG, "✨ [온디바이스 LLM 다국어 번역 완료]: '$trimmed' ➔ '$translated' (${target.name})")
             } catch (_: Throwable) {}
-            IntentResult.Success(translated, UiStrings.translationComplete(target.flag, target.name))
+            IntentResult.Success(translated, UiStrings.translationComplete(target.flag, target.name), effectiveIntent)
         } else {
-            process(voiceInput, currentEditorText, packageName)
+            process(voiceInput, currentEditorText, packageName, speechIntent)
         }
     }
 
-    internal fun cleanLlmOutput(raw: String): String {
+    internal fun cleanLlmOutput(raw: String, targetLangCode: String = ""): String {
         var text = raw
             .replace(Regex("""<(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>\s*(model|user|assistant)?""", RegexOption.IGNORE_CASE), "")
             .replace(Regex("""</(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)>""", RegexOption.IGNORE_CASE), "")
             .replace(Regex("""<\|(im_start|im_end|endoftext)[^|>]*\|>\s*(assistant|user|system)?""", RegexOption.IGNORE_CASE), "")
             .replace(Regex("""</?[a-zA-Z0-9_-]+(\s+[^>]*)?>"""), "")
+            .replace(Regex("""\[INTENT:\s*(STATEMENT|QUESTION|REQUEST|CONFIRM)\]""", RegexOption.IGNORE_CASE), "")
             .trim()
 
         if (text.contains("\n")) {
@@ -643,14 +747,20 @@ class DearTalkIntentEngine(
         }
 
         text = text
-            .replace(Regex("""^(최종\s*문장|수정된\s*문장|다듬은\s*문장|변환된\s*문장|결과|답변|제안|답|문장|Output|Result|Sentence|model|assistant|AI|Translation|Translated Text|Japanese|English|Chinese|Spanish|French|German|Indonesian|Vietnamese|Thai|Tagalog|Malay|日本語|英語|中国語)\s*[:：]\s*""", RegexOption.IGNORE_CASE), "")
+            .replace(LanguageProfileRegistry.allCleaningPrefixesRegex, "")
             .trim()
             .removePrefix(">")
             .removePrefix("-")
             .removePrefix("*")
-            .removeSurrounding("\"")
-            .removeSurrounding("`")
-            .removeSurrounding("```")
+
+        val profile = if (targetLangCode.isNotBlank()) LanguageProfileRegistry.get(targetLangCode) else null
+        val quotes = profile?.quotationMarks ?: listOf('"', '\'', '`', '“', '”', '‘', '’', '「', '」', '『', '』')
+        for (q in quotes) {
+            text = text.trim(q)
+        }
+
+        text = text
+            .replace(Regex("""[\u2728\u2729\u2b50\u2b51\u2747\u2748\u2749\u2733\u2734\u2744]+$"""), "")
             .trim()
 
         return text.trim()
@@ -673,60 +783,143 @@ class DearTalkIntentEngine(
     }
 
     /**
-     * 🌐 12개 글로벌/동남아 다국어 특화 실시간 동적 통역 엔진 (Zero Hardcoding)
+     * 🔄 문장 발화 의도(Intent) 변환기 (Whole-Sentence Pragmatic Rewrite)
+     * - 온디바이스 SLM을 통해 단순 구두점 변경이 아닌, 문장의 어순, 종결 어미, 억양을 완벽히 재작성합니다.
+     * - 예: "이거 복잡한 문제야" ➔ (QUESTION) "이거 복잡한 문제야?" / "이거 복잡한 문제인가요?"
+     * - 예: "너는 복잡한 문제라고 생각하니" ➔ (STATEMENT) "이건 복잡한 문제라고 생각해."
+     * - 예: "This is a complicated issue" ➔ (QUESTION) "Is this a complicated issue?" / "Do you think this is a complicated issue?"
      */
-    suspend fun translate(
-        voiceInput: String,
-        targetLangCode: String,
-        sourceLangCode: String = "KO",
-        tone: String? = null,
-        packageName: String = "",
-        conversationContext: List<String> = emptyList()
+    suspend fun rewriteSentenceIntent(
+        text: String,
+        langCode: String = "KO",
+        targetIntent: ai.deartalk.android.live.data.SpeechIntent,
+        packageName: String = ""
     ): String = withContext(Dispatchers.IO) {
-        val trimmed = voiceInput.trim()
-        if (trimmed.isBlank()) return@withContext ""
+        val trimmed = text.trim()
+        if (trimmed.isBlank() || targetIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) return@withContext trimmed
 
         if (!isModelLoaded && sharedInitJob?.isActive == true) {
             try { sharedInitJob?.join() } catch (_: Throwable) {}
         }
 
-        val targetLangName = when (targetLangCode.uppercase()) {
-            "EN" -> "English"
-            "ES" -> "Spanish (Español)"
-            "FR" -> "French (Français)"
-            "DE" -> "German (Deutsch)"
-            "JA" -> "Japanese (日本語)"
-            "ZH" -> "Simplified Chinese (简体中文)"
-            "KO" -> "Korean (한국어)"
-            "ID" -> "Indonesian (Bahasa Indonesia)"
-            "VI" -> "Vietnamese (Tiếng Việt)"
-            "TL", "FIL" -> "Filipino/Tagalog (Wikang Filipino)"
-            "TH" -> "Thai (ภาษาไทย)"
-            "MS" -> "Malay (Bahasa Melayu)"
-            else -> targetLangCode
+        val effectiveLang = if (langCode.equals("AUTO", ignoreCase = true)) {
+            ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(trimmed, fallback = "KO")
+        } else langCode.uppercase()
+
+        if (isModelLoaded || sharedInitJob?.isActive == true) {
+            try {
+                val profile = LanguageProfileRegistry.get(effectiveLang)
+                val intentRule = profile.getIntentRule(targetIntent)
+                val intentDesc = intentRule?.directive ?: ""
+
+                val scriptGuideline = if (profile.scriptGuidelines.isNotBlank()) "${profile.scriptGuidelines}\n" else ""
+                val prompt = "<start_of_turn>user\n" +
+                        "You are an expert real-time conversational sentence rewrite AI.\n" +
+                        "Rewrite the sentence to match the target speech intent while preserving the core meaning and tone.\n" +
+                        scriptGuideline +
+                        "Target Intent: $intentDesc\n\n" +
+                        "[Output Rule]\n" +
+                        "Output ONLY the single-line rewritten sentence in ${profile.englishName} without quotes, markdown, or explanations.\n\n" +
+                        "Input text: \"$trimmed\"<end_of_turn>\n" +
+                        "<start_of_turn>model\n"
+
+                val output = executeInference(prompt)
+                if (!output.isNullOrBlank()) {
+                    var clean = cleanLlmOutput(output, profile.code)
+                    clean = profile.applyPostProcessing(clean, targetIntent)
+                    Log.d(TAG, "✨ [의도 재작성 완료]: '$trimmed' ➔ '$clean' ($targetIntent, ${profile.code})")
+                    return@withContext clean
+                }
+            } catch (e: Throwable) {
+                Log.e(TAG, "❌ rewriteSentenceIntent 오류: ${e.message}")
+            }
         }
+
+        // 🛡️ 휴리스틱 폴백: 부호 및 기본 어미 보정
+        val clean = trimmed.trimEnd('?', '.', '!', ',', '"', '\'', '`')
+        when (targetIntent) {
+            ai.deartalk.android.live.data.SpeechIntent.QUESTION -> "$clean?"
+            ai.deartalk.android.live.data.SpeechIntent.STATEMENT -> {
+                if (effectiveLang == "EN") {
+                    ai.deartalk.android.stt.IntonationAnalyzer.convertToDeclarativeEnglish(clean)
+                } else {
+                    "$clean."
+                }
+            }
+            ai.deartalk.android.live.data.SpeechIntent.REQUEST -> "$clean."
+            ai.deartalk.android.live.data.SpeechIntent.CONFIRM -> "$clean?"
+            ai.deartalk.android.live.data.SpeechIntent.AUTO -> trimmed
+        }
+    }
+
+    /**
+     * 🎯 [DearTalk Live & AI 공통] 원문 및 번역문 통합 의도 재작성 및 재번역 파이프라인
+     * - 원문을 새 의도에 맞추어 온디바이스 SLM으로 재작성한 후,
+     * - 번역 대상 언어가 다를 경우 목표 언어로 완전한 문장 구조를 갖추어 재번역합니다.
+     */
+    suspend fun rephraseMessageWithIntent(
+        rawSourceText: String,
+        sourceLangCode: String,
+        targetLangCode: String,
+        targetIntent: ai.deartalk.android.live.data.SpeechIntent,
+        tone: String? = null,
+        packageName: String = "",
+        conversationContext: List<String> = emptyList()
+    ): Pair<String, String> = withContext(Dispatchers.IO) {
+        val rewrittenSource = rewriteSentenceIntent(
+            text = rawSourceText,
+            langCode = sourceLangCode,
+            targetIntent = targetIntent,
+            packageName = packageName
+        )
+
+        val rewrittenTranslation = if (sourceLangCode.equals(targetLangCode, ignoreCase = true)) {
+            rewrittenSource
+        } else {
+            translate(
+                voiceInput = rewrittenSource,
+                targetLangCode = targetLangCode,
+                sourceLangCode = sourceLangCode,
+                tone = tone,
+                packageName = packageName,
+                conversationContext = conversationContext,
+                speechIntent = targetIntent
+            )
+        }
+
+        Pair(rewrittenSource, rewrittenTranslation)
+    }
+
+    /**
+     * 🌐 12개 글로벌/동남아 다국어 특화 실시간 동적 통역 & 화행 단일 패스 분류 엔진 (Single-Pass Semantic Tagging)
+     * - Zero Hardcoding 원칙에 따라 온디바이스 SLM이 번역과 동시에 발화 의도([INTENT: ...])를 원샷 태깅합니다.
+     */
+    suspend fun translateWithIntent(
+        voiceInput: String,
+        targetLangCode: String,
+        sourceLangCode: String = "KO",
+        tone: String? = null,
+        packageName: String = "",
+        conversationContext: List<String> = emptyList(),
+        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
+    ): Pair<String, ai.deartalk.android.live.data.SpeechIntent> = withContext(Dispatchers.IO) {
+        val trimmed = voiceInput.trim()
+        if (trimmed.isBlank()) return@withContext Pair("", ai.deartalk.android.live.data.SpeechIntent.STATEMENT)
+
+        if (!isModelLoaded && sharedInitJob?.isActive == true) {
+            try { sharedInitJob?.join() } catch (_: Throwable) {}
+        }
+
+        val targetProfile = LanguageProfileRegistry.get(targetLangCode)
+        val targetLangName = targetProfile.englishName
 
         val effectiveSourceLangCode = if (sourceLangCode.equals("AUTO", ignoreCase = true)) {
             ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(trimmed, fallback = "KO")
         } else {
             sourceLangCode
         }
-
-        val sourceLangName = when (effectiveSourceLangCode.uppercase()) {
-            "EN" -> "English"
-            "ES" -> "Spanish"
-            "FR" -> "French"
-            "DE" -> "German"
-            "JA" -> "Japanese"
-            "ZH" -> "Chinese"
-            "KO" -> "Korean"
-            "ID" -> "Indonesian"
-            "VI" -> "Vietnamese"
-            "TL", "FIL" -> "Filipino"
-            "TH" -> "Thai"
-            "MS" -> "Malay"
-            else -> effectiveSourceLangCode
-        }
+        val sourceProfile = LanguageProfileRegistry.get(effectiveSourceLangCode)
+        val sourceLangName = sourceProfile.englishName
 
         val toneInstruction = if (!tone.isNullOrBlank()) " Adapt the translated sentence to have a '$tone' tone." else ""
 
@@ -746,15 +939,44 @@ class DearTalkIntentEngine(
             "3. SPEECH RECOGNITION (ASR) CORRECTION: The input was transcribed by voice STT and might contain phonetic slips, misheard words, homophones, or noise corruptions (e.g., mishearing '포함' as '포항', 'W hotel' as 'double hotel', numbers, or names). Analyze the preceding conversation flow carefully. If an obvious transcription mistake or contextual mismatch is present, SMARTLY REPAIR the intended meaning into natural $targetLangName.\n"
         } else ""
 
+        val linguisticRule = if (targetProfile.scriptGuidelines.isNotBlank()) {
+            "3. LINGUISTIC SPECIFICATION: ${targetProfile.scriptGuidelines}\n"
+        } else ""
+
+        // 🎯 4. 명시적 발화 의도 (Speech Pragmatics) 및 단일 패스 분류 지침 주입 (Zero Hardcoding)
+        val isExplicitQuestion = ai.deartalk.android.stt.IntonationAnalyzer.isLikelyQuestion(
+            text = trimmed,
+            languageCode = effectiveSourceLangCode
+        )
+        val defaultFallbackIntent = if (isExplicitQuestion) ai.deartalk.android.live.data.SpeechIntent.QUESTION else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        val expectedFallback = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else defaultFallbackIntent
+
+        val intentRuleSection = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+            "4. INTENT CLASSIFICATION & OUTPUT FORMAT:\n" +
+            "- Analyze the pragmatic intent: [INTENT: STATEMENT | QUESTION | REQUEST | CONFIRM].\n" +
+            "- Line 1: Output `[INTENT: <CLASSIFIED_INTENT>]`\n" +
+            "- Line 2: Output ONLY the single-line translated sentence in $targetLangName.\n\n"
+        } else {
+            val intentRule = targetProfile.getIntentRule(speechIntent)
+            val intentDirective = intentRule?.directive ?: ""
+            "4. SPECIFIED INTENT & OUTPUT FORMAT:\n" +
+            (if (intentDirective.isNotBlank()) "- $intentDirective\n" else "") +
+            "- Specified Intent: ${speechIntent.name}\n" +
+            "- Line 1: Output `[INTENT: ${speechIntent.name}]`\n" +
+            "- Line 2: Output ONLY the single-line translated sentence in $targetLangName.\n\n"
+        }
+
         if (isModelLoaded || sharedInitJob?.isActive == true) {
             try {
                 val prompt = "<start_of_turn>user\n" +
                         "You are an expert real-time simultaneous interpreter and conversational speech repair assistant.\n" +
                         "Translate the spoken speech from $sourceLangName into natural, accurate $targetLangName.$toneInstruction\n" +
                         "CRITICAL INSTRUCTIONS:\n" +
-                        "1. Output ONLY the single-line translated sentence in $targetLangName.\n" +
+                        "1. Follow the two-line output format exactly.\n" +
                         "2. Do NOT add notes, explanations, romanization, conversational fillers, or quotes.\n" +
-                        asrRepairInstruction + "\n" +
+                        linguisticRule +
+                        asrRepairInstruction +
+                        intentRuleSection +
                         contextBlock +
                         "Input text to translate: \"$trimmed\"<end_of_turn>\n" +
                         "<start_of_turn>model\n"
@@ -762,22 +984,46 @@ class DearTalkIntentEngine(
                 val output = executeInference(prompt)
 
                 if (!output.isNullOrBlank()) {
-                    Log.d(TAG, "✨ [온디바이스 번역 성공] '$trimmed' ($sourceLangName) ➔ '$output' ($targetLangName)")
+                    val (detectedIntent, cleanOutput) = parseIntentTagAndClean(output, expectedFallback)
+                    var processed = cleanLlmOutput(cleanOutput, targetProfile.code)
+                    processed = targetProfile.applyPostProcessing(processed, if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else detectedIntent)
+                    Log.d(TAG, "✨ [온디바이스 번역 성공] '$trimmed' ($sourceLangName) ➔ '$processed' ($targetLangName, 화행: $detectedIntent)")
                     if (packageName.isNotBlank()) {
-                        AppScopedUtteranceCache.shared.addUtterance(packageName, output)
+                        AppScopedUtteranceCache.shared.addUtterance(packageName, processed)
                     }
-                    return@withContext output
+                    return@withContext Pair(processed, detectedIntent)
                 }
             } catch (e: Throwable) {
-                Log.e(TAG, "❌ translate 오류: ${e.message}")
+                Log.e(TAG, "❌ translateWithIntent 오류: ${e.message}")
             }
         }
 
         if (packageName.isNotBlank()) {
             AppScopedUtteranceCache.shared.addUtterance(packageName, trimmed)
         }
-        return@withContext trimmed
+        Pair(trimmed, expectedFallback)
     }
+
+    /**
+     * 🌐 12개 글로벌/동남아 다국어 특화 실시간 동적 통역 엔진 (하위 호환성 래퍼)
+     */
+    suspend fun translate(
+        voiceInput: String,
+        targetLangCode: String,
+        sourceLangCode: String = "KO",
+        tone: String? = null,
+        packageName: String = "",
+        conversationContext: List<String> = emptyList(),
+        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
+    ): String = translateWithIntent(
+        voiceInput = voiceInput,
+        targetLangCode = targetLangCode,
+        sourceLangCode = sourceLangCode,
+        tone = tone,
+        packageName = packageName,
+        conversationContext = conversationContext,
+        speechIntent = speechIntent
+    ).first
 
     suspend fun processCustomPrompt(promptText: String): String = withContext(Dispatchers.IO) {
         val formatted = "<start_of_turn>user\n$promptText<end_of_turn>\n<start_of_turn>model\n"

@@ -31,6 +31,7 @@ data class CustomTone(
 
 data class TranslationTarget(
     val id: String = UUID.randomUUID().toString(),
+    val code: String = "EN",
     val name: String,
     val targetLanguage: String,
     val flag: String = "🌐"
@@ -85,48 +86,56 @@ object CustomToneManager {
         get() = listOf(
             TranslationTarget(
                 id = "trans_en",
+                code = "EN",
                 name = UiStrings.langEnglish,
                 targetLanguage = "영어(English)",
                 flag = "🇺🇸"
             ),
             TranslationTarget(
                 id = "trans_id",
+                code = "ID",
                 name = UiStrings.langIndonesian,
                 targetLanguage = "인도네시아어(Bahasa Indonesia)",
                 flag = "🇮🇩"
             ),
             TranslationTarget(
                 id = "trans_ja",
+                code = "JA",
                 name = UiStrings.langJapanese,
                 targetLanguage = "일본어(日本語)",
                 flag = "🇯🇵"
             ),
             TranslationTarget(
                 id = "trans_zh",
+                code = "ZH",
                 name = UiStrings.langChinese,
                 targetLanguage = "중국어(中文)",
                 flag = "🇨🇳"
             ),
             TranslationTarget(
                 id = "trans_es",
+                code = "ES",
                 name = UiStrings.langSpanish,
                 targetLanguage = "스페인어(Español)",
                 flag = "🇪🇸"
             ),
             TranslationTarget(
                 id = "trans_fr",
+                code = "FR",
                 name = UiStrings.langFrench,
                 targetLanguage = "프랑스어(Français)",
                 flag = "🇫🇷"
             ),
             TranslationTarget(
                 id = "trans_de",
+                code = "DE",
                 name = UiStrings.langGerman,
                 targetLanguage = "독일어(Deutsch)",
                 flag = "🇩🇪"
             ),
             TranslationTarget(
                 id = "trans_vi",
+                code = "VI",
                 name = UiStrings.langVietnamese,
                 targetLanguage = "베트남어(Tiếng Việt)",
                 flag = "🇻🇳"
@@ -213,9 +222,23 @@ object CustomToneManager {
             val list = mutableListOf<TranslationTarget>()
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
+                val id = obj.getString("id")
+                val code = obj.optString("code", "").ifBlank {
+                    when {
+                        id.contains("ja") -> "JA"
+                        id.contains("id") -> "ID"
+                        id.contains("zh") -> "ZH"
+                        id.contains("es") -> "ES"
+                        id.contains("fr") -> "FR"
+                        id.contains("de") -> "DE"
+                        id.contains("vi") -> "VI"
+                        else -> "EN"
+                    }
+                }
                 list.add(
                     TranslationTarget(
-                        id = obj.getString("id"),
+                        id = id,
+                        code = code,
                         name = obj.getString("name"),
                         targetLanguage = obj.getString("targetLanguage"),
                         flag = obj.optString("flag", "🌐")
@@ -233,6 +256,7 @@ object CustomToneManager {
         list.forEach { item ->
             val obj = JSONObject().apply {
                 put("id", item.id)
+                put("code", item.code)
                 put("name", item.name)
                 put("targetLanguage", item.targetLanguage)
                 put("flag", item.flag)

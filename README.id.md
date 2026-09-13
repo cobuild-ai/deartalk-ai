@@ -27,7 +27,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.0` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | DearTalk Live Messenger Suara 1:1 Real-Time, SQLite 100% Offline, Perbaikan Suara ASR Sadar Konteks, Perpanjangan Hening 10 Detik & Terjemahan Instan, Kartu Bahasa Responsif 2 Tingkat |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.2` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | DearTalk Live Messenger Suara 1:1 Real-Time, Tampilan Balik 180° Tatap Muka, UI Multibahasa Tanpa Pemotongan Teks, SQLite 100% Offline, Perbaikan Suara ASR Sadar Konteks |
 
 ---
 
@@ -42,12 +42,12 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 ## 🌟 Fitur Utama Papan Ketik Android
 
-### 🎙️ AI Voice Studio & Penerjemah Langsung (`VoiceStudioActivity`)
-- **Studio Layar Penuh Terisolasi Memori:** Aktivitas mandiri yang menjalankan alur kerja STT ➔ LLM ➔ TTS secara berurutan tanpa membebani memori keyboard IME.
-- **Pemilih Bahasa 2-Arah & Tukar 1-Ketuk:** Arsitektur `[ 🗣️ Bahasa Bicara ] ⇄ [ 🌐 Bahasa Terjemahan ]` dengan pembalikan arah percakapan instan.
-- **Mesin Terjemahan Dinamis Tanpa Hardcoding:** Prompt penerjemah simultan peka konteks untuk 12 bahasa dengan integrasi model akustik lokal.
-- **Kustomisasi Suara & Kontrol Nada:** Pilihan vokal Wanita/Pria dan 4 tingkat nada (`Normal`, `Bass Dalam`, `Sedang Hangat`, `Tinggi Cerah`).
-- **Pemutaran Ulang Audio 0ms:** Putar ulang audio instan saat mengetuk ikon speaker tanpa inferensi ulang LLM (`speakDirectly`).
+### 🎙️ Penerjemah Langsung Tatap Muka 1:1 & Perekam Suara (`DearTalkLiveActivity`)
+- **Sesi Percakapan Layar Penuh Terisolasi Memori:** Aktivitas mandiri untuk penerjemahan tatap muka langsung 2-arah 1:1 dan pencatatan riwayat SQLite tanpa membebani memori keyboard IME.
+- **Mikrofon Ganda 2-Arah & Tampilan Rotasi 180°:** Tampilan simetris atas-bawah untuk percakapan tatap muka dan bilah aksi ganda `[🙋 Bicara]` / `[👂 Dengar]`.
+- **Integrasi Paket AI On-Device & Diagnostik Perangkat Keras:** Terintegrasi di lembar pengaturan untuk diagnostik RAM/penyimpanan dan manajemen unduh/hapus paket model AI lokal Qwen (1.2GB).
+- **Penyesuaian Niat Pasca-Bicara Tanpa Hardcoding:** Mesin cerdas waktu nyata untuk merombak nada percakapan menjadi Pertanyaan, Pernyataan, atau Permintaan dengan menjaga konteks asli.
+- **Pemutaran Ulang Audio 0ms & TTS Multibahasa:** Sintesis suara alami instan untuk lawan bicara.
 
 ### 📱 Papan Ketik Android (`deartalk-android`)
 - **Android 15 & Target SDK 35:** Arsitektur UI modular modern berbasis Jetpack Compose yang ringan dan elegan.

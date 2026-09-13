@@ -63,7 +63,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
+        val testLocale = intent?.getStringExtra("test_locale")
+        if (!testLocale.isNullOrBlank()) {
+            DearTalkSettings.setAutoLanguage(this, false)
+            DearTalkSettings.setSelectedLanguageCode(this, testLocale)
+            UiStrings.setLocale(java.util.Locale(testLocale))
+        } else {
+            UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
+        }
 
         sttManager = SpeechRecognitionManager(this)
         intentEngine = DearTalkIntentEngine(this)
@@ -91,6 +98,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
+        val testLocale = intent.getStringExtra("test_locale")
+        if (!testLocale.isNullOrBlank()) {
+            DearTalkSettings.setAutoLanguage(this, false)
+            DearTalkSettings.setSelectedLanguageCode(this, testLocale)
+            UiStrings.setLocale(java.util.Locale(testLocale))
+        }
         handleTestIntent(intent)
     }
 
