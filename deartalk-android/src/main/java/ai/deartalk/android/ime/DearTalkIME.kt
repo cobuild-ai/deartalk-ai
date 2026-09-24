@@ -57,32 +57,102 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     private lateinit var ttsManager: TextToSpeechManager
     private lateinit var modelLifecycleManager: ai.deartalk.android.data.ModelLifecycleManager
 
-    private var currentPackageName by mutableStateOf("")
-    private var micUiState by mutableStateOf(MicUiState.IDLE)
-    private var activeTierState by mutableStateOf(ai.deartalk.android.data.ActiveAiTier.STT_ONLY)
-    private var recognizedTextState by mutableStateOf("")
-    private var statusMessageState by mutableStateOf("")
-    private var aiTextState by mutableStateOf("")
-    private var tonesState by mutableStateOf<List<CustomTone>>(emptyList())
-    private var aiModesState by mutableStateOf<List<ai.deartalk.android.data.pref.AiModeItem>>(emptyList())
-    private var isTranslationModeState by mutableStateOf(false)
-    private var selectedTargetLanguageState by mutableStateOf(ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TRANSLATIONS.first())
-    private var selectedToneState by mutableStateOf(ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES.first())
-    private var selectedSpeechIntentState by mutableStateOf(ai.deartalk.android.live.data.SpeechIntent.AUTO)
-    private var detectedSpeechIntentState by mutableStateOf<ai.deartalk.android.live.data.SpeechIntent?>(null)
-    private var isRetransformingState by mutableStateOf(false)
-    private var isStandardKeyboardModeState by mutableStateOf(false)
-    private var koreanKeyboardTypeState by mutableStateOf(KoreanKeyboardType.DUBEOLSIK)
-    private var clipboardTextState by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(ai.deartalk.android.ui.state.ImeUiState())
+        private set
+
+    // 단일 불변 ImeUiState 연동 프로퍼티 델리게이트 (하위 호환 및 안전한 상태 전이)
+    private var currentPackageName: String
+        get() = uiState.currentPackageName
+        set(value) { uiState = uiState.copy(currentPackageName = value) }
+    private var micUiState: MicUiState
+        get() = uiState.micUiState
+        set(value) { uiState = uiState.copy(micUiState = value) }
+    private var activeTierState: ai.deartalk.android.data.ActiveAiTier
+        get() = uiState.activeTier
+        set(value) { uiState = uiState.copy(activeTier = value) }
+    private var recognizedTextState: String
+        get() = uiState.recognizedText
+        set(value) { uiState = uiState.copy(recognizedText = value) }
+    private var statusMessageState: String
+        get() = uiState.statusMessage
+        set(value) { uiState = uiState.copy(statusMessage = value) }
+    private var aiTextState: String
+        get() = uiState.aiText
+        set(value) { uiState = uiState.copy(aiText = value) }
+    private var tonesState: List<CustomTone>
+        get() = uiState.tones
+        set(value) { uiState = uiState.copy(tones = value) }
+    private var aiModesState: List<ai.deartalk.android.data.pref.AiModeItem>
+        get() = uiState.aiModes
+        set(value) { uiState = uiState.copy(aiModes = value) }
+    private var isTranslationModeState: Boolean
+        get() = uiState.isTranslationMode
+        set(value) { uiState = uiState.copy(isTranslationMode = value) }
+    private var selectedTargetLanguageState: ai.deartalk.android.data.pref.TranslationTarget
+        get() = uiState.selectedTargetLanguage
+        set(value) { uiState = uiState.copy(selectedTargetLanguage = value) }
+    private var selectedToneState: ai.deartalk.android.data.pref.CustomTone
+        get() = uiState.selectedTone
+        set(value) { uiState = uiState.copy(selectedTone = value) }
+    private var selectedSpeechIntentState: ai.deartalk.android.live.data.SpeechIntent
+        get() = uiState.selectedSpeechIntent
+        set(value) { uiState = uiState.copy(selectedSpeechIntent = value) }
+    private var detectedSpeechIntentState: ai.deartalk.android.live.data.SpeechIntent?
+        get() = uiState.detectedSpeechIntent
+        set(value) { uiState = uiState.copy(detectedSpeechIntent = value) }
+    private var isRetransformingState: Boolean
+        get() = uiState.isRetransforming
+        set(value) { uiState = uiState.copy(isRetransforming = value) }
+    private var isStandardKeyboardModeState: Boolean
+        get() = uiState.isStandardKeyboardMode
+        set(value) { uiState = uiState.copy(isStandardKeyboardMode = value) }
+    private var koreanKeyboardTypeState: KoreanKeyboardType
+        get() = uiState.koreanKeyboardType
+        set(value) { uiState = uiState.copy(koreanKeyboardType = value) }
+    private var keyboardModeState: ai.deartalk.android.data.pref.KeyboardMode
+        get() = uiState.keyboardMode
+        set(value) { uiState = uiState.copy(keyboardMode = value) }
+    private var clipboardTextState: String?
+
+        get() = uiState.clipboardText
+        set(value) { uiState = uiState.copy(clipboardText = value) }
     private var lastPastedClipText: String? = null
     private var lastDismissedClipText: String? = null
     private var lastObservedClipText: String? = null
     private var firstObservedClipTime: Long = 0L
     private var clipboardDismissJob: Job? = null
     private var retransformJob: Job? = null
+    private var activePunctuationCharState by mutableStateOf<Char?>(null)
 
     private val hangulComposer = HangulComposer()
     private val cheonjiinComposer = CheonjiinComposer()
+
+    private val testReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+            if (intent?.action == "ai.deartalk.android.ime.SET_TEST_STATE") {
+                val stt = intent.getStringExtra("raw_stt")
+                val ai = intent.getStringExtra("ai_text")
+                val toneId = intent.getStringExtra("tone_id")
+                val inputText = intent.getStringExtra("input_text")
+
+                if (stt != null) recognizedTextState = stt
+                if (ai != null) aiTextState = ai
+                if (toneId != null) {
+                    val foundTone = (tonesState.ifEmpty { CustomToneManager.DEFAULT_TONES })
+                        .find { it.id == toneId }
+                    if (foundTone != null) {
+                        selectedToneState = foundTone
+                    }
+                }
+                if (inputText != null) {
+                    currentInputConnection?.let { ic ->
+                        ic.performContextMenuAction(android.R.id.selectAll)
+                        ic.commitText(inputText, 1)
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -104,6 +174,13 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
 
         observeStt()
         observeTier()
+
+        val filter = android.content.IntentFilter("ai.deartalk.android.ime.SET_TEST_STATE")
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(testReceiver, filter, android.content.Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(testReceiver, filter)
+        }
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -115,6 +192,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
 
         UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
         koreanKeyboardTypeState = DearTalkSettings.getKoreanKeyboardType(this)
+        keyboardModeState = DearTalkSettings.getKeyboardMode(this)
         refreshClipboard()
 
         modelLifecycleManager.refreshState()
@@ -123,11 +201,14 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         aiModesState = CustomToneManager.getAllAiModes(this)
     }
 
+
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
         dismissClipboard()
         hangulComposer.reset()
         cheonjiinComposer.reset()
+        selectedSpeechIntentState = ai.deartalk.android.live.data.SpeechIntent.AUTO
+        detectedSpeechIntentState = ai.deartalk.android.live.data.SpeechIntent.AUTO
         if (micUiState == MicUiState.LISTENING || micUiState == MicUiState.PREPARING) {
             sttManager.cancelListening()
             micUiState = MicUiState.IDLE
@@ -245,7 +326,10 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         }
     }
 
-    private fun onUserKeyTyped() {
+    private fun onUserKeyTyped(isPunctuationKey: Boolean = false) {
+        if (!isPunctuationKey && activePunctuationCharState != null) {
+            activePunctuationCharState = null
+        }
         if (clipboardTextState != null) {
             dismissClipboard()
         }
@@ -326,6 +410,16 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                                     cheonjiinComposer.reset()
                                 }
                             },
+                            onCheonjiinPunctuationClick = {
+                                onUserKeyTyped(isPunctuationKey = true)
+                                runCatching {
+                                    cheonjiinComposer.inputPunctuationCycle(currentInputConnection)
+                                    activePunctuationCharState = cheonjiinComposer.activePunctuationChar
+                                }.onFailure { e ->
+                                    CrashLogger.logHandledException("DearTalkIME.onCheonjiinPunctuationClick", "Cheonjiin punctuation input exception", e)
+                                }
+                            },
+                            activePunctuationChar = activePunctuationCharState,
                             onDeleteClick = {
                                 onUserKeyTyped()
                                 runCatching {
@@ -375,6 +469,13 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                                     hangulComposer.commit(currentInputConnection)
                                 }
                                 isStandardKeyboardModeState = false
+                            },
+                            onCommitComposing = {
+                                if (koreanKeyboardTypeState == KoreanKeyboardType.CHEONJIIN) {
+                                    cheonjiinComposer.commit(currentInputConnection)
+                                } else {
+                                    hangulComposer.commit(currentInputConnection)
+                                }
                             }
                         )
                     } else {
@@ -387,6 +488,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                             tones = tonesState,
                             aiModes = aiModesState,
                             isTranslationMode = isTranslationModeState,
+                            keyboardMode = keyboardModeState,
                             selectedTargetLanguage = selectedTargetLanguageState,
                             availableLanguages = ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TRANSLATIONS,
                             onToggleTranslationMode = {
@@ -502,6 +604,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
             MicUiState.IDLE -> {
                 recognizedTextState = ""
                 aiTextState = ""
+                // 🌟 [UX 원칙]: 신규 음성 녹음 시작 시 톤앤매너(기본다듬기) 및 화행(AUTO) 선택을 일괄 초기화
+                resetSelectionsToDefault()
                 val targetLocale = ai.deartalk.android.data.pref.DearTalkSettings.getEffectiveLocale(this)
                 sttManager.startListening(targetLocale)
             }
@@ -715,6 +819,13 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         }
     }
 
+    private fun resetSelectionsToDefault() {
+        val defaultTone = tonesState.firstOrNull() ?: ai.deartalk.android.data.pref.CustomToneManager.DEFAULT_TONES.first()
+        selectedToneState = defaultTone
+        selectedSpeechIntentState = ai.deartalk.android.live.data.SpeechIntent.AUTO
+        detectedSpeechIntentState = ai.deartalk.android.live.data.SpeechIntent.AUTO
+    }
+
     private fun handleApplyAiText(text: String) {
         val textToCommit = text.ifBlank { aiTextState.ifBlank { recognizedTextState } }
         if (textToCommit.isNotBlank()) {
@@ -724,6 +835,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                 recognizedTextState = ""
                 micUiState = MicUiState.IDLE
                 statusMessageState = UiStrings.textApplied
+                // 🌟 [UX 원칙]: 메시지 입력 완료 시 톤앤매너(기본다듬기) 및 화행(AUTO) 선택을 일괄 초기화!
+                resetSelectionsToDefault()
             } else {
                 statusMessageState = "⚠️ 입력 대상 앱 연결 단절"
             }
@@ -735,6 +848,8 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         recognizedTextState = ""
         micUiState = MicUiState.IDLE
         statusMessageState = UiStrings.aiTextCleared
+        // 🌟 [UX 원칙]: 텍스트 삭제/취소 시에도 톤앤매너 및 화행 선택을 기본값으로 리셋!
+        resetSelectionsToDefault()
     }
 
     private fun handleDelete() {
@@ -831,6 +946,7 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
     override fun onDestroy() {
         super.onDestroy()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        runCatching { unregisterReceiver(testReceiver) }
         sttManager.destroy()
         ttsManager.shutdown()
         store.clear()

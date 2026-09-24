@@ -1,5 +1,6 @@
 package ai.deartalk.android.stt
 
+import ai.deartalk.android.crash.CrashLogger
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -219,10 +220,11 @@ class SpeechRecognitionManager(private val context: Context) {
 
             val langTag = ai.deartalk.android.util.LanguageLocaleHelper.getLanguageTag(locale)
 
-            // 🌟 상대방 듣기 및 장문 대화 시 무음 감지 대기 시간을 10초(10,000ms)로 대폭 확장하여 문장 중간의 호흡/단어 생각으로 인한 끊김 방지
-            val completeSilence = if (isLongSpeech) 10000L else 7000L
-            val possibleSilence = if (isLongSpeech) 7000L else 5000L
-            val minLength = if (isLongSpeech) 3000L else 2000L
+            // 🌟 발화 중 호흡이나 단어 생각으로 인한 끊김을 원천 차단하기 위해 단일 10초(10,000ms) 안전 대기 적용
+            // (말씀이 끝났을 때는 사용자가 [완료] 또는 [입력] 버튼을 터치하여 0ms 만에 즉시 전송)
+            val completeSilence = 10000L
+            val possibleSilence = 8000L
+            val minLength = 2000L
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -265,7 +267,8 @@ class SpeechRecognitionManager(private val context: Context) {
                 } else {
                     _voiceState.value = VoiceState.Idle
                 }
-            } catch (_: Throwable) {
+            } catch (t: Throwable) {
+                CrashLogger.logHandledException("SpeechRecognitionManager.stopListening", "SpeechRecognizer stopListening failure", t)
                 if (lastRecognizedText.isNotBlank()) {
                     val fallbackText = lastRecognizedText
                     lastRecognizedText = ""

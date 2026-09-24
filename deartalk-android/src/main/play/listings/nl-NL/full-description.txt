@@ -1,0 +1,48 @@
+✨ DearTalk AI: 100% On-Device AI-stemtoetsenbord & Live tolk voor 59 talen
+
+Geen data naar de cloud. Volledige Air-Gapped privacy.
+DearTalk AI draait volledig op de NPU van uw smartphone zonder ook maar één byte aan spraak- of tekstgegevens naar externe servers te sturen.
+
+🎙️ DEEL 1. Slim On-Device AI-stemtoetsenbord (Voice IME)
+Spreek op een natuurlijke manier in chat-, e-mail- of notitie-apps: de lokale AI verfijnt uw zinnen in real-time.
+
+1. ⚡ Real-time grammatica- en typefoutcorrectie
+- Generatieve AI op het apparaat analyseert de context en corrigeert typefouten en zinsbouw direct tot vloeiende zinnen.
+
+2. 🎭 Toon en stijl aanpassen met 1 tik
+- Pas uw toon moeiteloos aan elke situatie aan:
+  - 😼 Zelfverzekerd (Cheeky): Gevat, direct en krachtig
+  - 👔 Formeel (Formal): Zakelijk en professioneel
+  - 🤝 Beleefd (Polite): Respectvol en hoffelijk
+  - 💖 Empathisch: Warm, begripvol en vriendelijk
+
+⚡ DEEL 2. DearTalk Live: Persoonlijke live vertaling in 59 talen
+Communiceer soepel tijdens buitenlandse reizen, vluchten of vergaderingen – zelfs 100% offline.
+
+1. 🚀 Ultrasnelle 2-Track hybride motor
+- Track 1 (~50ms): Directe conceptvertaling in 59 talen dankzij Google ML Kit On-Device NMT.
+- Track 2 (~2s): Contextuele en natuurlijke verfijning via het lokale AI-model.
+
+2. 🔄 180° Symmetrische Flip View
+- Leg de telefoon op tafel: het scherm van uw gesprekspartner draait 180 graden voor natuurlijk oogcontact.
+
+3. 🔊 1-Tik Auto-Speak (TTS-spraakuitvoer)
+- Schakel het voorlezen van vertalingen direct in of uit via de bovenste balk.
+
+4. 🧹 Ringbuffer voor 200 berichten O(1)
+- FIFO-buffer van 200 berichten houdt het geheugen en de opslag van uw toestel altijd snel en licht.
+
+💰 DEEL 3. 100% Gratis voor Altijd & Geen AI-Kosten
+- Werkt lokaal op de NPU van uw smartphone zonder betaalde cloud-API-oproepen.
+- Spreek en vertaal onbeperkt: geen datakosten en geen kosten voor AI-tokens.
+- Geen maandelijkse abonnementen of verborgen kosten. Alle functies zijn volledig gratis.
+
+✈️ DEEL 4. 100% Offline: In Vliegtuigen, Buitenland en Zonder Internet
+- Werkt perfect in de vliegtuigmodus, tijdens reizen zonder roaming en op plekken zonder bereik.
+- Vertaal live in 59 talen en typ met AI-spraak zonder wifi of mobiele data.
+- Absolute Air-Gapped privacy beschermt uw vertrouwelijke gesprekken. 100% Air-Gap beveiliging & Vliegtuigmodus
+- Werkt volledig zonder internet. Absolute vertrouwelijkheid voor privégesprekken en zakelijke bijeenkomsten.
+
+🌐 Ondersteunde talen:
+- Lokale offline vertaling: 59 talen (Nederlands, Engels, Frans, Duits, Spaans, Koreaans, etc.)
+- App-interface & AI-tonen: Nederlands, Engels, Koreaans, Indonesisch.

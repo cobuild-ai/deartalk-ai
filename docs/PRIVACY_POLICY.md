@@ -51,5 +51,5 @@ If we update this Privacy Policy, the revised version will be published here wit
 ## 6. Contact Us
 
 If you have any questions or suggestions about this Privacy Policy, please contact us at:
-- **Email**: `privacy@deartalk.ai`
-- **GitHub Repository**: `https://github.com/smilelife/deartalk-ai`
+- **Email**: `onthelogic@gmail.com`
+- **GitHub Repository**: `https://github.com/cobuild-ai/deartalk-ai`

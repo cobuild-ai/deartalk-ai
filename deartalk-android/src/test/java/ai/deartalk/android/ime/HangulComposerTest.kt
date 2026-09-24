@@ -150,4 +150,78 @@ class HangulComposerTest {
         assertEquals("가A", fakeConnectionHandler.getFullText())
         assertFalse(composer.isComposing)
     }
+
+    @Test
+    fun testDoubleSBatchimWithoutShift() {
+        // Shift 없이 'ㅅ' 두 번 연타 시 'ㅆ' 받침 합성 검증 ("했")
+        composer.inputJamo(mockConnection, 'ㅎ')
+        composer.inputJamo(mockConnection, 'ㅐ')
+        composer.inputJamo(mockConnection, 'ㅅ')
+        assertEquals("햇", fakeConnectionHandler.getFullText())
+
+        composer.inputJamo(mockConnection, 'ㅅ')
+        assertEquals("했", fakeConnectionHandler.getFullText())
+    }
+
+    @Test
+    fun testThreeStepVowelSynthesis() {
+        // 'ㅗ' + 'ㅏ' + 'ㅣ' -> 'ㅙ' (왜)
+        composer.inputJamo(mockConnection, 'ㅇ')
+        composer.inputJamo(mockConnection, 'ㅗ')
+        assertEquals("오", fakeConnectionHandler.getFullText())
+
+        composer.inputJamo(mockConnection, 'ㅏ')
+        assertEquals("와", fakeConnectionHandler.getFullText())
+
+        composer.inputJamo(mockConnection, 'ㅣ')
+        assertEquals("왜", fakeConnectionHandler.getFullText())
+    }
+
+    @Test
+    fun testDoubleBatchimSsSplitWithVowel() {
+        // '있' + 'ㅓ' -> '이써' (도깨비불 쌍자음 분리)
+        composer.inputJamo(mockConnection, 'ㅇ')
+        composer.inputJamo(mockConnection, 'ㅣ')
+        composer.inputJamo(mockConnection, 'ㅅ')
+        composer.inputJamo(mockConnection, 'ㅅ')
+        assertEquals("있", fakeConnectionHandler.getFullText())
+
+        composer.inputJamo(mockConnection, 'ㅓ')
+        assertEquals("이써", fakeConnectionHandler.getFullText())
+    }
+
+    @Test
+    fun testCommonSentenceTyping() {
+        // "안녕하세요" 입력 흐름 검증
+        val text = "안녕하세요"
+        fakeConnectionHandler.clear()
+        composer.reset()
+        
+        // ㅇ ㅏ ㄴ
+        composer.inputJamo(mockConnection, 'ㅇ')
+        composer.inputJamo(mockConnection, 'ㅏ')
+        composer.inputJamo(mockConnection, 'ㄴ')
+        assertEquals("안", fakeConnectionHandler.getFullText())
+
+        // ㄴ ㅕ ㅇ
+        composer.inputJamo(mockConnection, 'ㄴ')
+        composer.inputJamo(mockConnection, 'ㅕ')
+        composer.inputJamo(mockConnection, 'ㅇ')
+        assertEquals("안녕", fakeConnectionHandler.getFullText())
+
+        // ㅎ ㅏ
+        composer.inputJamo(mockConnection, 'ㅎ')
+        composer.inputJamo(mockConnection, 'ㅏ')
+        assertEquals("안녕하", fakeConnectionHandler.getFullText())
+
+        // ㅅ ㅔ
+        composer.inputJamo(mockConnection, 'ㅅ')
+        composer.inputJamo(mockConnection, 'ㅔ')
+        assertEquals("안녕하세", fakeConnectionHandler.getFullText())
+
+        // ㅇ ㅛ
+        composer.inputJamo(mockConnection, 'ㅇ')
+        composer.inputJamo(mockConnection, 'ㅛ')
+        assertEquals("안녕하세요", fakeConnectionHandler.getFullText())
+    }
 }

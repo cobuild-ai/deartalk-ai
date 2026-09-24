@@ -1,0 +1,48 @@
+✨ DearTalk AI: 100% On-Device KI-Sprachtastatur & Live-Dolmetscher für 59 Sprachen
+
+Keine Datenübertragung in die Cloud. Absolute Air-Gapped-Privatsphäre.
+DearTalk AI läuft vollständig auf der NPU und den lokalen neuronalen Netzen Ihres Smartphones, ohne ein einziges Byte an Audio oder Text an externe Server zu senden.
+
+🎙️ TEIL 1. Intelligente On-Device KI-Sprachtastatur (Voice IME)
+Sprechen Sie ganz natürlich in Chat-, E-Mail- oder Notizen-Apps – die On-Device-KI verfeinert Ihre Gedanken in Echtzeit.
+
+1. ⚡ Echtzeit-Korrektur von Grammatik und Tippfehlern
+- Generative On-Device-KI korrigiert Erkennungsfehler, falsche Wortstellungen und Zeichensetzung im Handumdrehen in flüssige Sätze.
+
+2. 🎭 1-Tap Tonalitäts- und Stilwechsel
+- Passen Sie Ihren Tonfall jeder Situation sofort an:
+  - 😼 Selbstbewusst (Cheeky): Schlagfertig, mutig und ausdrucksstark
+  - 👔 Formell (Formal): Höflich und geschäftstauglich
+  - 🤝 Höflich (Polite): Respektvoll und zuvorkommend
+  - 💖 Empathisch: Herzlich, warm und verständnisvoll
+
+⚡ TEIL 2. DearTalk Live: Persönliches Dolmetschen in 59 Sprachen
+Verständigen Sie sich mühelos auf Auslandsreisen, im Flugzeug oder in Meetings – auch komplett offline.
+
+1. 🚀 2-Track Hybrid-Engine mit extrem niedriger Latenz
+- Track 1 (~50ms): Blitzschneller Übersetzungsentwurf für 59 Sprachen via Google ML Kit On-Device NMT.
+- Track 2 (~2s): Kontextuelle Verfeinerung durch das lokale neuronale KI-Sprachmodell.
+
+2. 🔄 180° Symmetrische Split-Screen Flip-Ansicht
+- Legen Sie das Smartphone auf den Tisch: Der Bildschirm Ihres Gegenübers dreht sich um 180 Grad, sodass Sie sich beim Sprechen direkt in die Augen schauen können.
+
+3. 🔊 1-Tap Auto-Speak (TTS-Sprachausgabe)
+- Schalten Sie die Audioausgabe der Übersetzung direkt in der oberen App-Leiste ein oder aus.
+
+4. 🧹 200-Nachrichten Ringpuffer O(1)
+- Automatischer FIFO-Puffer für 200 Nachrichten, der den Speicher Ihres Geräts schlank hält.
+
+💰 TEIL 3. 100% Dauerhaft Kostenlos & Keine KI-Gebühren
+- Läuft lokal auf der NPU Ihres Smartphones ohne teure Cloud-API-Aufrufe.
+- Sprechen und übersetzen Sie unbegrenzt: Keine Datenkosten und keine Token-Gebühren.
+- Keine monatlichen Abonnements oder versteckten Kosten. Alle Funktionen komplett kostenlos.
+
+✈️ TEIL 4. 100% Offline: Im Flugzeug, im Ausland und ohne Netzverbindung
+- Funktioniert zu 100% im Flugmodus, bei Auslandsreisen ohne Roaming und an Orten ohne Empfang.
+- Nutzen Sie 59-Sprachen-Live-Dolmetschen und KI-Sprachtastatur ohne WLAN oder mobile Daten.
+- Absolute Air-Gapped-Sicherheit schützt Ihre privaten Gespräche. 100% Air-Gap-Sicherheit & Flugmodus-Unterstützung
+- Funktioniert völlig ohne Internetverbindung. Höchste Diskretion für vertrauliche Geschäftsgespräche.
+
+🌐 Unterstützte Sprachen:
+- Lokale Offline-Übersetzung: 59 Sprachen (Deutsch, Englisch, Spanisch, Französisch, Koreanisch, Japanisch usw.)
+- Benutzeroberfläche & KI-Tonalität: Deutsch, Englisch, Koreanisch, Indonesisch.

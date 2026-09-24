@@ -44,7 +44,9 @@ data class LiveMessage(
     val targetLang: String,
     val tone: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
-    val originalRawText: String = rawText
+    val originalRawText: String = rawText,
+    val isDraft: Boolean = false,
+    val draftText: String? = null
 )
 
 /**

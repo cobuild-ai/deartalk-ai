@@ -7,13 +7,13 @@
         android:protectionLevel="signature" />
 
     <application>
-        <!-- 디버그 빌드 전용 ADB 테스트 리시버 -->
+        <!-- 디버그 빌드 전용 ADB 테스트 리시버 (디버그 빌드에서 adb shell 테스트 허용) -->
         <receiver
             android:name=".test.DearTalkTestReceiver"
-            android:exported="true"
-            android:permission="ai.deartalk.android.permission.TEST_INFERENCE">
+            android:exported="true">
             <intent-filter>
                 <action android:name="ai.deartalk.android.TEST_INFERENCE" />
+                <action android:name="ai.deartalk.android.TEST_TONE" />
             </intent-filter>
         </receiver>
     </application>

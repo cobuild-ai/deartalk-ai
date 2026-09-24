@@ -8,7 +8,7 @@
   <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
-[![Platform: Android](https://img.shields.io/badge/Platform-Android%2015%20(API%2035)-3DDC84?logo=android&logoColor=white)](#-안드로이드-키보드-주요-기능)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-안드로이드-키보드-주요-기능)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-핵심-엔지니어링-원칙)
 [![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-완벽한-개인정보-보호-보증)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -27,7 +27,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.2` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | DearTalk Live 1:1 대면 실시간 통역 메신저, 180° 대면 플립 뷰, 3개 국어 무결성 UI, 100% 오프라인 SQLite 저장소, 대화 맥락 기반 ASR 음성 오인식 복원 |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.5` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | NPU 제로 락 아키텍처(추론 스톨 원천 해결), 원문 왜곡 방지 프롬프트, 메인 설정 허브 개편(Live 상시 노출), 단일 10초 무음 안전 대기 |
 
 ---
 
@@ -45,7 +45,7 @@
 ### 🎙️ 1:1 실시간 대면 통역기 & 지능형 보이스 레코더 (`DearTalkLiveActivity`)
 - **메모리 격리 독립 풀스크린 대화 세션:** 키보드 IME 프로세스의 메모리 안정성을 위해 분리된 전용 액티비티에서 1:1 양방향 실시간 대면 통역 및 SQLite 대화록 영속화.
 - **2-Way 듀얼 마이크 & 180° 대면 회전:** 맞은편 상대방과의 대화를 위한 상하 대칭 회전 뷰 및 `[🙋 내가 말하기]`, `[👂 상대방 듣기]` 듀얼 액션 바.
-- **온디바이스 AI 팩 & 하드웨어 진단 통합:** 설정 바텀시트에서 RAM/스토리지 상태 진단 및 Qwen 온디바이스 AI 모델 팩(1.2GB) 다운로드/퍼지 관리.
+- **온디바이스 AI 팩 & 하드웨어 진단 통합:** 설정 바텀시트에서 RAM/스토리지 상태 진단 및 Gemma 4 온디바이스 AI 모델 팩(PAD) 다운로드/퍼지 관리.
 - **Zero-Hardcoding 사후 의도 조율:** 대화 완료 후에도 의문문, 평서문, 요청문으로 톤을 자유롭게 재작성하는 실시간 지능형 엔진.
 - **0ms 즉각 다시 듣기 & 다국어 TTS:** 상대방 발화 및 번역문 즉시 음성 재생 지원.
 

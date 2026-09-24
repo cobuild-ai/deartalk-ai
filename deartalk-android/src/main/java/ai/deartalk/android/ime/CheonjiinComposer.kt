@@ -17,19 +17,19 @@ class CheonjiinComposer {
         "", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"
     )
 
-    // 복합 받침 매핑 (초성 인덱스 -> 종성 인덱스 결합)
+    // 복합 받침 매핑 (Pair(첫째받침 종성 인덱스, 둘째자음 초성 인덱스) -> 복합받침 종성 인덱스)
     private val doubleJong = mapOf(
-        Pair(1, 19) to 3,   // ㄱ + ㅅ = ㄳ
-        Pair(4, 22) to 5,   // ㄴ + ㅈ = ㄵ
-        Pair(4, 27) to 6,   // ㄴ + ㅎ = ㄶ
-        Pair(8, 1) to 9,    // ㄹ + ㄱ = ㄺ
-        Pair(8, 16) to 10,  // ㄹ + ㅁ = ㄻ
-        Pair(8, 17) to 11,  // ㄹ + ㅂ = ㄼ
-        Pair(8, 19) to 12,  // ㄹ + ㅅ = ㄽ
-        Pair(8, 25) to 13,  // ㄹ + ㅌ = ㄾ
-        Pair(8, 26) to 14,  // ㄹ + ㅍ = ㄿ
-        Pair(8, 27) to 15,  // ㄹ + ㅎ = ㅀ
-        Pair(17, 19) to 18  // ㅂ + ㅅ = ㅄ
+        Pair(1, 9) to 3,   // ㄱ(jong 1) + ㅅ(cho 9) = ㄳ(jong 3)
+        Pair(4, 12) to 5,  // ㄴ(jong 4) + ㅈ(cho 12) = ㄵ(jong 5)
+        Pair(4, 18) to 6,  // ㄴ(jong 4) + ㅎ(cho 18) = ㄶ(jong 6)
+        Pair(8, 0) to 9,   // ㄹ(jong 8) + ㄱ(cho 0) = ㄺ(jong 9)
+        Pair(8, 6) to 10,  // ㄹ(jong 8) + ㅁ(cho 6) = ㄻ(jong 10)
+        Pair(8, 7) to 11,  // ㄹ(jong 8) + ㅂ(cho 7) = ㄼ(jong 11)
+        Pair(8, 9) to 12,  // ㄹ(jong 8) + ㅅ(cho 9) = ㄽ(jong 12)
+        Pair(8, 16) to 13, // ㄹ(jong 8) + ㅌ(cho 16) = ㄾ(jong 13)
+        Pair(8, 17) to 14, // ㄹ(jong 8) + ㅍ(cho 17) = ㄿ(jong 14)
+        Pair(8, 18) to 15, // ㄹ(jong 8) + ㅎ(cho 18) = ㅀ(jong 15)
+        Pair(17, 9) to 18  // ㅂ(jong 17) + ㅅ(cho 9) = ㅄ(jong 18)
     )
 
     // 자음 키 그룹별 순환 목록
@@ -51,7 +51,22 @@ class CheonjiinComposer {
     private var lastKeyGroup: Char? = null
     private var lastKeyIndex: Int = 0
     private var lastKeyTime: Long = 0L
-    private val KEY_TIMEOUT_MS = 1200L
+    private val KEY_TIMEOUT_MS = 650L
+
+    // 특수문자/구두점 (.,?!) 순환 연타 상태 추적
+    private val punctuationCycle = listOf('.', ',', '?', '!')
+    private var lastPunctuationIndex: Int = -1
+    private var lastPunctuationTime: Long = 0L
+
+    val activePunctuationChar: Char?
+        get() {
+            val now = System.currentTimeMillis()
+            return if (lastPunctuationIndex >= 0 && (now - lastPunctuationTime) < KEY_TIMEOUT_MS) {
+                punctuationCycle[lastPunctuationIndex]
+            } else {
+                null
+            }
+        }
 
     // 천지인 모음 합성 상태 추적 ("" or "ㆍ", "ㆍㆍ", "ㅣ", "ㅡ" etc)
     private var vowelBuffer = StringBuilder()
@@ -83,16 +98,40 @@ class CheonjiinComposer {
      * 자음 키 입력 처리 ('ㄱ', 'ㄴ', 'ㄷ', 'ㅂ', 'ㅅ', 'ㅈ', 'ㅇ')
      */
     fun inputConsonantKey(ic: InputConnection?, keyGroup: Char) {
+        lastPunctuationIndex = -1
         val now = System.currentTimeMillis()
         val cycle = consonantCycles[keyGroup] ?: listOf(keyGroup)
 
         // 1. 이전 키와 동일한 키를 타임아웃 내에 연타한 경우: 순환 변경
         if (lastKeyGroup == keyGroup && (now - lastKeyTime) < KEY_TIMEOUT_MS) {
-            lastKeyIndex = (lastKeyIndex + 1) % cycle.size
-            val targetChar = cycle[lastKeyIndex]
-            lastKeyTime = now
-            cycleCurrentConsonant(ic, targetChar)
-            return
+            val nextIndex = lastKeyIndex + 1
+            if (nextIndex < cycle.size) {
+                lastKeyIndex = nextIndex
+                val targetChar = cycle[lastKeyIndex]
+                lastKeyTime = now
+                cycleCurrentConsonant(ic, targetChar)
+                return
+            } else {
+                // 사이클을 모두 소진한 후 또 누른 경우:
+                // 종성이 있는 완성 음절이면 앞 글자를 확정하고 새 글자 초성으로 시작!
+                if (cho != -1 && jung != -1 && jong != 0) {
+                    commit(ic)
+                    val targetChar = cycle[0]
+                    cho = chosungs.indexOf(targetChar)
+                    lastKeyGroup = keyGroup
+                    lastKeyIndex = 0
+                    lastKeyTime = now
+                    ic?.setComposingText(makeSyllable(), 1)
+                    return
+                } else {
+                    // 초성 자리에 있을 때는 처음으로 순환
+                    lastKeyIndex = 0
+                    val targetChar = cycle[0]
+                    lastKeyTime = now
+                    cycleCurrentConsonant(ic, targetChar)
+                    return
+                }
+            }
         }
 
         // 2. 새로운 키 입력 또는 타임아웃 경과
@@ -178,25 +217,15 @@ class CheonjiinComposer {
      * 천지인 모음 키 입력 처리: 'ㅣ', 'ㆍ' (또는 '·'), 'ㅡ'
      */
     fun inputVowelKey(ic: InputConnection?, vowelChar: Char) {
+        lastPunctuationIndex = -1
         lastKeyGroup = null // 모음 입력 시 자음 연타 리셋
 
-        // 1. 종성이 복합 받침인 경우: 뒷받침을 떼어 다음 글자 초성으로 이동
+        // 종성이 있는 상태에서 모음 입력 시: 받침을 분리하여 다음 글자 초성으로 이동 (도깨비불 현상)
         if (cho != -1 && jung != -1 && jong != 0) {
             val (firstJong, secondCho) = splitJong(jong)
             jong = firstJong
             commit(ic)
             cho = secondCho
-            jung = -1
-            jong = 0
-            vowelBuffer.clear()
-        }
-
-        // 2. 단일 종성이 있는 상태에서 모음 입력 시: 종성을 다음 글자 초성으로 이동
-        else if (cho != -1 && jung != -1 && jong != 0) {
-            val prevJongChar = jongsungs[jong]
-            jong = 0
-            commit(ic)
-            cho = chosungs.indexOf(prevJongChar)
             jung = -1
             jong = 0
             vowelBuffer.clear()
@@ -289,6 +318,7 @@ class CheonjiinComposer {
     }
 
     fun delete(ic: InputConnection?) {
+        lastPunctuationIndex = -1
         lastKeyGroup = null
 
         if (jong != 0) {
@@ -327,6 +357,7 @@ class CheonjiinComposer {
     }
 
     fun space(ic: InputConnection?) {
+        lastPunctuationIndex = -1
         lastKeyGroup = null
         if (isComposing) {
             commit(ic)
@@ -335,7 +366,39 @@ class CheonjiinComposer {
         }
     }
 
+    /**
+     * 문장부호 순환 키 (.,?!) 입력 처리
+     * - 연속 클릭 시: '.' -> ',' -> '?' -> '!' 순환 교체
+     * - 타임아웃(1.2초) 경과 또는 다른 글자 작성 후 입력 시: 새 '.' 입력
+     */
+    fun inputPunctuationCycle(ic: InputConnection?) {
+        val now = System.currentTimeMillis()
+        lastKeyGroup = null
+
+        // 1. 조합 중인 한글이 있다면 먼저 확정 커밋
+        if (isComposing) {
+            commit(ic)
+        }
+
+        // 2. 직전 입력이 구두점 순환이고 타임아웃(1.2초) 내 연타인 경우 직전문자 1글자 삭제 후 교체
+        if (lastPunctuationIndex >= 0 && (now - lastPunctuationTime) < KEY_TIMEOUT_MS) {
+            lastPunctuationIndex = (lastPunctuationIndex + 1) % punctuationCycle.size
+            val targetChar = punctuationCycle[lastPunctuationIndex]
+            lastPunctuationTime = now
+            ic?.deleteSurroundingText(1, 0)
+            ic?.commitText(targetChar.toString(), 1)
+            return
+        }
+
+        // 3. 새로운 구두점 입력 시작 ('.'부터)
+        lastPunctuationIndex = 0
+        lastPunctuationTime = now
+        val targetChar = punctuationCycle[0]
+        ic?.commitText(targetChar.toString(), 1)
+    }
+
     fun commit(ic: InputConnection?) {
+        lastPunctuationIndex = -1
         lastKeyGroup = null
         if (isComposing) {
             val text = makeSyllable()
@@ -366,5 +429,7 @@ class CheonjiinComposer {
         lastKeyGroup = null
         lastKeyIndex = 0
         lastKeyTime = 0L
+        lastPunctuationIndex = -1
+        lastPunctuationTime = 0L
     }
 }

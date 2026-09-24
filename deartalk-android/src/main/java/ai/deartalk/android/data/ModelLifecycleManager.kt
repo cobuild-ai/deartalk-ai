@@ -23,21 +23,22 @@ sealed class ModelPackState {
  * 🌟 현재 활성화된 온디바이스 지능 등급
  */
 enum class ActiveAiTier {
-    HIGH_QWEN,   // 🌟 Qwen3-1.7B Full Suite (PAD 고성능 올인원 엔진)
+    GEMMA_4,     // 🌟 Gemma 4 E2B LiteRT (PAD 고성능 온디바이스 엔진)
     BASE_GEMMA,  // 🟢 Gemma 2B LiteRT (기본 내장 경량 엔진)
     STT_ONLY     // ⚡ 순수 음성인식 (LLM 미탑재 기기: STT 정상 동작 + 1-Tap PAD 다운로드 대기)
 }
 
 /**
- * 📦 Qwen 고품질 보이스/번역 모델 패키지(STT + LLM + TTS) 생명주기 관리자
+ * 📦 Gemma 4 온디바이스 AI 모델 패키지 생명주기 관리자
  * Play Asset Delivery (PAD) on-demand 표준 및 로컬 ADB 경로(/data/local/tmp/llm/)와 호환
  */
 class ModelLifecycleManager(private val context: Context) {
 
     companion object {
         private const val TAG = "ModelLifecycleManager"
-        const val QWEN_PACK_NAME = "qwen_voice_pack"
-        const val TOTAL_PACK_SIZE_BYTES = 1845493760L // 약 1.84 GB (STT 400MB + LLM 1.0GB + TTS 440MB)
+        const val GEMMA_PACK_NAME = "gemma_asset_pack"
+        const val TOTAL_PACK_SIZE_BYTES = 1845493760L // 약 1.84 GB
+        private const val MIN_VALID_MODEL_BYTES = 50 * 1024 * 1024L // 최소 50MB 이상
 
         const val KEY_STT = "stt"
         const val KEY_LLM = "llm"
@@ -58,7 +59,7 @@ class ModelLifecycleManager(private val context: Context) {
     }
 
     fun getModelDirectory(): File {
-        val dir = File(context.filesDir, "models/qwen")
+        val dir = File(context.filesDir, "models/gemma")
         if (!dir.exists()) {
             dir.mkdirs()
         }
@@ -74,12 +75,12 @@ class ModelLifecycleManager(private val context: Context) {
         val paths = resolveModelPaths()
         if (paths.isNotEmpty()) {
             _packState.value = ModelPackState.Installed(paths)
-            _activeTier.value = ActiveAiTier.HIGH_QWEN
+            _activeTier.value = ActiveAiTier.GEMMA_4
         } else {
             if (_packState.value !is ModelPackState.Downloading) {
                 _packState.value = ModelPackState.NotInstalled
             }
-            // Gemma 기본 모델 존재 여부 확인
+            // Gemma 기본 모델 존재 여부 확인 (최소 50MB 유효 바이너리 검증)
             val hasGemma = hasGemmaBaseModel()
             _activeTier.value = if (hasGemma) ActiveAiTier.BASE_GEMMA else ActiveAiTier.STT_ONLY
         }
@@ -89,6 +90,7 @@ class ModelLifecycleManager(private val context: Context) {
         val gemmaCandidates = listOf(
             "/data/local/tmp/llm/model.litertlm",
             "/data/local/tmp/llm/gemma-2b-it.litertlm",
+            "/data/local/tmp/llm/gemma-4-E2B-it.litertlm",
             "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
             "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
             File(context.filesDir, "models/model.litertlm").absolutePath,
@@ -96,51 +98,64 @@ class ModelLifecycleManager(private val context: Context) {
         )
         return gemmaCandidates.any { path ->
             val f = File(path)
-            f.exists() && f.length() > 0
+            f.exists() && f.length() >= MIN_VALID_MODEL_BYTES
         }
     }
 
     /**
-     * 🔍 모델 로컬 경로 해석 (ADB 테스트 디렉토리 우선 검사)
+     * 🔍 모델 로컬 경로 해석 (ADB 테스트 디렉토리 및 실존 바이너리 우선 검사)
      */
     fun resolveModelPaths(): Map<String, String> {
         val paths = mutableMapOf<String, String>()
 
-        // 1. ADB 개발자 로컬 경로 감지
+        // 0. Google Play Asset Delivery (install-time) 경로 감지
+        try {
+            val assetPackManager = com.google.android.play.core.assetpacks.AssetPackManagerFactory.getInstance(context)
+            val padLocation = assetPackManager.getPackLocation("gemma_asset_pack")
+            if (padLocation != null) {
+                val padAssetsPath = padLocation.assetsPath()
+                if (!padAssetsPath.isNullOrBlank()) {
+                    val padLlm = File(padAssetsPath, "models/gemma/gemma-4-E2B-it.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+                        ?: File(padAssetsPath, "models/gemma-4-E2B-it.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+                        ?: File(padAssetsPath, "models/model.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+                    if (padLlm != null) {
+                        paths[KEY_LLM] = padLlm.absolutePath
+                        return paths
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "PAD location query skipped or unavailable: ${e.message}")
+        }
+
+        // 1. ADB 개발자 로컬 경로 감지 (유효 크기 50MB 이상)
         val adbDir = File("/data/local/tmp/llm")
         if (adbDir.exists() && adbDir.isDirectory) {
-            val sttFile = File(adbDir, "qwen3-asr-0.6b.bin")
-            val llmFile = File(adbDir, "qwen2.5-0.5b-it.bin").takeIf { it.exists() }
-                ?: File(adbDir, "qwen-0.5b-it.bin").takeIf { it.exists() }
-                ?: File(adbDir, "qwen3-1.7b-it.bin")
-            val ttsFile = File(adbDir, "qwen3-tts-0.6b.bin")
-            if (sttFile.exists() || llmFile.exists() || ttsFile.exists()) {
-                if (sttFile.exists()) paths[KEY_STT] = sttFile.absolutePath
-                if (llmFile.exists()) paths[KEY_LLM] = llmFile.absolutePath
-                if (ttsFile.exists()) paths[KEY_TTS] = ttsFile.absolutePath
+            val llmFile = File(adbDir, "gemma-4-E2B-it.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+                ?: File(adbDir, "model.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+                ?: File(adbDir, "model.bin").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+
+            if (llmFile != null) {
+                paths[KEY_LLM] = llmFile.absolutePath
                 return paths
             }
         }
 
-        // 2. 앱 내부 On-Demand 다운로드 디렉토리 감지
+        // 2. 앱 내부 On-Demand 다운로드 디렉토리 감지 (유효 크기 50MB 이상)
         val modelDir = getModelDirectory()
-        val appStt = File(modelDir, "qwen3-asr-0.6b.bin")
-        val appLlm = File(modelDir, "qwen2.5-0.5b-it.bin").takeIf { it.exists() }
-            ?: File(modelDir, "qwen-0.5b-it.bin").takeIf { it.exists() }
-            ?: File(modelDir, "qwen3-1.7b-it.bin")
-        val appTts = File(modelDir, "qwen3-tts-0.6b.bin")
+        val appLlm = File(modelDir, "gemma-4-E2B-it.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+            ?: File(modelDir, "model.litertlm").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
+            ?: File(modelDir, "model.bin").takeIf { it.exists() && it.length() >= MIN_VALID_MODEL_BYTES }
 
-        if (appStt.exists() && appLlm.exists() && appTts.exists()) {
-            paths[KEY_STT] = appStt.absolutePath
+        if (appLlm != null) {
             paths[KEY_LLM] = appLlm.absolutePath
-            paths[KEY_TTS] = appTts.absolutePath
         }
 
         return paths
     }
 
     /**
-     * 📥 Play Asset Delivery On-Demand 또는 안전한 시뮬레이션 패키지 다운로드
+     * 📥 Play Asset Delivery On-Demand 상태 알림 (Zero Fake Protocol)
      */
     fun startDownload(onSuccess: (() -> Unit)? = null, onError: ((String) -> Unit)? = null) {
         if (_packState.value is ModelPackState.Downloading || isInstalled()) return
@@ -148,32 +163,10 @@ class ModelLifecycleManager(private val context: Context) {
         downloadJob?.cancel()
         downloadJob = scope.launch {
             try {
-                Log.d(TAG, "📥 Qwen 고성능 모델 패키지 다운로드 시작 (총 ${TOTAL_PACK_SIZE_BYTES / (1024 * 1024)}MB)...")
-                val totalBytes = TOTAL_PACK_SIZE_BYTES
-                var downloaded = 0L
-
-                // 부드러운 프로그레스 시뮬레이션 및 파일 생성
-                val modelDir = getModelDirectory()
-                val steps = 20
-                val chunkSize = totalBytes / steps
-
-                for (i in 1..steps) {
-                    delay(120) // 120ms 간격으로 안정적인 프로그레스 갱신
-                    downloaded += chunkSize
-                    val percent = ((downloaded.toDouble() / totalBytes) * 100).toInt().coerceIn(1, 100)
-                    _packState.value = ModelPackState.Downloading(percent, downloaded, totalBytes)
-                }
-
-                // 무결성 검증용 파일 저장
-                File(modelDir, "qwen3-asr-0.6b.bin").writeText("QWEN3_ASR_MODEL_MANIFEST")
-                File(modelDir, "qwen3-1.7b-it.bin").writeText("QWEN3_1.7B_LLM_MANIFEST")
-                File(modelDir, "qwen3-tts-0.6b.bin").writeText("QWEN3_TTS_MODEL_MANIFEST")
-
-                val paths = resolveModelPaths()
-                _packState.value = ModelPackState.Installed(paths)
-                _activeTier.value = ActiveAiTier.HIGH_QWEN
-                Log.d(TAG, "🎉 Qwen 고성능 모델 패키지 설치 완료!")
-                onSuccess?.invoke()
+                Log.d(TAG, "📥 Gemma 4 온디바이스 AI 팩 Play Asset Delivery 배포 준비 확인...")
+                // 가짜 manifest 파일 생성을 엄격히 금지하고 정직하게 배포 대기 상태로 보고
+                _packState.value = ModelPackState.Error("Play Asset Delivery (PAD) 패키지가 배포 준비 중입니다.")
+                onError?.invoke("Play Asset Delivery 패키지 배포 준비 중")
             } catch (e: Exception) {
                 Log.e(TAG, "❌ 다운로드 실패", e)
                 _packState.value = ModelPackState.Error(e.message ?: "다운로드 중 오류가 발생했습니다.")
@@ -205,7 +198,7 @@ class ModelLifecycleManager(private val context: Context) {
         }
 
         refreshState()
-        Log.d(TAG, "🧹 Qwen 모델 패키지 삭제 완료 (환원된 용량: ${freedBytes / (1024 * 1024)}MB)")
+        Log.d(TAG, "🧹 Gemma 4 모델 패키지 삭제 완료 (환원된 용량: ${freedBytes / (1024 * 1024)}MB)")
         return freedBytes
     }
 }

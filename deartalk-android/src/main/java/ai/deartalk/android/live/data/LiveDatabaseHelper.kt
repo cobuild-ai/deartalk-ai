@@ -1,5 +1,6 @@
 package ai.deartalk.android.live.data
 
+import ai.deartalk.android.crash.CrashLogger
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -12,7 +13,7 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
 
     companion object {
         const val DATABASE_NAME = "deartalk_live.db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
 
         // Sessions Table
         const val TABLE_SESSIONS = "live_sessions"
@@ -34,6 +35,8 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         const val COL_MSG_TONE = "tone"
         const val COL_MSG_CREATED_AT = "created_at"
         const val COL_MSG_ORIGINAL_RAW_TEXT = "original_raw_text"
+        const val COL_MSG_IS_DRAFT = "is_draft"
+        const val COL_MSG_DRAFT_TEXT = "draft_text"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -59,6 +62,8 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
                 $COL_MSG_TONE TEXT,
                 $COL_MSG_CREATED_AT INTEGER NOT NULL,
                 $COL_MSG_ORIGINAL_RAW_TEXT TEXT,
+                $COL_MSG_IS_DRAFT INTEGER DEFAULT 0,
+                $COL_MSG_DRAFT_TEXT TEXT,
                 FOREIGN KEY($COL_MSG_SESSION_ID) REFERENCES $TABLE_SESSIONS($COL_SESSION_ID) ON DELETE CASCADE
             )
         """.trimIndent()
@@ -81,7 +86,17 @@ class LiveDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_
         if (oldVersion < 2) {
             try {
                 db.execSQL("ALTER TABLE $TABLE_MESSAGES ADD COLUMN $COL_MSG_ORIGINAL_RAW_TEXT TEXT")
-            } catch (_: Throwable) {}
+            } catch (t: Throwable) {
+                CrashLogger.logHandledException("LiveDatabaseHelper.onUpgrade", "Migration to v2 failed (column may already exist)", t)
+            }
+        }
+        if (oldVersion < 3) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_MESSAGES ADD COLUMN $COL_MSG_IS_DRAFT INTEGER DEFAULT 0")
+                db.execSQL("ALTER TABLE $TABLE_MESSAGES ADD COLUMN $COL_MSG_DRAFT_TEXT TEXT")
+            } catch (t: Throwable) {
+                CrashLogger.logHandledException("LiveDatabaseHelper.onUpgrade", "Migration to v3 failed (columns may already exist)", t)
+            }
         }
     }
 }

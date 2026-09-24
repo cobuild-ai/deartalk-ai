@@ -25,8 +25,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.Mic
@@ -37,6 +39,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -46,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -80,6 +84,9 @@ import ai.deartalk.android.live.ui.components.LiveSettingsBottomSheet
 import ai.deartalk.android.live.ui.components.SymmetricActionMicBar
 import ai.deartalk.android.stt.LanguageModelStatus
 import ai.deartalk.android.util.LanguageLocaleHelper
+import ai.deartalk.android.ui.state.LiveUiState
+import ai.deartalk.android.live.data.LiveMessage
+import ai.deartalk.android.live.data.SpeechIntent
 
 import ai.deartalk.android.agent.DearTalkIntentEngine
 import ai.deartalk.android.data.ModelLifecycleManager
@@ -145,7 +152,6 @@ fun DearTalkLiveScreen(
     }
     val isProcessing by controller.isProcessing.collectAsState()
     val rephrasingMessageId by controller.rephrasingMessageId.collectAsState()
-    val isContinuousListening by controller.isContinuousListening.collectAsState()
     val rmsDb by controller.rmsDb.collectAsState()
     val modelDownloadStatus by controller.modelDownloadStatus.collectAsState()
 
@@ -159,46 +165,9 @@ fun DearTalkLiveScreen(
     val partnerStatus = modelDownloadStatus[partnerLangTag]
 
     var showSessionSheet by remember { mutableStateOf(false) }
-    var showMyLangMenu by remember { mutableStateOf(false) }
-    var showPartnerLangMenu by remember { mutableStateOf(false) }
     var showLiveSettingsSheet by remember { mutableStateOf(openSettings) }
     var isFlipViewEnabled by remember { mutableStateOf(initialFlipView) }
-    var showToneMenu by remember { mutableStateOf(false) }
-
-    val tones = remember(UiStrings.currentLocale) {
-        listOf(
-            "✨ " + UiStrings.toneRefine,
-            "🙇 " + UiStrings.tonePolite,
-            "😊 " + UiStrings.toneCasual,
-            "💼 " + UiStrings.toneBusiness,
-            "😆 " + UiStrings.toneFunny,
-            "😼 " + UiStrings.toneCheeky
-        )
-    }
-
-    // 🌟 1. 공식 지원 3대 언어 (KO, EN, ID)
-    val officialLangs = remember(UiStrings.currentLocale) {
-        listOf(
-            "KO" to (if (UiStrings.isKo) "🇰🇷 한국어" else if (UiStrings.isId) "🇰🇷 Korea" else "🇰🇷 Korean"),
-            "EN" to (if (UiStrings.isKo) "🇺🇸 English" else if (UiStrings.isId) "🇺🇸 Inggris" else "🇺🇸 English"),
-            "ID" to (if (UiStrings.isKo) "🇮🇩 인도네시아어" else if (UiStrings.isId) "🇮🇩 Indonesia" else "🇮🇩 Indonesian")
-        )
-    }
-
-    // 🌐 2. 글로벌 교차 통역 지원 언어
-    val crossLangs = remember(UiStrings.currentLocale) {
-        listOf(
-            "JA" to (if (UiStrings.isKo) "🇯🇵 일본어" else if (UiStrings.isId) "🇯🇵 Jepang" else "🇯🇵 Japanese"),
-            "ZH" to (if (UiStrings.isKo) "🇨🇳 중국어" else if (UiStrings.isId) "🇨🇳 Mandarin" else "🇨🇳 Chinese"),
-            "ES" to (if (UiStrings.isKo) "🇪🇸 스페인어" else if (UiStrings.isId) "🇪🇸 Spanyol" else "🇪🇸 Spanish"),
-            "FR" to (if (UiStrings.isKo) "🇫🇷 프랑스어" else if (UiStrings.isId) "🇫🇷 Prancis" else "🇫🇷 French"),
-            "DE" to (if (UiStrings.isKo) "🇩🇪 독일어" else if (UiStrings.isId) "🇩🇪 Jerman" else "🇩🇪 German"),
-            "VI" to (if (UiStrings.isKo) "🇻🇳 베트남어" else if (UiStrings.isId) "🇻🇳 Vietnam" else "🇻🇳 Vietnamese"),
-            "TH" to (if (UiStrings.isKo) "🇹🇭 태국어" else if (UiStrings.isId) "🇹🇭 Thailand" else "🇹🇭 Thai")
-        )
-    }
-
-    val allSupportedLangs = remember(officialLangs, crossLangs) { officialLangs + crossLangs }
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
 
     // 마이크 권한 요청 런처
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -233,6 +202,49 @@ fun DearTalkLiveScreen(
         )
     }
 
+    if (showClearConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirmDialog = false },
+            title = {
+                Text(
+                    text = if (UiStrings.isKo) "대화 내용 비우기" else if (UiStrings.isId) "Kosongkan Percakapan" else "Clear Conversation",
+                    fontWeight = FontWeight.Bold,
+                    color = DearTalkText
+                )
+            },
+            text = {
+                Text(
+                    text = if (UiStrings.isKo) "현재 화면의 모든 대화 기록을 지우시겠습니까?" else if (UiStrings.isId) "Hapus semua percakapan di layar saat ini?" else "Clear all conversation history on this screen?",
+                    color = Color.LightGray
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearConfirmDialog = false
+                        controller.clearTimeline()
+                    }
+                ) {
+                    Text(
+                        text = if (UiStrings.isKo) "비우기" else if (UiStrings.isId) "Kosongkan" else "Clear",
+                        color = Color(0xFFEF4444),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirmDialog = false }) {
+                    Text(
+                        text = UiStrings.btnCancel,
+                        color = Color.Gray
+                    )
+                }
+            },
+            containerColor = DearTalkSurface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
     if (showSessionSheet) {
         LiveSessionListSheet(
             sessions = sessions,
@@ -243,53 +255,164 @@ fun DearTalkLiveScreen(
         )
     }
 
+    val liveUiState = LiveUiState(
+        currentSession = currentSession,
+        messages = messages,
+        sessions = sessions,
+        activeSpeaker = activeSpeaker,
+        processingSpeaker = processingSpeaker,
+        streamingText = streamingText,
+        isProcessing = isProcessing,
+        rephrasingMessageId = rephrasingMessageId,
+        rmsDb = rmsDb,
+        myLang = controller.myLang,
+        partnerLang = controller.partnerLang,
+        myIntent = controller.myIntent,
+        partnerIntent = controller.partnerIntent,
+        myDetectedIntent = controller.myDetectedIntent,
+        partnerDetectedIntent = controller.partnerDetectedIntent,
+        selectedTone = controller.selectedTone,
+        isFlipViewEnabled = isFlipViewEnabled,
+        isAutoSpeakEnabled = controller.isAutoSpeakEnabled,
+        myModelStatus = myStatus,
+        partnerModelStatus = partnerStatus
+    )
+
+    DearTalkLiveContent(
+        state = liveUiState,
+        onBackClick = onBackClick,
+        onToggleAutoSpeak = {
+            controller.toggleAutoSpeak()
+            val toastMsg = if (controller.isAutoSpeakEnabled) {
+                if (UiStrings.isKo) "🔊 자동 음성 읽기 켜짐" else if (UiStrings.isId) "🔊 Baca Suara Otomatis Aktif" else "🔊 Auto-Speak Enabled"
+            } else {
+                if (UiStrings.isKo) "🔇 자동 음성 읽기 꺼짐" else if (UiStrings.isId) "🔇 Baca Suara Otomatis Nonaktif" else "🔇 Auto-Speak Disabled"
+            }
+            Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
+        },
+        onToggleFlipView = {
+            isFlipViewEnabled = !isFlipViewEnabled
+            val toastMsg = if (isFlipViewEnabled) UiStrings.liveMenuFlipOn else UiStrings.liveMenuFlipOff
+            Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
+        },
+        onClearClick = { showClearConfirmDialog = true },
+        onOpenSettings = { showLiveSettingsSheet = true },
+        onSpeakMeClick = { checkAndExecute { controller.toggleSpeakMe() } },
+        onListenPartnerClick = { checkAndExecute { controller.toggleListenPartner() } },
+        onMyIntentSelected = { controller.setIntentByUser(ActiveSpeaker.ME, it) },
+        onPartnerIntentSelected = { controller.setIntentByUser(ActiveSpeaker.PARTNER, it) },
+        onMyLangSelected = { code -> controller.setLanguages(my = code, partner = controller.partnerLang) },
+        onPartnerLangSelected = { code -> controller.setLanguages(my = controller.myLang, partner = code) },
+        onSwapLanguages = { controller.swapLanguages() },
+        onToneSelected = { controller.setTone(it) },
+        onReplayMessage = { controller.replayMessage(it) }
+    )
+}
+
+/**
+ * 🎨 DearTalk Live 순수 상태 기반 화면 (Stateless Composable / Clean Architecture)
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DearTalkLiveContent(
+    state: LiveUiState,
+    onBackClick: () -> Unit,
+    onToggleAutoSpeak: () -> Unit,
+    onToggleFlipView: () -> Unit,
+    onClearClick: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onSpeakMeClick: () -> Unit,
+    onListenPartnerClick: () -> Unit,
+    onMyIntentSelected: (SpeechIntent) -> Unit,
+    onPartnerIntentSelected: (SpeechIntent) -> Unit,
+    onMyLangSelected: (String) -> Unit,
+    onPartnerLangSelected: (String) -> Unit,
+    onSwapLanguages: () -> Unit,
+    onToneSelected: (String) -> Unit,
+    onReplayMessage: (LiveMessage) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showMyLangMenu by remember { mutableStateOf(false) }
+    var showPartnerLangMenu by remember { mutableStateOf(false) }
+    var showToneMenu by remember { mutableStateOf(false) }
+
+    val tones = remember(UiStrings.currentLocale) {
+        listOf(
+            "✨ " + UiStrings.toneRefine,
+            "🙇 " + UiStrings.tonePolite,
+            "😊 " + UiStrings.toneCasual,
+            "💼 " + UiStrings.toneBusiness,
+            "😆 " + UiStrings.toneFunny,
+            "😼 " + UiStrings.toneCheeky
+        )
+    }
+
+    val officialLangs = remember(UiStrings.currentLocale) {
+        listOf(
+            "KO" to (if (UiStrings.isKo) "🇰🇷 한국어" else if (UiStrings.isId) "🇰🇷 Korea" else "🇰🇷 Korean"),
+            "EN" to (if (UiStrings.isKo) "🇺🇸 English" else if (UiStrings.isId) "🇺🇸 Inggris" else "🇺🇸 English"),
+            "ID" to (if (UiStrings.isKo) "🇮🇩 인도네시아어" else if (UiStrings.isId) "🇮🇩 Indonesia" else "🇮🇩 Indonesian")
+        )
+    }
+
+    val crossLangs = remember(UiStrings.currentLocale) {
+        listOf(
+            "JA" to (if (UiStrings.isKo) "🇯🇵 일본어" else if (UiStrings.isId) "🇯🇵 Jepang" else "🇯🇵 Japanese"),
+            "ZH" to (if (UiStrings.isKo) "🇨🇳 중국어" else if (UiStrings.isId) "🇨🇳 Mandarin" else "🇨🇳 Chinese"),
+            "ES" to (if (UiStrings.isKo) "🇪🇸 스페인어" else if (UiStrings.isId) "🇪🇸 Spanyol" else "🇪🇸 Spanish"),
+            "FR" to (if (UiStrings.isKo) "🇫🇷 프랑스어" else if (UiStrings.isId) "🇫🇷 Prancis" else "🇫🇷 French"),
+            "DE" to (if (UiStrings.isKo) "🇩🇪 독일어" else if (UiStrings.isId) "🇩🇪 Jerman" else "🇩🇪 German"),
+            "VI" to (if (UiStrings.isKo) "🇻🇳 베트남어" else if (UiStrings.isId) "🇻🇳 Vietnam" else "🇻🇳 Vietnamese"),
+            "TH" to (if (UiStrings.isKo) "🇹🇭 태국어" else if (UiStrings.isId) "🇹🇭 Thailand" else "🇹🇭 Thai")
+        )
+    }
+
+    val allSupportedLangs = remember(officialLangs, crossLangs) { officialLangs + crossLangs }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "🎙️ DearTalk Live",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DearTalkText,
-                            maxLines = 1
-                        )
-                        currentSession?.let {
-                            Text(
-                                text = it.title,
-                                fontSize = 11.sp,
-                                color = Color.Gray,
-                                maxLines = 1
-                            )
-                        }
-                    }
+                    Text(
+                        text = "🎙️ DearTalk Live",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DearTalkText,
+                        maxLines = 1
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기",
+                            contentDescription = if (UiStrings.isKo) "뒤로가기" else if (UiStrings.isId) "Kembali" else "Back",
                             tint = DearTalkText
                         )
                     }
                 },
                 actions = {
-                    // 1. 대면 180° 대칭 모드 즉각 전환 (ScreenRotation)
-                    IconButton(onClick = {
-                        isFlipViewEnabled = !isFlipViewEnabled
-                        val toastMsg = if (isFlipViewEnabled) UiStrings.liveMenuFlipOn else UiStrings.liveMenuFlipOff
-                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                    }) {
+                    IconButton(onClick = onToggleAutoSpeak) {
                         Icon(
-                            imageVector = Icons.Default.ScreenRotation,
-                            contentDescription = if (isFlipViewEnabled) UiStrings.liveMenuFlipOff else UiStrings.liveMenuFlipOn,
-                            tint = if (isFlipViewEnabled) DearTalkPrimary else DearTalkText
+                            imageVector = if (state.isAutoSpeakEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
+                            contentDescription = UiStrings.liveAutoSpeakTitle,
+                            tint = if (state.isAutoSpeakEnabled) DearTalkPrimary else Color.Gray
                         )
                     }
-
-                    // 2. 통합 설정 바텀 시트 (Settings)
-                    IconButton(onClick = { showLiveSettingsSheet = true }) {
+                    IconButton(onClick = onToggleFlipView) {
+                        Icon(
+                            imageVector = Icons.Default.ScreenRotation,
+                            contentDescription = if (state.isFlipViewEnabled) UiStrings.liveMenuFlipOff else UiStrings.liveMenuFlipOn,
+                            tint = if (state.isFlipViewEnabled) DearTalkPrimary else DearTalkText
+                        )
+                    }
+                    IconButton(onClick = onClearClick) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteSweep,
+                            contentDescription = if (UiStrings.isKo) "대화 비우기" else if (UiStrings.isId) "Kosongkan" else "Clear Timeline",
+                            tint = DearTalkText
+                        )
+                    }
+                    IconButton(onClick = onOpenSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = UiStrings.liveSettingsTitle,
@@ -301,36 +424,31 @@ fun DearTalkLiveScreen(
             )
         },
         bottomBar = {
-            if (!isFlipViewEnabled) {
+            if (!state.isFlipViewEnabled) {
                 DualActionMicBar(
-                    activeSpeaker = activeSpeaker,
-                    processingSpeaker = processingSpeaker,
-                    isProcessing = isProcessing,
-                    rmsDb = rmsDb,
-                    currentIntent = controller.myIntent,
-                    detectedIntent = controller.myDetectedIntent,
-                    langCode = controller.myLang,
-                    onIntentSelected = { controller.setIntentByUser(ai.deartalk.android.live.ActiveSpeaker.ME, it) },
-                    onSpeakMeClick = {
-                        checkAndExecute { controller.toggleSpeakMe() }
-                    },
-                    onListenPartnerClick = {
-                        checkAndExecute { controller.toggleListenPartner() }
-                    },
+                    activeSpeaker = state.activeSpeaker,
+                    processingSpeaker = state.processingSpeaker,
+                    isProcessing = state.isProcessing,
+                    rmsDb = state.rmsDb,
+                    currentIntent = state.myIntent,
+                    detectedIntent = state.myDetectedIntent,
+                    langCode = state.myLang,
+                    onIntentSelected = onMyIntentSelected,
+                    onSpeakMeClick = onSpeakMeClick,
+                    onListenPartnerClick = onListenPartnerClick,
                     modifier = Modifier.navigationBarsPadding()
                 )
             }
         },
-        containerColor = DearTalkBackground
+        containerColor = DearTalkBackground,
+        modifier = modifier
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (isFlipViewEnabled) {
-                // 🔄 [상대방 180° 대면 대칭 마이크 바]
-                // 180도 회전 배치되어 맞은편 상대방 시야에서 완벽한 정방향 대칭 조작 제공
+            if (state.isFlipViewEnabled) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -338,30 +456,25 @@ fun DearTalkLiveScreen(
                 ) {
                     SymmetricActionMicBar(
                         speakerType = ActiveSpeaker.PARTNER,
-                        langCode = controller.partnerLang,
-                        languageLabel = allSupportedLangs.firstOrNull { it.first == controller.partnerLang }?.second ?: controller.partnerLang,
-                        onLanguageSelect = { code ->
-                            controller.setLanguages(my = controller.myLang, partner = code)
-                        },
+                        langCode = state.partnerLang,
+                        languageLabel = allSupportedLangs.firstOrNull { it.first == state.partnerLang }?.second ?: state.partnerLang,
+                        onLanguageSelect = onPartnerLangSelected,
                         supportedOfficialLangs = officialLangs,
                         supportedCrossLangs = crossLangs,
-                        isActive = activeSpeaker == ActiveSpeaker.PARTNER,
-                        isProcessing = isProcessing && (activeSpeaker == ActiveSpeaker.PARTNER || processingSpeaker == ActiveSpeaker.PARTNER),
-                        rmsDb = if (activeSpeaker == ActiveSpeaker.PARTNER) rmsDb else 0f,
-                        currentIntent = controller.partnerIntent,
-                        detectedIntent = controller.partnerDetectedIntent,
-                        onIntentSelected = { controller.setIntentByUser(ai.deartalk.android.live.ActiveSpeaker.PARTNER, it) },
-                        onActionClick = {
-                            checkAndExecute { controller.toggleListenPartner() }
-                        },
+                        isActive = state.activeSpeaker == ActiveSpeaker.PARTNER,
+                        isProcessing = state.isProcessing && (state.activeSpeaker == ActiveSpeaker.PARTNER || state.processingSpeaker == ActiveSpeaker.PARTNER),
+                        rmsDb = if (state.activeSpeaker == ActiveSpeaker.PARTNER) state.rmsDb else 0f,
+                        currentIntent = state.partnerIntent,
+                        detectedIntent = state.partnerDetectedIntent,
+                        onIntentSelected = onPartnerIntentSelected,
+                        onActionClick = onListenPartnerClick,
                         accentColor = Color(0xFF6366F1),
-                        icon = if (activeSpeaker == ActiveSpeaker.PARTNER) Icons.Default.Stop else Icons.Default.Hearing
+                        icon = if (state.activeSpeaker == ActiveSpeaker.PARTNER) Icons.Default.Stop else Icons.Default.Hearing
                     )
                 }
             }
 
-            if (!isFlipViewEnabled) {
-                // 🌐 슬림 컴팩트 언어 바 (핸드헬드 일반 모드 전용 - 180도 대면 모드에서는 상하 대칭 마이크 바로 흡수되어 타임라인 공간 극대화)
+            if (!state.isFlipViewEnabled) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -370,213 +483,214 @@ fun DearTalkLiveScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                // 내 언어 캡슐 칩 (2단 모던 카드 구조: 화자/상태 + 언어명)
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(DearTalkBackground)
-                        .border(1.dp, DearTalkPrimary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                        .clickable { showMyLangMenu = true }
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center
+                    // 내 언어 캡슐 칩
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(DearTalkBackground)
+                            .border(1.dp, DearTalkPrimary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .clickable { showMyLangMenu = true }
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = UiStrings.liveMePrefix,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Gray
-                            )
-                            LanguageStatusBadge(myStatus)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = UiStrings.liveMePrefix,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Gray
+                                )
+                                LanguageStatusBadge(state.myModelStatus)
+                            }
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = allSupportedLangs.firstOrNull { it.first == state.myLang }?.second ?: state.myLang,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DearTalkPrimary,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text(
+                                    text = "▾",
+                                    fontSize = 11.sp,
+                                    color = DearTalkPrimary.copy(alpha = 0.7f)
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                        DropdownMenu(
+                            expanded = showMyLangMenu,
+                            onDismissRequest = { showMyLangMenu = false }
                         ) {
                             Text(
-                                text = allSupportedLangs.firstOrNull { it.first == controller.myLang }?.second ?: controller.myLang,
-                                fontSize = 12.sp,
+                                text = "✨ ${UiStrings.officialLangSection}",
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = DearTalkPrimary,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false)
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
+                            officialLangs.forEach { (code, label) ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    },
+                                    onClick = {
+                                        onMyLangSelected(code)
+                                        showMyLangMenu = false
+                                    }
+                                )
+                            }
+                            androidx.compose.material3.HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = Color.White.copy(alpha = 0.1f)
+                            )
                             Text(
-                                text = "▾",
+                                text = "🌐 ${UiStrings.crossLangSection}",
                                 fontSize = 11.sp,
-                                color = DearTalkPrimary.copy(alpha = 0.7f)
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
+                            crossLangs.forEach { (code, label) ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = label, fontSize = 13.sp)
+                                    },
+                                    onClick = {
+                                        onMyLangSelected(code)
+                                        showMyLangMenu = false
+                                    }
+                                )
+                            }
                         }
                     }
-                    DropdownMenu(
-                        expanded = showMyLangMenu,
-                        onDismissRequest = { showMyLangMenu = false }
+
+                    // ⇄ 미니멀 스왑 아이콘
+                    IconButton(
+                        onClick = onSwapLanguages,
+                        modifier = Modifier.size(36.dp)
                     ) {
-                        Text(
-                            text = "✨ ${UiStrings.officialLangSection}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DearTalkPrimary,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                        Icon(
+                            imageVector = Icons.Default.SwapHoriz,
+                            contentDescription = UiStrings.swapLangContentDesc,
+                            tint = DearTalkPrimary.copy(alpha = 0.8f),
+                            modifier = Modifier.size(20.dp)
                         )
-                        officialLangs.forEach { (code, label) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                },
-                                onClick = {
-                                    controller.setLanguages(my = code, partner = controller.partnerLang)
-                                    showMyLangMenu = false
-                                }
-                            )
-                        }
-                        androidx.compose.material3.HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = Color.White.copy(alpha = 0.1f)
-                        )
-                        Text(
-                            text = "🌐 ${UiStrings.crossLangSection}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                        )
-                        crossLangs.forEach { (code, label) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = label, fontSize = 13.sp)
-                                },
-                                onClick = {
-                                    controller.setLanguages(my = code, partner = controller.partnerLang)
-                                    showMyLangMenu = false
-                                }
-                            )
-                        }
                     }
-                }
 
-                // ⇄ 미니멀 스왑 아이콘 (터치 타겟 36dp 최적화)
-                IconButton(
-                    onClick = { controller.swapLanguages() },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.SwapHoriz,
-                        contentDescription = "언어 교환",
-                        tint = DearTalkPrimary.copy(alpha = 0.8f),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // 상대방 언어 캡슐 칩 (2단 모던 카드 구조: 화자/상태 + 언어명)
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(DearTalkBackground)
-                        .border(1.dp, Color(0xFF818CF8).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                        .clickable { showPartnerLangMenu = true }
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center
+                    // 상대방 언어 캡슐 칩
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(DearTalkBackground)
+                            .border(1.dp, Color(0xFF818CF8).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .clickable { showPartnerLangMenu = true }
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = UiStrings.livePartnerPrefix,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Gray
-                            )
-                            LanguageStatusBadge(partnerStatus)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = UiStrings.livePartnerPrefix,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Gray
+                                )
+                                LanguageStatusBadge(state.partnerModelStatus)
+                            }
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = allSupportedLangs.firstOrNull { it.first == state.partnerLang }?.second ?: state.partnerLang,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF818CF8),
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text(
+                                    text = "▾",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF818CF8).copy(alpha = 0.7f)
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                        DropdownMenu(
+                            expanded = showPartnerLangMenu,
+                            onDismissRequest = { showPartnerLangMenu = false }
                         ) {
                             Text(
-                                text = allSupportedLangs.firstOrNull { it.first == controller.partnerLang }?.second ?: controller.partnerLang,
-                                fontSize = 12.sp,
+                                text = "✨ ${UiStrings.officialLangSection}",
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF818CF8),
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false)
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
+                            officialLangs.forEach { (code, label) ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    },
+                                    onClick = {
+                                        onPartnerLangSelected(code)
+                                        showPartnerLangMenu = false
+                                    }
+                                )
+                            }
+                            androidx.compose.material3.HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = Color.White.copy(alpha = 0.1f)
+                            )
                             Text(
-                                text = "▾",
+                                text = "🌐 ${UiStrings.crossLangSection}",
                                 fontSize = 11.sp,
-                                color = Color(0xFF818CF8).copy(alpha = 0.7f)
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
-                        }
-                    }
-                    DropdownMenu(
-                        expanded = showPartnerLangMenu,
-                        onDismissRequest = { showPartnerLangMenu = false }
-                    ) {
-                        Text(
-                            text = "✨ ${UiStrings.officialLangSection}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF818CF8),
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                        )
-                        officialLangs.forEach { (code, label) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                },
-                                onClick = {
-                                    controller.setLanguages(my = controller.myLang, partner = code)
-                                    showPartnerLangMenu = false
-                                }
-                            )
-                        }
-                        androidx.compose.material3.HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = Color.White.copy(alpha = 0.1f)
-                        )
-                        Text(
-                            text = "🌐 ${UiStrings.crossLangSection}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                        )
-                        crossLangs.forEach { (code, label) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = label, fontSize = 13.sp)
-                                },
-                                onClick = {
-                                    controller.setLanguages(my = controller.myLang, partner = code)
-                                    showPartnerLangMenu = false
-                                }
-                            )
+                            crossLangs.forEach { (code, label) ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = label, fontSize = 13.sp)
+                                    },
+                                    onClick = {
+                                        onPartnerLangSelected(code)
+                                        showPartnerLangMenu = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // 💼 내 발화 스타일(톤앤매너) 스트립 (IME 키보드와 100% 동일한 비주얼 & 실시간 재점검 연동)
+            // 💼 내 발화 스타일(톤앤매너) 스트립
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -595,7 +709,7 @@ fun DearTalkLiveScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = controller.selectedTone,
+                            text = state.selectedTone,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = DearTalkPrimary
@@ -617,84 +731,65 @@ fun DearTalkLiveScreen(
                                     Text(
                                         text = toneItem,
                                         fontSize = 12.5.sp,
-                                        fontWeight = if (controller.selectedTone == toneItem) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (controller.selectedTone == toneItem) DearTalkPrimary else DearTalkText
+                                        fontWeight = if (state.selectedTone == toneItem) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (state.selectedTone == toneItem) DearTalkPrimary else DearTalkText
                                     )
                                 },
                                 onClick = {
-                                    controller.setTone(toneItem)
+                                    onToneSelected(toneItem)
                                     showToneMenu = false
                                 }
                             )
                         }
                     }
                 }
-
-                // 우측: 신규 대화 빠른 생성 버튼
-                IconButton(
-                    onClick = { controller.createNewSession() },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "새 대화",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(17.dp)
-                    )
-                }
             }
-        }
 
-            if (isFlipViewEnabled) {
-                // 🪞 180° 대면 모드: 화면을 50:50으로 꽉 채우는 대형 대칭 스테이지 (풀스크린 고가독성 모드)
+            if (state.isFlipViewEnabled) {
+                // 🪞 180° 대면 모드
                 FullScreenSymmetricStage(
-                    messages = messages,
-                    streamingText = streamingText,
-                    activeSpeaker = activeSpeaker,
-                    processingSpeaker = processingSpeaker,
-                    isProcessing = isProcessing,
-                    rephrasingMessageId = rephrasingMessageId,
-                    onReplayClick = { controller.replayMessage(it) },
+                    messages = state.messages,
+                    streamingText = state.streamingText,
+                    activeSpeaker = state.activeSpeaker,
+                    processingSpeaker = state.processingSpeaker,
+                    isProcessing = state.isProcessing,
+                    rephrasingMessageId = state.rephrasingMessageId,
+                    onReplayClick = onReplayMessage,
                     modifier = Modifier.weight(1f)
                 )
             } else {
-                // 💬 핸드헬드 일반 모드: 카카오톡/메신저 스타일 2-Way 대화 타임라인
+                // 💬 핸드헬드 일반 모드
                 LiveMessengerTimeline(
-                    messages = messages,
-                    streamingText = streamingText,
-                    activeSpeaker = activeSpeaker,
-                    processingSpeaker = processingSpeaker,
-                    isProcessing = isProcessing,
+                    messages = state.messages,
+                    streamingText = state.streamingText,
+                    activeSpeaker = state.activeSpeaker,
+                    processingSpeaker = state.processingSpeaker,
+                    isProcessing = state.isProcessing,
                     isFlipViewEnabled = false,
-                    rephrasingMessageId = rephrasingMessageId,
-                    onReplayClick = { controller.replayMessage(it) },
+                    rephrasingMessageId = state.rephrasingMessageId,
+                    onReplayClick = onReplayMessage,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            if (isFlipViewEnabled) {
+            if (state.isFlipViewEnabled) {
                 // 🙋 [내 0° 대면 대칭 마이크 바]
-                // 내 시야에서 정방향으로 버튼이 손가락 쪽, 칩이 화면 중앙 쪽으로 배치
                 SymmetricActionMicBar(
                     speakerType = ActiveSpeaker.ME,
-                    langCode = controller.myLang,
-                    languageLabel = allSupportedLangs.firstOrNull { it.first == controller.myLang }?.second ?: controller.myLang,
-                    onLanguageSelect = { code ->
-                        controller.setLanguages(my = code, partner = controller.partnerLang)
-                    },
+                    langCode = state.myLang,
+                    languageLabel = allSupportedLangs.firstOrNull { it.first == state.myLang }?.second ?: state.myLang,
+                    onLanguageSelect = onMyLangSelected,
                     supportedOfficialLangs = officialLangs,
                     supportedCrossLangs = crossLangs,
-                    isActive = activeSpeaker == ActiveSpeaker.ME,
-                    isProcessing = isProcessing && (activeSpeaker == ActiveSpeaker.ME || processingSpeaker == ActiveSpeaker.ME),
-                    rmsDb = if (activeSpeaker == ActiveSpeaker.ME) rmsDb else 0f,
-                    currentIntent = controller.myIntent,
-                    detectedIntent = controller.myDetectedIntent,
-                    onIntentSelected = { controller.setIntentByUser(ai.deartalk.android.live.ActiveSpeaker.ME, it) },
-                    onActionClick = {
-                        checkAndExecute { controller.toggleSpeakMe() }
-                    },
+                    isActive = state.activeSpeaker == ActiveSpeaker.ME,
+                    isProcessing = state.isProcessing && (state.activeSpeaker == ActiveSpeaker.ME || state.processingSpeaker == ActiveSpeaker.ME),
+                    rmsDb = if (state.activeSpeaker == ActiveSpeaker.ME) state.rmsDb else 0f,
+                    currentIntent = state.myIntent,
+                    detectedIntent = state.myDetectedIntent,
+                    onIntentSelected = onMyIntentSelected,
+                    onActionClick = onSpeakMeClick,
                     accentColor = Color(0xFF10B981),
-                    icon = if (activeSpeaker == ActiveSpeaker.ME) Icons.Default.Stop else Icons.Default.Mic,
+                    icon = if (state.activeSpeaker == ActiveSpeaker.ME) Icons.Default.Stop else Icons.Default.Mic,
                     modifier = Modifier.navigationBarsPadding()
                 )
             }

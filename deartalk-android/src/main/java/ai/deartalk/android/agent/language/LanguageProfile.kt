@@ -8,7 +8,11 @@ import ai.deartalk.android.live.data.SpeechIntent
 data class SpeechIntentRule(
     val directive: String,
     val endingPunctuation: String = "",
-    val examples: List<Pair<String, String>> = emptyList()
+    val examples: List<Pair<String, String>> = emptyList(),
+    // 🌐 언어학적 의도 판별 패턴 메타데이터 (SSOT Zero Hardcoding)
+    val endings: List<String> = emptyList(),
+    val prefixes: List<String> = emptyList(),
+    val keywords: List<String> = emptyList()
 )
 
 /**

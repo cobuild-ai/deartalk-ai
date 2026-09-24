@@ -107,11 +107,11 @@ object UiStrings {
     val toneCheeky get() = if (isKo) "당당하게" else if (isId) "Percaya Diri" else "Cheeky"
 
     val instRefine get() = if (isKo) "문맥을 살려 중복과 어색한 끊김 없이 자연스럽고 유려한 완성형 문장으로 다듬어 작성하세요." else if (isId) "Rapikan menjadi satu kalimat lengkap yang alami dan lancar tanpa pengulangan kata yang janggal." else "Polish into a natural, fluent, and well-structured complete sentence preserving original intent."
-    val instPolite get() = if (isKo) "상대방에게 정중하고 예의 바른 비즈니스 경어체로 다듬어 완성형 문장 하나로 작성하세요." else if (isId) "Ubah menjadi satu kalimat lengkap dengan gaya bahasa yang sopan, santun, dan formal." else "Refine into a polite, respectful, and courteous complete sentence suitable for professional communication."
-    val instCasual get() = if (isKo) "친구에게 대화하듯 부드럽고 친근한 톤으로 자연스러운 완성형 문장 하나로 작성하세요." else if (isId) "Ubah menjadi kalimat santai, hangat, dan ramah seperti mengobrol dengan teman dekat." else "Transform into a friendly, casual, and conversational complete sentence like talking to a friend."
-    val instBusiness get() = if (isKo) "격식 있는 이메일/업무 메신저에 어울리는 명확하고 신뢰감 있는 문장으로 작성하세요." else if (isId) "Tuliskan dalam gaya bisnis yang jelas, ringkas, dan profesional untuk pesan kerja/email." else "Write in a clear, professional, and concise tone ideal for business messaging and email."
-    val instFunny get() = if (isKo) "재치 있고 위트와 유머가 넘치며 빵 터지는 센스 있는 유쾌한 어조로 작성하세요." else if (isId) "Tuliskan dengan gaya yang ceria, penuh humor, lucu, dan menyenangkan." else "Add witty humor and playful charm to create an entertaining and fun sentence."
-    val instCheeky get() = if (isKo) "자신만만하고 쿨하며 살짝 얄밉고 거만하지만 밉지 않은 도도한 반말 어조로 작성하세요." else if (isId) "Tuliskan dengan gaya percaya diri, keren, sedikit nakal tapi tetap memikat." else "Write in a confident, cheeky, and cool attitude that is delightfully bold."
+    val instPolite get() = if (isKo) "정중하고 예의 바른 경어체" else if (isId) "Sopan dan santun" else "Polite and courteous tone"
+    val instCasual get() = if (isKo) "친구에게 말하듯 편안하고 친근한 어조" else if (isId) "Santai dan ramah" else "Friendly and casual tone"
+    val instBusiness get() = if (isKo) "격식 있는 이메일/업무 메신저 어조" else if (isId) "Formal dan profesional" else "Professional business tone"
+    val instFunny get() = if (isKo) "유머와 위트가 넘치는 유쾌한 어조" else if (isId) "Lucu dan menghibur" else "Humorous and playful tone"
+    val instCheeky get() = if (isKo) "자신만만하고 쿨한 당당한 어조" else if (isId) "Percaya diri dan keren" else "Confident and bold attitude"
 
     // ═══════════════════════════════════════════════════
     // CustomToneManager.kt — 언어 이름
@@ -172,23 +172,23 @@ object UiStrings {
     val userGuideTitle get() = if (isKo) "📖 DearTalk AI 쉽게 쓰는 법" else if (isId) "📖 Panduan Cepat DearTalk AI" else "📖 DearTalk AI Quick Guide"
     val userGuideHowToUseTitle get() = if (isKo) "💡 이렇게 사용해 보세요" else if (isId) "💡 Cara Penggunaan" else "💡 How to Use"
     val userGuideHowToUseContent get() = if (isKo) {
-        "1. 위 🚀 [1단계] 및 [2단계] 버튼을 눌러 DearTalk AI 키보드를 활성화합니다.\n" +
-        "2. 카카오톡, 문자, 이메일 등 원하는 대화창을 터치하여 키보드를 엽니다.\n" +
-        "3. 키보드 상단의 마이크(🎙️) 버튼을 누르고 자연스럽게 말씀하세요.\n" +
-        "4. [공손하게], [친근하게], [비즈니스] 등 톤 칩을 눌러 원하는 말투로 다듬습니다.\n" +
-        "5. 완성된 문장을 확인한 후 오른쪽 [입력 📥] 버튼을 누르면 즉시 입력됩니다."
+        "1. 상단 안내에 따라 키보드를 활성화합니다.\n" +
+        "2. 카카오톡 등 대화창을 눌러 키보드를 엽니다.\n" +
+        "3. 상단 마이크(🎙️)를 누르고 편하게 말씀하세요.\n" +
+        "4. 원하는 말투 칩(공손/친근 등)을 눌러 다듬습니다.\n" +
+        "5. 완성된 문장을 확인하고 [입력 📥]을 누르면 전송!"
     } else if (isId) {
-        "1. Ketuk tombol 🚀 [Langkah 1] dan [Langkah 2] di atas untuk mengaktifkan DearTalk AI.\n" +
-        "2. Buka aplikasi pesan (WhatsApp, SMS, Email) dan buka papan ketik.\n" +
-        "3. Ketuk tombol mikrofon (🎙️) di papan ketik dan bicaralah secara alami.\n" +
-        "4. Ketuk tombol gaya seperti [Sopan], [Santai], atau [Formal] untuk merapikan kalimat.\n" +
-        "5. Periksa kalimat yang dirapikan lalu ketuk [Kirim 📥] untuk langsung memasukkan ke pesan."
+        "1. Aktifkan keyboard melalui panduan di atas.\n" +
+        "2. Buka kolom chat (WhatsApp dll.) untuk mengetik.\n" +
+        "3. Ketuk ikon mikrofon (🎙️) dan mulailah bicara.\n" +
+        "4. Pilih gaya bahasa (Sopan/Santai) yang diinginkan.\n" +
+        "5. Ketuk [Kirim 📥] untuk memasukkan teks ke pesan."
     } else {
-        "1. Tap Step 1 and Step 2 buttons above to enable and set DearTalk AI as default.\n" +
-        "2. Tap any chat or text input area in KakaoTalk, Messages, or Email.\n" +
-        "3. Tap the mic (🎙️) button and speak naturally.\n" +
-        "4. Tap tone chips like [Polite], [Casual], or [Business] to polish your style.\n" +
-        "5. Check the refined sentence and tap [Apply 📥] to insert it instantly."
+        "1. Enable and select DearTalk AI using steps above.\n" +
+        "2. Open keyboard in any chat or message app.\n" +
+        "3. Tap the mic (🎙️) and speak naturally.\n" +
+        "4. Tap a tone chip (Polite, Casual, etc.) to refine.\n" +
+        "5. Review the result and tap [Apply 📥] to send."
     }
     // ═══════════════════════════════════════════════════
     // DearTalkLiveActivity.kt — 1:1 실시간 대면 대화 & 지능형 보이스 레코더
@@ -202,14 +202,14 @@ object UiStrings {
     fun diagCaution(ram: String) = if (isKo) "주의 사양 (RAM ${ram}GB - 순차 파이프라인 구동)" else if (isId) "Perhatian (RAM ${ram}GB - Alur Kerja Sekuensial)" else "Caution (RAM ${ram}GB - Sequential Pipeline)"
     fun diagRestricted(ram: String) = if (isKo) "사양 제한 (RAM ${ram}GB - 기본 엔진 권장)" else if (isId) "Terbatas (RAM ${ram}GB - Disarankan Mesin Standar)" else "Restricted (RAM ${ram}GB - Standard Engine Recommended)"
     
-    val diagModelTitle get() = if (isKo) "Qwen 0.5B Nano 온디바이스 패키지" else if (isId) "Paket AI Qwen 0.5B Nano" else "Qwen 0.5B Nano AI Package"
-    val diagModelSubtitle get() = if (isKo) "STT(0.6B) + LLM(0.5B) + TTS(0.6B) · 1.2GB" else if (isId) "STT(0.6B) + LLM(0.5B) + TTS(0.6B) · 1.2GB" else "STT(0.6B) + LLM(0.5B) + TTS(0.6B) · 1.2GB"
+    val diagModelTitle get() = if (isKo) "오프라인 기능 팩" else if (isId) "Paket Fitur Offline" else "Offline Feature Pack"
+    val diagModelSubtitle get() = if (isKo) "음성 인식 + 문맥 다듬기 + 음성 재생" else if (isId) "Pengenalan Suara + Perapian + Sintesis Suara" else "Voice Recognition + Refinement + Speech"
     val diagDownloadBtn get() = if (isKo) "다운로드" else if (isId) "Unduh" else "Download"
-    val diagDownloadingLabel get() = if (isKo) "Qwen 모델 패키지 다운로드 중..." else if (isId) "Mengunduh paket model Qwen..." else "Downloading Qwen Model Package..."
-    val diagActiveLabel get() = if (isKo) "Qwen 0.5B Nano 엔진 활성화됨" else if (isId) "Mesin Qwen 0.5B Nano Aktif" else "Qwen 0.5B Nano Engine Active"
-    val diagPurgeContentDesc get() = if (isKo) "모델 패키지 삭제" else if (isId) "Hapus paket model" else "Purge model package"
-    val diagPurgeConfirmTitle get() = if (isKo) "모델 패키지 삭제" else if (isId) "Hapus Paket Model" else "Delete Model Package"
-    val diagPurgeConfirmMessage get() = if (isKo) "다운로드된 온디바이스 AI 모델 파일을 삭제하시겠습니까? 필요 시 언제든 다시 다운로드할 수 있습니다." else if (isId) "Hapus paket model AI on-device? Anda dapat mengunduhnya kembali kapan saja." else "Delete downloaded on-device AI model package? You can re-download anytime."
+    val diagDownloadingLabel get() = if (isKo) "오프라인 기능 팩 다운로드 중..." else if (isId) "Mengunduh paket offline..." else "Downloading Offline Pack..."
+    val diagActiveLabel get() = if (isKo) "100% 오프라인 준비 완료" else if (isId) "100% Offline Siap Digunakan" else "100% Offline Ready"
+    val diagPurgeContentDesc get() = if (isKo) "오프라인 데이터 삭제" else if (isId) "Hapus data offline" else "Purge offline data"
+    val diagPurgeConfirmTitle get() = if (isKo) "오프라인 데이터 정리" else if (isId) "Hapus Data Offline" else "Clean Up Offline Data"
+    val diagPurgeConfirmMessage get() = if (isKo) "다운로드된 오프라인 언어 데이터를 삭제하시겠습니까? 필요 시 언제든 다시 다운로드할 수 있습니다." else if (isId) "Hapus paket offline yang diunduh? Anda dapat mengunduhnya kembali kapan saja." else "Delete downloaded offline package? You can re-download anytime."
     val btnDelete get() = if (isKo) "삭제" else if (isId) "Hapus" else "Delete"
     val btnCancel get() = if (isKo) "취소" else if (isId) "Batal" else "Cancel"
     val btnStop get() = if (isKo) "중지" else if (isId) "Berhenti" else "Stop"
@@ -326,12 +326,12 @@ object UiStrings {
     }
 
     // 9. 온디바이스 AI 지능 등급 뱃지 & 안내
-    val tierBadgeHigh get() = if (isKo) "🌟 Qwen 1.7B Pro" else if (isId) "🌟 Qwen 1.7B Pro" else "🌟 Qwen 1.7B Pro"
-    val tierBadgeBase get() = if (isKo) "🟢 Gemma 2B Base" else if (isId) "🟢 Gemma 2B Base" else "🟢 Gemma 2B Base"
+    val tierBadgeHigh get() = if (isKo) "🌟 온디바이스 AI" else if (isId) "🌟 AI On-Device" else "🌟 On-Device AI"
+    val tierBadgeBase get() = if (isKo) "🟢 로컬 AI" else if (isId) "🟢 AI Lokal" else "🟢 Local AI"
     val tierBadgeSttOnly get() = if (isKo) "⚡ STT 모드 (AI팩 필요)" else if (isId) "⚡ Mode STT (Perlu Paket AI)" else "⚡ STT Only (Needs AI Pack)"
 
-    val tierBannerSttOnlyPrompt get() = if (isKo) "💡 AI 모델을 다운로드하면 문맥 정제 및 톤 변환이 활성화됩니다." else if (isId) "💡 Unduh model AI untuk mengaktifkan pemurnian & nada bicara." else "💡 Download AI model to enable context refinement & tone styles."
-    val tierDownloadAction get() = if (isKo) "AI 팩 다운로드" else if (isId) "Unduh Paket AI" else "Download AI Pack"
+    val tierBannerSttOnlyPrompt get() = if (isKo) "💡 오프라인 팩을 다운로드하면 문맥 다듬기 및 말투 변환이 활성화됩니다." else if (isId) "💡 Unduh paket offline untuk mengaktifkan perapian & nada bicara." else "💡 Download offline pack to enable context refinement & tone styles."
+    val tierDownloadAction get() = if (isKo) "오프라인 팩 다운로드" else if (isId) "Unduh Paket Offline" else "Download Offline Pack"
 
     // ═══════════════════════════════════════════════════
     // DearTalk Live — 실시간 1:1 통역 UI 다국어 지원 (KO, EN, ID)
@@ -406,4 +406,14 @@ object UiStrings {
     val liveDeleteAllConfirmTitle get() = if (isKo) "모든 대화 기록 삭제" else if (isId) "Hapus Semua Riwayat" else "Delete All History"
     val liveDeleteAllConfirmMsg get() = if (isKo) "저장된 모든 대화 기록과 메시지를 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다." else if (isId) "Apakah Anda yakin ingin menghapus semua riwayat percakapan dan pesan? Tindakan ini tidak dapat dibatalkan." else "Are you sure you want to permanently delete all conversation history and messages? This action cannot be undone."
     val liveDeleteAllSuccess get() = if (isKo) "모든 대화 기록이 삭제되었습니다." else if (isId) "Semua riwayat percakapan telah dihapus." else "All conversation history has been deleted."
+
+    // ═══════════════════════════════════════════════════
+    // 2-Track 통역 (빠른 번역 vs AI 맞춤 다듬기)
+    // ═══════════════════════════════════════════════════
+    val liveDraftTag get() = if (isKo) "• ⚡ 빠른 번역" else if (isId) "• ⚡ Terjemahan Cepat" else "• ⚡ Quick Draft"
+    val liveDraftTitle get() = if (isKo) "⚡ 빠른 번역" else if (isId) "⚡ Terjemahan Cepat" else "⚡ Quick Draft"
+    val liveRefiningProgress get() = if (isKo) "✨ AI가 문맥과 말투를 다듬는 중..." else if (isId) "✨ AI sedang merapikan konteks & nada..." else "✨ AI is refining context & tone..."
+    val liveBeforeRefine get() = if (isKo) "⚡ 변환 전: " else if (isId) "⚡ Sebelum: " else "⚡ Before: "
+    val liveAfterRefine get() = if (isKo) "✨ AI 맞춤 다듬기" else if (isId) "✨ Dirapikan AI" else "✨ AI Refined"
+    val liveDraftToRefineStage get() = if (isKo) "⚡ 빠른 번역 ➔ ✨ AI가 자연스럽게 다듬는 중..." else if (isId) "⚡ Terjemahan Cepat ➔ ✨ AI sedang merapikan..." else "⚡ Quick Draft ➔ ✨ Refining with AI..."
 }

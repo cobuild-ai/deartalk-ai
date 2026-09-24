@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "DearTalkAI"
 include(":deartalk-android")
+include(":gemma_asset_pack")

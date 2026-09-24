@@ -310,15 +310,30 @@ private fun PartnerStageHalf(
                 // 내가 말한 경우: 상대방 언어로 번역된 정제문 (크고 선명하게)
                 // 상대방이 말한 경우: 상대방이 말한 원문
                 val mainText = if (message.sender == LiveSender.ME) message.refinedText else message.rawText
+                val textColor = when {
+                    message.isDraft && message.sender == LiveSender.ME -> Color(0xFFFBBF24)
+                    isPartnerSpotlight -> Color(0xFF0F172A)
+                    else -> DearTalkText
+                }
                 Text(
                     text = mainText,
                     fontSize = if (isPartnerSpotlight) 24.sp else 21.sp,
                     fontWeight = if (isPartnerSpotlight) FontWeight.Bold else FontWeight.SemiBold,
-                    fontStyle = if (isRephrasing) FontStyle.Italic else FontStyle.Normal,
-                    color = (if (isPartnerSpotlight) Color(0xFF0F172A) else DearTalkText).copy(alpha = rephraseAlpha),
+                    fontStyle = if (isRephrasing || message.isDraft) FontStyle.Italic else FontStyle.Normal,
+                    color = textColor.copy(alpha = rephraseAlpha),
                     lineHeight = 32.sp,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (message.isDraft && message.sender == LiveSender.ME) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = UiStrings.liveDraftToRefineStage,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF59E0B)
+                    )
+                }
 
                 // 🌟 AI 재점검 진행 인디케이터
                 if (isRephrasing) {
@@ -594,15 +609,30 @@ private fun UserStageHalf(
                 // 상대방이 말한 경우: 한국어로 번역된 정제문 (내가 읽고 이해할 내용)
                 // 내가 말한 경우: 내가 발화한 한국어 원문
                 val mainText = if (message.sender == LiveSender.PARTNER) message.refinedText else message.rawText
+                val textColor = when {
+                    message.isDraft && message.sender == LiveSender.PARTNER -> Color(0xFFFBBF24)
+                    isUserSpotlight -> Color(0xFF0F172A)
+                    else -> DearTalkText
+                }
                 Text(
                     text = mainText,
                     fontSize = if (isUserSpotlight) 24.sp else 21.sp,
                     fontWeight = if (isUserSpotlight) FontWeight.Bold else FontWeight.SemiBold,
-                    fontStyle = if (isRephrasing) FontStyle.Italic else FontStyle.Normal,
-                    color = (if (isUserSpotlight) Color(0xFF0F172A) else DearTalkText).copy(alpha = rephraseAlpha),
+                    fontStyle = if (isRephrasing || message.isDraft) FontStyle.Italic else FontStyle.Normal,
+                    color = textColor.copy(alpha = rephraseAlpha),
                     lineHeight = 32.sp,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (message.isDraft && message.sender == LiveSender.PARTNER) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = UiStrings.liveDraftToRefineStage,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF59E0B)
+                    )
+                }
 
                 // 🌟 AI 재점검 진행 인디케이터
                 if (isRephrasing) {

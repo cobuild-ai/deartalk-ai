@@ -1,5 +1,6 @@
 package ai.deartalk.android.tts
 
+import ai.deartalk.android.crash.CrashLogger
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
@@ -33,7 +34,9 @@ class TextToSpeechManager(context: Context) {
     private fun initTts(onReady: (() -> Unit)? = null) {
         try {
             tts?.shutdown()
-        } catch (_: Throwable) {}
+        } catch (t: Throwable) {
+            CrashLogger.logHandledException("TextToSpeechManager.initTts", "Previous TTS instance shutdown error", t)
+        }
 
         isInitialized = false
         tts = TextToSpeech(appContext) { status ->
@@ -176,7 +179,9 @@ class TextToSpeechManager(context: Context) {
     fun stop() {
         try {
             tts?.stop()
-        } catch (_: Throwable) {}
+        } catch (t: Throwable) {
+            CrashLogger.logHandledException("TextToSpeechManager.stop", "TTS stop failure", t)
+        }
     }
 
     fun shutdown() {

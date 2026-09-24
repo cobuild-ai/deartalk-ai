@@ -62,6 +62,32 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontStyle
 
+/** 언어 코드 → 국기 이모지 변환 (UX 단순화: "KO" → "🇰🇷") */
+fun langCodeToFlag(code: String): String = when (code.uppercase()) {
+    "KO" -> "🇰🇷"
+    "EN" -> "🇺🇸"
+    "ID" -> "🇮🇩"
+    "JA" -> "🇯🇵"
+    "ZH" -> "🇨🇳"
+    "ZH-CN", "ZH_CN" -> "🇨🇳"
+    "ZH-TW", "ZH_TW" -> "🇹🇼"
+    "ES" -> "🇪🇸"
+    "FR" -> "🇫🇷"
+    "DE" -> "🇩🇪"
+    "PT" -> "🇵🇹"
+    "RU" -> "🇷🇺"
+    "AR" -> "🇸🇦"
+    "HI" -> "🇮🇳"
+    "VI" -> "🇻🇳"
+    "TH" -> "🇹🇭"
+    "MS" -> "🇲🇾"
+    "TR" -> "🇹🇷"
+    "IT" -> "🇮🇹"
+    "NL" -> "🇳🇱"
+    "PL" -> "🇵🇱"
+    else -> code
+}
+
 /**
  * 💬 카카오톡 / Continuum 스타일 1:1 대화 타임라인
  */
@@ -106,7 +132,7 @@ fun LiveMessengerTimeline(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "외국인과 마주보고 서로 말해보세요.\n하단의 [말하기]와 [듣기] 버튼으로\nAI가 실시간 통역 및 스크립트를 작성합니다.",
+                    text = UiStrings.liveSubtitle,
                     fontSize = 14.sp,
                     color = Color.Gray,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -219,26 +245,25 @@ private fun MessageBubble(
             horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
         ) {
+            // 발화자 이름 + 국기 화살표 ("나  🇰🇷→🇮🇩" 형태로 직관적 표시)
             Text(
-                text = if (isMe) "🙋 ${UiStrings.liveMePrefix} (${message.sourceLang} ➔ ${message.targetLang})" else "👤 ${UiStrings.livePartnerPrefix} (${message.sourceLang} ➔ ${message.targetLang})",
+                text = if (isMe) {
+                    "🙋 ${UiStrings.liveMePrefix}  ${langCodeToFlag(message.sourceLang)}→${langCodeToFlag(message.targetLang)}"
+                } else {
+                    "👤 ${UiStrings.livePartnerPrefix}  ${langCodeToFlag(message.sourceLang)}→${langCodeToFlag(message.targetLang)}"
+                },
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isMe) DearTalkPrimary else Color(0xFF818CF8)
             )
+            // AI 재점검 중 표시 (Draft 태그는 버블 안 색상으로 구분하므로 헤더 제거)
             if (isRephrasing) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (UiStrings.isKo) "• 🔄 AI 재점검 중..." else if (UiStrings.isId) "• 🔄 AI memeriksa..." else "• 🔄 AI Re-checking...",
+                    text = if (UiStrings.isKo) "• 🔄" else "• 🔄",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = DearTalkPrimary
-                )
-            } else if (message.tone != null && isMe) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "• ${message.tone}",
-                    fontSize = 10.sp,
-                    color = Color.Gray
                 )
             }
         }
@@ -257,8 +282,8 @@ private fun MessageBubble(
                 )
                 .background(if (isMe) Color(0xFF064E3B).copy(alpha = 0.5f) else DearTalkSurface)
                 .border(
-                    width = if (isRephrasing) 1.5.dp else 1.dp,
-                    color = if (isRephrasing) DearTalkPrimary.copy(alpha = 0.75f) else if (isMe) DearTalkPrimary.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.08f),
+                    width = if (isRephrasing || message.isDraft) 1.5.dp else 1.dp,
+                    color = if (message.isDraft) Color(0xFFF59E0B).copy(alpha = 0.6f) else if (isRephrasing) DearTalkPrimary.copy(alpha = 0.75f) else if (isMe) DearTalkPrimary.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.08f),
                     shape = RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
@@ -297,31 +322,89 @@ private fun MessageBubble(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 2. AI 정제 / 번역문 - 로봇 아이콘 캡슐
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
+                // 2. 2-Track 하이브리드 번역문 표시
+                if (message.isDraft) {
+                    // ⚡ [변환전] 초경량 모델 초안 (앰버/골드 오렌지 색상)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF78350F)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "⚡",
+                                fontSize = 10.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Text(
+                                text = UiStrings.liveDraftTitle,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFF59E0B)
+                            )
+                            Text(
+                                text = message.refinedText,
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFFDE68A),
+                                lineHeight = 19.5.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                         modifier = Modifier
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(if (isMe) Color(0xFF065F46) else Color(0xFF0C4A6E)),
-                        contentAlignment = Alignment.Center
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFFF59E0B).copy(alpha = 0.12f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.SmartToy,
-                            contentDescription = null,
-                            tint = if (isMe) Color(0xFF6EE7B7) else Color(0xFF38BDF8),
-                            modifier = Modifier.size(11.dp)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(9.dp),
+                            color = Color(0xFFF59E0B),
+                            strokeWidth = 1.5.dp
+                        )
+                        Text(
+                            text = UiStrings.liveRefiningProgress,
+                            fontSize = 10.sp,
+                            fontStyle = FontStyle.Italic,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFF59E0B)
                         )
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = message.refinedText,
-                        fontSize = 14.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontStyle = if (isRephrasing) FontStyle.Italic else FontStyle.Normal,
-                        color = DearTalkText.copy(alpha = animatedAlpha),
-                        lineHeight = 19.5.sp
-                    )
+                } else {
+                    // ✅ AI 완성 번역문 — 색상(에메랄드/스카이블루)으로 Draft와 구분, 라벨 없이 깔끔하게
+                    Row(verticalAlignment = Alignment.Top) {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(CircleShape)
+                                .background(if (isMe) Color(0xFF065F46) else Color(0xFF0C4A6E)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SmartToy,
+                                contentDescription = null,
+                                tint = if (isMe) Color(0xFF6EE7B7) else Color(0xFF38BDF8),
+                                modifier = Modifier.size(11.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = message.refinedText,
+                            fontSize = 14.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontStyle = if (isRephrasing) FontStyle.Italic else FontStyle.Normal,
+                            color = if (isMe) Color(0xFF6EE7B7) else Color(0xFF38BDF8),
+                            lineHeight = 19.5.sp
+                        )
+                    }
                 }
 
                 // 🌟 AI 재점검 진행 인디케이터

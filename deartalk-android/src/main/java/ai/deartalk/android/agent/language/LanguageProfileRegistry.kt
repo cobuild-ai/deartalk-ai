@@ -26,7 +26,9 @@ object LanguageProfileRegistry {
                         "너는 집에 있어" to "너 집에 있어?",
                         "이거 복잡한 문제야" to "이거 복잡한 문제야?",
                         "지금 출발했어" to "지금 출발했어?"
-                    )
+                    ),
+                    endings = listOf("까", "나요", "가요", "실까요", "을까요", "ㄹ까요", "어때", "어때요", "래", "니", "냐", "는가", "인가", "던가", "려나", "맞나요"),
+                    keywords = listOf("혹시", "언제", "어디", "누구", "무엇", "왜", "어떻게", "몇")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "화행 목표: [설명/평서문] 명확한 평서문 종결 어미('~야', '~다', '~습니다', '~해요')로 바꾸고 마침표('.')로 끝내세요. 의문문 구조를 사용하지 마세요.",
@@ -35,15 +37,19 @@ object LanguageProfileRegistry {
                         "너 집에 있어?" to "너 집에 있어.",
                         "이거 복잡한 문제야?" to "이거 복잡한 문제야.",
                         "지금 출발했니?" to "지금 출발했어."
-                    )
+                    ),
+                    endings = listOf("다", "습니다", "입니다", "해요", "야")
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "화행 목표: [정중한 부탁] 상대방에게 정중히 요청하거나 부탁하는 표현('~해줘', '~해주세요', '~부탁드립니다')으로 바꾸세요.",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    endings = listOf("주세요", "바랍니다", "바래요", "해줘", "해라", "줘", "도와줘", "알려줘", "보내줘", "확인해줘", "주실래요", "주시겠어요", "주시겠습니까"),
+                    keywords = listOf("부탁", "부탁드립니다", "부탁드려요", "부탁해")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "화행 목표: [확인/재확인] 상대방에게 사실이나 의사를 확인하는 어미('~맞지?', '~그렇지?', '~죠?')로 끝내세요.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("지", "맞지", "맞죠", "그렇지", "그렇죠", "거지", "거죠", "알았지", "됐지", "됐죠", "죠")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -69,6 +75,11 @@ object LanguageProfileRegistry {
                         "이거 복잡한 문제야" to "Is this a complicated issue?",
                         "지금 출발했어" to "Did you leave now?",
                         "시간 돼" to "Do you have time?"
+                    ),
+                    prefixes = listOf(
+                        "are ", "is ", "do ", "does ", "did ", "what ", "how ", "why ",
+                        "where ", "when ", "who ", "which ", "can ", "could ", "would ",
+                        "will ", "should ", "shall ", "am ", "were ", "was ", "have you ", "has "
                     )
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
@@ -83,11 +94,14 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): The speaker is asking for something or making a polite request/order. Strictly structure the translated output as a courteous request in English (e.g., using 'Could you please...', 'Please...').",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    prefixes = listOf("could you", "can you", "would you", "will you", "please ", "kindly "),
+                    keywords = listOf("please")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): The speaker is seeking confirmation or double-checking (asking 'Right?'). Structure the translated output to confirm in English, ending with '?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("right", "correct", "isn't it", "aren't you", "don't you", "right?")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -113,7 +127,8 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Formulate as a natural polite question in Japanese ending with '〜ですか？', '〜ますか？', or '？'.",
-                    endingPunctuation = "？"
+                    endingPunctuation = "？",
+                    endings = listOf("か", "ですか", "ますか", "でしょうか")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Formulate as a clear polite declarative sentence in Japanese ending with '〜です。', '〜ます。', or '。'.",
@@ -121,11 +136,13 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Formulate as a courteous request in Japanese using '〜をお願いします。' or '〜てください。'.",
-                    endingPunctuation = "。"
+                    endingPunctuation = "。",
+                    endings = listOf("ください", "お願いします", "ちょうだい", "頼む")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Formulate as confirmation in Japanese ending with '〜ですね？' or '〜でしょうか？'.",
-                    endingPunctuation = "？"
+                    endingPunctuation = "？",
+                    endings = listOf("ね", "ですよね", "確認")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -144,7 +161,9 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Formulate as a natural question in Chinese ending with question particles like '吗？', '呢？', or '？'.",
-                    endingPunctuation = "？"
+                    endingPunctuation = "？",
+                    endings = listOf("吗", "嗎", "呢"),
+                    prefixes = listOf("为什么", "怎么", "怎麼", "谁", "誰", "哪")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Formulate as a clear declarative sentence in Chinese ending with '。'.",
@@ -152,11 +171,14 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Formulate as a polite request in Chinese using '请...' or '麻烦您...'.",
-                    endingPunctuation = "。"
+                    endingPunctuation = "。",
+                    prefixes = listOf("请", "請", "麻烦", "麻煩"),
+                    keywords = listOf("帮忙", "幫忙", "协助", "協助")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Formulate as seeking confirmation ending with '对吧？', '是不是？', or '确认一下...'.",
-                    endingPunctuation = "？"
+                    endingPunctuation = "？",
+                    endings = listOf("吧", "对吧", "對吧", "是不是")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -175,7 +197,8 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Ubah struktur kalimat menjadi pertanyaan yang alami dalam bahasa Indonesia dan akhiri dengan '?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    prefixes = listOf("apakah", "bagaimana", "kenapa", "mengapa", "kapan", "siapa", "di mana", "dimana", "berapa", "mana")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Ubah menjadi kalimat berita/pernyataan yang jelas dan akhiri dengan '.' (hindari kalimat tanya).",
@@ -183,11 +206,14 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Gunakan kata permintaan sopan seperti 'tolong' atau 'mohon'.",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    prefixes = listOf("bisa ", "bisakah ", "tolong ", "mohon "),
+                    keywords = listOf("tolong", "mohon", "silakan")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Akhiri dengan konfirmasi seperti 'kan?' atau 'benar?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("kan", "ya", "benar")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -205,7 +231,8 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Formulate as a clear interrogative sentence in Spanish ending with '?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    prefixes = listOf("cómo", "qué", "dónde", "cuándo", "quién", "por qué", "¿")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Formulate as a clear declarative statement in Spanish ending with '.'.",
@@ -213,11 +240,14 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Formulate as a courteous request in Spanish (e.g., 'Por favor...', '¿Podrías...?').",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    prefixes = listOf("podrías", "podría", "por favor"),
+                    keywords = listOf("por favor")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Formulate as seeking confirmation in Spanish (e.g., '..., ¿verdad?', '¿cierto?').",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("verdad", "cierto")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -235,7 +265,8 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Formulate as a natural question in French ending with '?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    prefixes = listOf("est-ce que", "comment", "pourquoi", "où", "quand", "qui")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Formulate as a clear declarative statement in French ending with '.'.",
@@ -243,11 +274,13 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Formulate as a polite request in French (e.g., 'S'il vous plaît...').",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    keywords = listOf("s'il vous plaît", "s'il te plaît", "svp")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Formulate as seeking confirmation in French (e.g., '..., n'est-ce pas ?').",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("n'est-ce pas")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -265,7 +298,8 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Formulate as a question in German ending with '?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    prefixes = listOf("warum", "wie", "wo", "wann", "wer", "was", "können sie", "kannst du")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Formulate as a clear declarative sentence in German ending with '.'.",
@@ -273,11 +307,13 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Formulate as a polite request in German (e.g., 'Bitte...').",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    keywords = listOf("bitte")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Formulate as seeking confirmation in German (e.g., '..., oder?', '..., nicht wahr?').",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("oder", "nicht wahr")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -295,7 +331,8 @@ object LanguageProfileRegistry {
             intentRules = mapOf(
                 SpeechIntent.QUESTION to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (QUESTION): Formulate as a question in Vietnamese ending with 'phải không?', 'sao?', or '?'.",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("phải không", "sao", "à", "chưa")
                 ),
                 SpeechIntent.STATEMENT to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (STATEMENT): Formulate as a clear declarative sentence in Vietnamese ending with '.'.",
@@ -303,11 +340,13 @@ object LanguageProfileRegistry {
                 ),
                 SpeechIntent.REQUEST to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (POLITE REQUEST): Formulate as a polite request in Vietnamese (e.g., 'Làm ơn...', 'Xin vui lòng...').",
-                    endingPunctuation = "."
+                    endingPunctuation = ".",
+                    prefixes = listOf("làm ơn", "xin vui lòng")
                 ),
                 SpeechIntent.CONFIRM to SpeechIntentRule(
                     directive = "4. SPEECH INTENT (CONFIRMATION): Formulate as seeking confirmation in Vietnamese (e.g., '...đúng không?').",
-                    endingPunctuation = "?"
+                    endingPunctuation = "?",
+                    endings = listOf("đúng không", "đúng chứ")
                 )
             ),
             cleaningPrefixes = listOf(
@@ -396,7 +435,8 @@ object LanguageProfileRegistry {
                 listOf(
                     "Output", "Result", "Sentence", "model", "assistant", "AI", "Translation", "Translated Text",
                     "영어", "일본어", "중국어", "스페인어", "프랑스어", "독일어", "인도네시아어", "베트남어",
-                    "최종 문장", "수정된 문장", "다듬은 문장", "변환된 문장", "결과", "답변", "제안", "답", "문장"
+                    "최종 문장", "수정된 문장", "다듬은 문장", "변환된 문장", "결과", "답변", "제안", "답", "문장",
+                    "교정", "교정문", "변환", "수정", "Refined", "Corrected", "Correction", "Koreksi", "Ubah"
                 )).distinct()
         val pattern = "^(${prefixes.joinToString("|") { Regex.escape(it) }})\\s*[:：]\\s*"
         Regex(pattern, RegexOption.IGNORE_CASE)

@@ -104,21 +104,21 @@ class DearTalkIntentEngineTest {
     }
 
     @Test
-    fun `cleanLlmOutput_Gemma_및_Qwen_ChatML_특수토큰_정제_테스트`() {
+    fun `cleanLlmOutput_Gemma_특수토큰_정제_테스트`() {
         // Gemma 토큰 테스트
         val gemmaRaw = "<start_of_turn>model\n내일 뵙겠습니다.<end_of_turn>"
         assertEquals("내일 뵙겠습니다.", intentEngine.cleanLlmOutput(gemmaRaw))
 
-        // Qwen ChatML 토큰 테스트
-        val qwenRaw = "<|im_start|>assistant\nSampai jumpa besok.<|im_end|>"
-        assertEquals("Sampai jumpa besok.", intentEngine.cleanLlmOutput(qwenRaw))
+        // 다국어 토큰 테스트
+        val multiRaw = "<start_of_turn>model\nSampai jumpa besok.<end_of_turn>"
+        assertEquals("Sampai jumpa besok.", intentEngine.cleanLlmOutput(multiRaw))
 
         // 접두어 제거 테스트
         val prefixRaw = "최종 문장: 안녕하세요!"
         assertEquals("안녕하세요!", intentEngine.cleanLlmOutput(prefixRaw))
 
         // 복합 마크다운 및 따옴표 제거 테스트
-        val complexRaw = "<|im_start|>assistant\n\"Terima kasih banyak atas bantuannya!\"<|im_end|>"
+        val complexRaw = "<start_of_turn>model\n\"Terima kasih banyak atas bantuannya!\"<end_of_turn>"
         assertEquals("Terima kasih banyak atas bantuannya!", intentEngine.cleanLlmOutput(complexRaw))
     }
 
