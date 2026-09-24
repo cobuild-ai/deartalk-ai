@@ -9,7 +9,7 @@ import android.os.StatFs
  * 📱 기기 하드웨어(RAM, 저장공간) 사전 진단 결과 등급
  */
 enum class DeviceTierRating {
-    OPTIMAL,     // 🟢 최적: RAM 8GB+ 및 저장공간 3GB+ (Qwen 풀스택 무제한 허용)
+    OPTIMAL,     // 🟢 최적: RAM 8GB+ 및 저장공간 3GB+ (Gemma 4 온디바이스 풀스택 구동)
     CAUTION,     // 🟡 주의: RAM 6GB 및 저장공간 2GB+ (순차 로딩 파이프라인으로 안전 구동)
     RESTRICTED   // 🔴 제한: RAM 4GB 이하 또는 저장공간 부족 (기기 멈춤 방지를 위해 설치 사전 차단)
 }

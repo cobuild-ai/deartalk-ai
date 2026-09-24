@@ -43,10 +43,13 @@ fun StandardKeyboardView(
     onCharClick: (Char) -> Unit,
     onCheonjiinConsonantClick: (Char) -> Unit = {},
     onCheonjiinVowelClick: (Char) -> Unit = {},
+    onCheonjiinPunctuationClick: () -> Unit = {},
+    activePunctuationChar: Char? = null,
     onDeleteClick: () -> Unit,
     onSpaceClick: () -> Unit,
     onEnterClick: () -> Unit,
-    onSwitchToAiModeClick: () -> Unit
+    onSwitchToAiModeClick: () -> Unit,
+    onCommitComposing: () -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
     val isKorean = UiStrings.isKo
@@ -89,29 +92,31 @@ fun StandardKeyboardView(
                         fontWeight = FontWeight.Medium
                     )
 
-                    // 한글 레이아웃일 때: [두벌식 | 천지인] 퀵 토글 칩 (방안 A)
+                    // 한글 레이아웃일 때: [두벌식 | 천지인] 퀵 토글 칩
                     if (layoutType == KeyboardLayoutType.HANGUL) {
                         Row(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(DearTalkKeyActive)
-                                .padding(1.dp),
+                                .padding(2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(5.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(if (currentKoreanType == KoreanKeyboardType.DUBEOLSIK) DearTalkPrimary else Color.Transparent)
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onCommitComposing()
                                         currentKoreanType = KoreanKeyboardType.DUBEOLSIK
                                         onKoreanKeyboardTypeChange(KoreanKeyboardType.DUBEOLSIK)
                                     }
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = "두벌식",
-                                    fontSize = 10.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = if (currentKoreanType == KoreanKeyboardType.DUBEOLSIK) FontWeight.Bold else FontWeight.Normal,
                                     color = if (currentKoreanType == KoreanKeyboardType.DUBEOLSIK) Color.White else DearTalkTextDim
                                 )
@@ -119,18 +124,20 @@ fun StandardKeyboardView(
 
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(5.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(if (currentKoreanType == KoreanKeyboardType.CHEONJIIN) DearTalkPrimary else Color.Transparent)
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onCommitComposing()
                                         currentKoreanType = KoreanKeyboardType.CHEONJIIN
                                         onKoreanKeyboardTypeChange(KoreanKeyboardType.CHEONJIIN)
                                     }
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = "천지인",
-                                    fontSize = 10.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = if (currentKoreanType == KoreanKeyboardType.CHEONJIIN) FontWeight.Bold else FontWeight.Normal,
                                     color = if (currentKoreanType == KoreanKeyboardType.CHEONJIIN) Color.White else DearTalkTextDim
                                 )
@@ -255,16 +262,23 @@ fun StandardKeyboardView(
                             },
                             onSymbolsClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onCommitComposing()
                                 layoutType = KeyboardLayoutType.SYMBOLS
                             },
                             onToggleLangClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onCommitComposing()
                                 layoutType = KeyboardLayoutType.ENGLISH
                             },
                             onSpecialCharClick = { char ->
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onCharClick(char)
-                            }
+                            },
+                            onPunctuationCycleClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onCheonjiinPunctuationClick()
+                            },
+                            activePunctuationChar = activePunctuationChar
                         )
                     } else {
                         HangulKeyboardLayout(
@@ -336,6 +350,7 @@ fun StandardKeyboardView(
                         bgColor = DearTalkKeyActive,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onCommitComposing()
                             layoutType = if (layoutType == KeyboardLayoutType.SYMBOLS) {
                                 if (isKorean) KeyboardLayoutType.HANGUL else KeyboardLayoutType.ENGLISH
                             } else {
@@ -355,6 +370,7 @@ fun StandardKeyboardView(
                         bgColor = DearTalkKeyActive,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onCommitComposing()
                             layoutType = if (layoutType == KeyboardLayoutType.HANGUL) KeyboardLayoutType.ENGLISH else KeyboardLayoutType.HANGUL
                         }
                     )
@@ -427,7 +443,9 @@ private fun CheonjiinKeyboardLayout(
     onSpaceClick: () -> Unit,
     onSymbolsClick: () -> Unit,
     onToggleLangClick: () -> Unit,
-    onSpecialCharClick: (Char) -> Unit
+    onSpecialCharClick: (Char) -> Unit,
+    onPunctuationCycleClick: () -> Unit,
+    activePunctuationChar: Char? = null
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -482,17 +500,38 @@ private fun CheonjiinKeyboardLayout(
             CheonjiinKey(mainText = "ㅂ ㅍ", subText = "7", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅂ') })
             CheonjiinKey(mainText = "ㅅ ㅎ", subText = "8", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅅ') })
             CheonjiinKey(mainText = "ㅈ ㅊ", subText = "9", modifier = Modifier.weight(1f), onClick = { onConsonantClick('ㅈ') })
+            val isPunctuationActive = activePunctuationChar != null
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(DearTalkKeyActive)
-                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
-                    .clickable { onSymbolsClick() },
+                    .background(if (isPunctuationActive) DearTalkPrimary else DearTalkKeyActive)
+                    .border(
+                        if (isPunctuationActive) 1.dp else 0.5.dp,
+                        if (isPunctuationActive) DearTalkSecondary else DearTalkBorder,
+                        RoundedCornerShape(6.dp)
+                    )
+                    .clickable { onPunctuationCycleClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = ".,?!", color = DearTalkText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                if (activePunctuationChar != null) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = activePunctuationChar.toString(),
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = ".,?!",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 9.sp
+                        )
+                    }
+                } else {
+                    Text(text = ".,?!", color = DearTalkText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
 

@@ -1,0 +1,48 @@
+✨ DearTalk AI: 100% On-Device AI-rösttangentbord & Live-tolk för 59 språk
+
+Ingen data skickas till molnet. Total Air-Gapped integritet.
+DearTalk AI körs helt på din smartphones NPU utan att skicka en enda byte röst- eller textdata till externa servrar.
+
+🎙️ DEL 1. Smart On-Device AI-rösttangentbord (Voice IME)
+Tala naturligt i chattar, e-post eller anteckningar – lokal AI finjusterar dina meningar direkt.
+
+1. ⚡ Realtidskorrigering av grammatik och stavfel
+- Generativ AI analyserar sammanhanget och rättar stavfel och meningsbyggnad till perfekt flyt.
+
+2. 🎭 Ändra ton och stil med 1 tryck
+- Anpassa tonen efter varje situation:
+  - 😼 Självsäker (Cheeky): Klyftig, modig och uttrycksfull
+  - 👔 Formell (Formal): Professionell och affärsmässig
+  - 🤝 Artig (Polite): Vänlig och respektfull
+  - 💖 Empatisk: Varm, förstående och omtänksam
+
+⚡ DEL 2. DearTalk Live: Personlig tolkning för 59 språk
+Kommunicera obehindrat på utlandsresor, flyg eller möten – helt offline.
+
+1. 🚀 2-Track hybridmotor med ultralåg latens
+- Track 1 (~50ms): Blixtsnabbt utkast till översättning för 59 språk via Google ML Kit On-Device NMT.
+- Track 2 (~2s): Kontextuell förfining och idiomatiska uttryck via den lokala AI-modellen.
+
+2. 🔄 180° Symmetrisk delad skärm (Flip View)
+- Lägg mobilen på bordet: Samtalspartnerns skärm roterar 180 grader så att ni kan hålla naturlig ögonkontakt.
+
+3. 🔊 1-Tryck Auto-Speak (TTS röstuppläsning)
+- Slå på eller av röstuppläsning av översättningen direkt från appens övre fält.
+
+4. 🧹 200-meddelandens ringbuffert O(1)
+- FIFO-begränsning till 200 meddelanden håller enheten snabb och frigör minne.
+
+💰 DEL 3. 100% Gratis för Alltid & Inga AI-Kostnader
+- Körs lokalt på din smartphones NPU utan anrop till dyra moln-API:er.
+- Tala och översätt obegränsat: inga datakostnader och inga avgifter för AI-tokens.
+- Inga månatliga prenumerationer eller dolda avgifter. Alla funktioner är helt gratis.
+
+✈️ DEL 4. 100% Offline: På Flygplan, Utomlands och Utan Nätverk
+- Fungerar till 100% i flygplansläge, vid utlandsresor utan roaming och på platser utan täckning.
+- Livetolkning för 59 språk och AI-röstinmatning helt utan Wi-Fi eller mobildata.
+- Fullständig Air-Gapped-säkerhet som garanterar absolut integritet för dina samtal. 100% Air-Gap säkerhet och flygläge
+- Fungerar helt utan internetanslutning. Fullständig sekretess för privata och affärsmässiga samtal.
+
+🌐 Språk som stöds:
+- Lokal offline-översättning: 59 språk (svenska, engelska, tyska, spanska, koreanska osv.)
+- Appgränssnitt och AI-toner: Svenska, Engelska, Koreanska, Indonesiska.

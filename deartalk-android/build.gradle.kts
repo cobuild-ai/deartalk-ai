@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.play.publisher)
 }
 
 android {
@@ -14,14 +15,16 @@ android {
         applicationId = "ai.deartalk.android"
         minSdk = 26
         targetSdk = 36
-        versionCode = 16
-        versionName = "1.1.2"
+        versionCode = 19
+        versionName = "1.1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
+
+    assetPacks += ":gemma_asset_pack"
 
     signingConfigs {
         create("release") {
@@ -101,7 +104,27 @@ dependencies {
     implementation(libs.litertlm.android)
     // Google MediaPipe Tasks GenAI
     implementation(libs.mediapipe.tasks.genai)
+    // Google Play Asset Delivery
+    implementation(libs.play.asset.delivery)
+    implementation(libs.play.asset.delivery.ktx)
+
+    // Google ML Kit On-Device Translation (Track 1 Ultra-fast Draft 50ms)
+    implementation(libs.mlkit.translate)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     testImplementation(libs.junit)
     debugImplementation(libs.androidx.ui.tooling)
 }
+
+play {
+    val serviceAccountFile = rootProject.file("play-service-account.json")
+    val localSaFile = file("play-service-account.json")
+    when {
+        serviceAccountFile.exists() -> serviceAccountCredentials.set(serviceAccountFile)
+        localSaFile.exists() -> serviceAccountCredentials.set(localSaFile)
+    }
+    track.set("internal")
+    releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
+    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.AUTO_OFFSET)
+}
+

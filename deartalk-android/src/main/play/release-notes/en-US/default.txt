@@ -1,0 +1,3 @@
+- Resolved on-device NPU inference stall for smooth background processing
+- Strengthened SLM prompt to preserve 100% of complex speech intent (reasons/requests)
+- 100% on-device air-gap privacy and 59-language real-time interpretation

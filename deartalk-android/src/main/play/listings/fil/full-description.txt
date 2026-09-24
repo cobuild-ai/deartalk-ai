@@ -1,0 +1,48 @@
+✨ DearTalk AI: 100% On-Device AI Voice Keyboard at Live Interpreter para sa 59 Wika
+
+Walang Cloud Transmission. Ganap na Air-Gapped Privacy.
+Tumatakbo ang DearTalk AI nang buo sa NPU ng iyong smartphone nang hindi nagpapadala ng boses o teksto sa mga panlabas na server.
+
+🎙️ BAHAGI 1. Matalinong On-Device AI Voice Keyboard (Voice IME)
+Magsalita nang natural sa anumang chat, email, o notes. Aayusin ng on-device AI ang iyong mga pangungusap.
+
+1. ⚡ Real-Time AI Grammar at Pagwawasto
+- Agad na sinusuri ng on-device AI ang konteksto upang ituwid ang maling baybay at bantas sa maayos na pangungusap.
+
+2. 🎭 Pagbabago ng Tono sa 1 Tap
+- Ibagay ang iyong pananalita sa bawat sitwasyon:
+  - 😼 May Kumpyansa (Cheeky): Matalas, tapat at kapansin-pansin
+  - 👔 Pormal (Formal): Angkop para sa trabaho at negosyo
+  - 🤝 Magalang (Polite): May paggalang at maingat
+  - 💖 May Malasakit (Empathetic): Mainit at maunawain
+
+⚡ BAHAGI 2. DearTalk Live: Harapang Pagsasalin sa 59 Wika
+Makipag-usap nang walang sagabal sa biyahe, eroplano, o kahit walang internet connection.
+
+1. 🚀 2-Track Ultra-Low Latency Hybrid Engine
+- Track 1 (~50ms): Mabilis na draft na salin para sa 59 wika gamit ang Google ML Kit On-Device NMT.
+- Track 2 (~2s): Pinapakinis ang mga idyoma gamit ang lokal na neural AI model.
+
+2. 🔄 180° Symmetric Split-Screen Flip View
+- Ilagay ang telepono sa mesa: iikot ng 180 degrees ang screen ng kausap upang makapag-usap nang may eye contact.
+
+3. 🔊 1-Tap Auto-Speak (Boses na Pagbasa)
+- Madaling buksan o patayin ang boses ng salin sa itaas na bar ng app.
+
+4. 🧹 200-Message FIFO Ring Buffer
+- O(1) memory efficiency para manatiling mabilis at magaan ang iyong smartphone.
+
+💰 BAHAGI 3. 100% Libreng Gamitin at Walang Bayad sa AI
+- Tumatakbo sa NPU ng iyong smartphone nang hindi tumatawag sa mga bayarang cloud API.
+- Walang limitasyong pag-uusap at pagsasalin nang walang singil sa data o bayad sa token ng AI.
+- Walang buwanang subscription at walang nakatagong bayarin. Libre ang lahat ng feature.
+
+✈️ BAHAGI 4. 100% Offline: Sa Eroplano, Ibang Bansa, at Walang Internet
+- Gumagana nang buo sa Airplane Mode, sa paglalakbay sa ibang bansa nang walang roaming, o sa walang signal.
+- Live interpreter sa 59 wika at AI voice typing nang walang Wi-Fi o mobile data.
+- Ganap na Air-Gapped privacy para sa iyong mga kumpidensyal na pag-uusap. 100% Air-Gap Security at Airplane Mode
+- Gumagana kahit walang internet. Ligtas para sa kumpidensyal na usapan.
+
+🌐 Mga Sinusuportahang Wika:
+- Offline On-Device Translation: 59 wika kabilang ang Filipino, Ingles, Koreano, Hapon, Tsino, Espanyol, atbp.
+- UI at Pag-aangkop ng Tono: Filipino, Ingles, Koreano, Indonesian.

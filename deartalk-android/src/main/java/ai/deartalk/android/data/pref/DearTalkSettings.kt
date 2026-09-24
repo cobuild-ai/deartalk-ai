@@ -101,9 +101,43 @@ object DearTalkSettings {
     fun setKoreanKeyboardType(context: Context, type: KoreanKeyboardType) {
         getPrefs(context).edit().putString(KEY_KOREAN_KEYBOARD_TYPE, type.name).apply()
     }
+
+    private const val KEY_KEYBOARD_MODE = "key_keyboard_mode"
+    private const val KEY_ONBOARDING_MODE_SHOWN = "key_onboarding_mode_shown"
+
+    fun getKeyboardMode(context: Context): KeyboardMode {
+        val name = getPrefs(context).getString(KEY_KEYBOARD_MODE, KeyboardMode.BASIC.name)
+        return try {
+            KeyboardMode.valueOf(name ?: KeyboardMode.BASIC.name)
+        } catch (_: Exception) {
+            KeyboardMode.BASIC
+        }
+    }
+
+    fun setKeyboardMode(context: Context, mode: KeyboardMode) {
+        getPrefs(context).edit().putString(KEY_KEYBOARD_MODE, mode.name).apply()
+    }
+
+    fun isOnboardingModeShown(context: Context): Boolean {
+        return getPrefs(context).getBoolean(KEY_ONBOARDING_MODE_SHOWN, false)
+    }
+
+    fun setOnboardingModeShown(context: Context, shown: Boolean) {
+        getPrefs(context).edit().putBoolean(KEY_ONBOARDING_MODE_SHOWN, shown).apply()
+    }
 }
 
 enum class KoreanKeyboardType {
     DUBEOLSIK,
     CHEONJIIN
+}
+
+/**
+ * 🎛️ 2-Tier 키보드 경험 모드
+ * - BASIC (기본 모드): 언어 고정, 번역 숨김, 톤앤매너/화행 보정에 집중 (3세 이상 전연령 초직관 경험)
+ * - PRO (프로 모드): 다국어 실시간 번역 + 톤앤매너 + 2-Track 통역 결합 (글로벌 파워 유저)
+ */
+enum class KeyboardMode {
+    BASIC,
+    PRO
 }

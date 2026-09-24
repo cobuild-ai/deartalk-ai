@@ -8,7 +8,7 @@
   <b>Bahasa Indonesia</b>
 </p>
 
-[![Platform: Android](https://img.shields.io/badge/Platform-Android%2015%20(API%2035)-3DDC84?logo=android&logoColor=white)](#-fitur-utama-papan-ketik-android)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-fitur-utama-papan-ketik-android)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-prinsip-utama-rekayasa)
 [![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-jaminan-privasi--keamanan-mutlak)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -27,7 +27,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.2` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | DearTalk Live Messenger Suara 1:1 Real-Time, Tampilan Balik 180° Tatap Muka, UI Multibahasa Tanpa Pemotongan Teks, SQLite 100% Offline, Perbaikan Suara ASR Sadar Konteks |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.5` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Arsitektur Zero-Lock NPU (Bebas Macet Inferensi), Prompt Anti-Distorsi, Desain Ulang Pusat Pengaturan (Live Selalu Tampil), Batas Hening Suara Terpadu 10 Detik |
 
 ---
 
@@ -45,7 +45,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 ### 🎙️ Penerjemah Langsung Tatap Muka 1:1 & Perekam Suara (`DearTalkLiveActivity`)
 - **Sesi Percakapan Layar Penuh Terisolasi Memori:** Aktivitas mandiri untuk penerjemahan tatap muka langsung 2-arah 1:1 dan pencatatan riwayat SQLite tanpa membebani memori keyboard IME.
 - **Mikrofon Ganda 2-Arah & Tampilan Rotasi 180°:** Tampilan simetris atas-bawah untuk percakapan tatap muka dan bilah aksi ganda `[🙋 Bicara]` / `[👂 Dengar]`.
-- **Integrasi Paket AI On-Device & Diagnostik Perangkat Keras:** Terintegrasi di lembar pengaturan untuk diagnostik RAM/penyimpanan dan manajemen unduh/hapus paket model AI lokal Qwen (1.2GB).
+- **Integrasi Paket AI On-Device & Diagnostik Perangkat Keras:** Terintegrasi di lembar pengaturan untuk diagnostik RAM/penyimpanan dan manajemen unduh/hapus paket model AI lokal Gemma 4 (PAD).
 - **Penyesuaian Niat Pasca-Bicara Tanpa Hardcoding:** Mesin cerdas waktu nyata untuk merombak nada percakapan menjadi Pertanyaan, Pernyataan, atau Permintaan dengan menjaga konteks asli.
 - **Pemutaran Ulang Audio 0ms & TTS Multibahasa:** Sintesis suara alami instan untuk lawan bicara.
 

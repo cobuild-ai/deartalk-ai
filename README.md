@@ -28,7 +28,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.2` | **Android 16 (API 36)** | **Production Stable** | DearTalk Live 1:1 Voice Messenger, 180° Face-to-Face Flip View, Multilingual Zero-Truncation UI, 100% Offline SQLite, Context-Aware ASR Speech Repair |
+| 🤖 **DearTalk Android IME & Live** | `v1.1.5` | **Android 16 (API 36)** | **Production Stable** | Zero-Lock NPU Architecture (Zero Inference Stall), Anti-Distortion Prompt, Settings Hub Redesign (Live Always Visible), Unified 10s Speech Silence Timeout |
 
 ---
 
@@ -46,7 +46,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 ### 🎙️ 1:1 Real-Time Face-to-Face Live Interpreter & Recorder (`DearTalkLiveActivity`)
 - **Memory-Isolated Full-Screen Session:** Dedicated activity executing 1:1 bidirectional real-time interpretation with SQLite persistent history safely outside IME memory space.
 - **2-Way Dual Mic & 180° Face-to-Face Stage:** Symmetric top-down rotation view for counterparty conversations and `[🙋 Speak]` / `[👂 Listen]` dual action bars.
-- **On-Device AI Pack & Hardware Diagnostics:** Integrated inside Settings bottom sheet for device RAM/storage diagnostics and Qwen local AI pack (1.2GB) download/purge management.
+- **On-Device AI Pack & Hardware Diagnostics:** Integrated inside Settings bottom sheet for device RAM/storage diagnostics and Gemma 4 local AI pack (PAD) download/purge management.
 - **Zero-Hardcoding Post-Hoc Intent Rewriting:** Real-time conversational tone tuning into Questions, Declarative Statements, or Requests preserving core context.
 - **Zero-Latency Audio Replay & Multilingual TTS:** Instant natural voice synthesis and playback for counterparties.
 

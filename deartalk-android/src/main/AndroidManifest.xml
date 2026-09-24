@@ -23,6 +23,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DearTalk">
 
+        <!-- 🏎️ Qualcomm Hexagon NPU DSP RPC Native Library (Zero Crash via required=false) -->
+        <uses-native-library
+            android:name="libcdsprpc.so"
+            android:required="false" />
+
         <!-- 메인 설정 및 모델 다운로드 마법사 액티비티 -->
         <activity
             android:name=".MainActivity"

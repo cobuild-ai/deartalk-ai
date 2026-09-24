@@ -1,0 +1,48 @@
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard & 59-Language Live Interpreter
+
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
+
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
+
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
+
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
+
+⚡ PART 2. DearTalk Live: 59-Language Face-to-Face Live Interpretation
+Communicate effortlessly during overseas travels, flights, and international meetings—even completely offline.
+
+1. 🚀 2-Track Ultra-Low Latency Hybrid Engine
+- Track 1 (~50ms): Instant draft translation across 59 global languages powered by Google ML Kit On-Device NMT.
+- Track 2 (~2s): Contextual nuance & idiom refinement via on-device neural language models.
+
+2. 🔄 180° Symmetric Face-to-Face Flip View
+- Place your smartphone on a table. The top screen flips 180 degrees so your conversation partner can read effortlessly while maintaining natural eye contact.
+
+3. 🔊 1-Tap Auto-Speak (TTS Voice Output) Toggle
+- Instantly toggle spoken translations on or off directly from the top app bar.
+
+4. 🧹 200-Message FIFO Ring Buffer
+- O(1) memory and storage efficiency that keeps your device fast and prevents bloat.
+
+💰 PART 3. 100% Free Forever & Zero AI Cloud Costs
+- Runs locally on your smartphone's NPU with no external cloud API calls.
+- Enjoy unlimited daily conversations and translations with zero data charges or AI token fees.
+- No monthly subscriptions, no paywalls, and no hidden charges.
+
+✈️ PART 4. 100% Offline: Flights, Overseas, and No Network Connection
+- Works seamlessly on airplanes (Airplane Mode), in remote overseas locations without roaming, or in subways with no signal.
+- Experience full 59-language real-time live interpretation and AI voice refinement with zero Wi-Fi or cellular connection.
+- 100% Air-Gapped security ensures absolute privacy and confidentiality for sensitive conversations.
+
+🌐 Language Support Details:
+- On-Device Offline Interpretation: 59 global languages including English, Korean, Indonesian, Spanish, French, German, Japanese, Chinese, Vietnamese, Thai, etc.
+- App UI & Contextual Tone Refinement: Deeply optimized for English, Korean, and Indonesian.

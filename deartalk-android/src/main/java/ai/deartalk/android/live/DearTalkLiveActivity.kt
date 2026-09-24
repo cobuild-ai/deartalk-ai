@@ -156,6 +156,14 @@ class DearTalkLiveActivity : ComponentActivity() {
         }
 
         if (speaker != ActiveSpeaker.NONE) {
+            val testRefined = intent.getStringExtra("test_refined_text")
+            if (!testRefined.isNullOrBlank()) {
+                val isDraft = intent.getBooleanExtra("test_is_draft", false)
+                android.util.Log.d("DearTalkLive", "📸 [테스트 완성 메시지 인젝션]: 화자=$speaker, 원문='$rawText', 번역='$testRefined'")
+                controller.insertCompletedTestMessage(speaker, rawText, testRefined, isDraft)
+                return
+            }
+
             val intentStr = intent.getStringExtra("test_intent")
             if (!intentStr.isNullOrBlank()) {
                 val speechIntent = when (intentStr.uppercase()) {

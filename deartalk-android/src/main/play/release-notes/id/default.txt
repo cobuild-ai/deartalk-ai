@@ -1,0 +1,3 @@
+- Mengatasi hambatan inferensi NPU on-device untuk kinerja latar belakang yang mulus
+- Memperkuat prompt SLM untuk mempertahankan 100% maksud kalimat asli tanpa pemotongan
+- Privasi air-gap 100% on-device dan penerjemahan langsung 59 bahasa

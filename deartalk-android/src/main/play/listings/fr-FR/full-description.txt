@@ -1,0 +1,47 @@
+✨ DearTalk AI: Clavier vocal IA 100% on-device et interprète en direct pour 59 langues
+
+Aucune donnée envoyée sur le cloud ! Confidentialité absolue Air-Gapped.
+DearTalk AI s'exécute intégralement sur le NPU de votre smartphone sans envoyer le moindre octet de voix ou de texte sur des serveurs externes.
+
+🎙️ PARTIE 1. Clavier vocal intelligent avec IA on-device (Voice IME)
+Dictez naturellement dans vos applications de messagerie, e-mails ou notes : l'IA peaufine vos phrases en direct.
+
+1. ⚡ Correction grammaticale et fautes en temps réel
+- L'IA générative on-device analyse le contexte et corrige instantanément les coquilles, tournures maladroites et ponctuations.
+
+2. 🎭 Changement de ton en 1 touche
+- Adaptez votre style de communication en un clin d'œil :
+  - 😼 Audacieux (Cheeky): Confiant, percutant et plein d'esprit
+  - 👔 Formel (Formal): Professionnel et adapté aux affaires
+  - 🤝 Courtois (Polite): Poli, respectueux et raffiné
+  - 💖 Empathique: Bienveillant, chaleureux et attentif
+
+⚡ PARTIE 2. DearTalk Live: Interprète face-à-face en 59 langues
+Échangez en voyage, en avion ou en réunion internationale, même totalement hors ligne.
+
+1. 🚀 Moteur hybride 2-Track ultra-rapide
+- Track 1 (~50ms): Traduction instantanée dans 59 langues via Google ML Kit On-Device NMT.
+- Track 2 (~2s): Remplacement par une traduction fluide et naturelle enrichie par le modèle IA local.
+
+2. 🔄 Vue miroir symétrique pivotée à 180° (Flip View)
+- Posez le téléphone sur une table : l'écran de votre interlocuteur pivote à 180° pour faciliter la lecture tout en maintenant le contact visuel.
+
+3. 🔊 Lecture vocale instantanée Auto-Speak (TTS)
+- Activez ou coupez la lecture audio des traductions en un clic sur la barre supérieure.
+
+4. 🧹 Mémoire tampon circulaire de 200 messages
+- Gestion en anneau FIFO pour garder votre appareil toujours fluide et rapide.
+
+💰 PARTIE 3. 100% Gratuit pour Toujours et Zéro Frais d'IA
+- Fonctionne localement sur le NPU de votre smartphone sans appel aux API cloud payantes.
+- Échangez et traduisez sans limite : aucune consommation de données ni coût de jetons IA.
+- Sans abonnement mensuel ni achat intégré caché. Toutes les fonctionnalités sont gratuites.
+
+✈️ PARTIE 4. 100% Hors Ligne : En Avion, à l'Étranger et Sans Réseau
+- Fonctionne à 100% en mode avion, en voyage sans itinérance et dans les zones blanches sans signal.
+- Traduction en direct en 59 langues et saisie vocale IA sans Wi-Fi ni données mobiles.
+- Sécurité Air-Gapped totale pour préserver votre confidentialité.
+
+🌐 Langues prises en charge:
+- Traduction locale offline : 59 langues (français, anglais, espagnol, allemand, coréen, japonais, etc.)
+- Interface et réglage du ton : Français, Anglais, Coréen, Indonésien.

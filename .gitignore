@@ -29,8 +29,10 @@ google-services.json
 GoogleService-Info.plist
 .env*
 *.pem
-*.key
 credentials.json
+play-service-account.json
+*-service-account.json
+play-*.json
 .cxx/
 .externalNativeBuild/
 captures/

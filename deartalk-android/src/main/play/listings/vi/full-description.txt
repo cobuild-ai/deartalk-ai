@@ -1,0 +1,48 @@
+✨ DearTalk AI: Bàn phím giọng nói AI 100% On-Device & Phiên dịch trực tiếp 59 ngôn ngữ
+
+Không gửi dữ liệu lên đám mây. Bảo mật tuyệt đối chuẩn Air-Gap.
+DearTalk AI hoạt động hoàn toàn trên chip NPU của điện thoại, không truyền bất kỳ byte dữ liệu giọng nói hay văn bản nào ra máy chủ bên ngoài.
+
+🎙️ PHẦN 1. Bàn phím giọng nói AI On-Device thông minh (Voice IME)
+Nói tự nhiên trong bất kỳ ứng dụng nhắn tin, email hay ghi chú nào để AI tự động trau chuốt câu từ.
+
+1. ⚡ Sửa lỗi ngữ pháp và chính tả theo thời gian thực
+- Mô hình AI tạo sinh on-device lập tức phân tích ngữ cảnh, tự động chỉnh sửa lỗi chính tả và ngắt câu mượt mà.
+
+2. 🎭 Chuyển đổi giọng điệu (Tone) chỉ với 1 chạm
+- Tùy biến phong cách nói chuyện phù hợp với từng tình huống:
+  - 😼 Tự tin (Cheeky): Sắc sảo, lôi cuốn và quyết đoán
+  - 👔 Trang trọng (Formal): Chuẩn mực cho công việc và kinh doanh
+  - 🤝 Lịch sự (Polite): Nhã nhặn, tôn trọng và chu đáo
+  - 💖 Thấu cảm (Empathetic): Ấm áp, chân thành và thấu hiểu
+
+⚡ PHẦN 2. DearTalk Live: Phiên dịch đối mặt trực tiếp 59 ngôn ngữ
+Giao tiếp thuận tiện khi du lịch nước ngoài, trên máy bay hoặc khi không có mạng.
+
+1. 🚀 Động cơ lai 2-Track độ trễ siêu thấp
+- Track 1 (~50ms): Bản dịch sơ bộ tức thì cho 59 ngôn ngữ toàn cầu bằng Google ML Kit On-Device NMT.
+- Track 2 (~2s): AI cục bộ hoàn thiện ngữ nghĩa và câu từ tự nhiên nhất.
+
+2. 🔄 Chế độ xoay ngược màn hình 180° (Flip View)
+- Đặt điện thoại lên bàn: nửa màn hình đối diện tự động xoay 180° để hai người vừa nhìn vào mắt nhau vừa trò chuyện tự nhiên.
+
+3. 🔊 Bật/Tắt phát âm tức thì (Auto-Speak TTS)
+- Bật hoặc tắt giọng đọc bản dịch nhanh chóng ngay trên thanh công cụ phía trên.
+
+4. 🧹 Bộ đệm xoay vòng 200 tin nhắn
+- Cơ chế FIFO giới hạn 200 tin nhắn giúp máy luôn nhẹ, mượt và không tốn bộ nhớ.
+
+💰 PHẦN 3. Miễn Phí 100% Mãi Mãi & Không Tốn Phí AI
+- Chạy trực tiếp trên NPU của điện thoại mà không gọi API đám mây trả phí.
+- Thoải mái nói và dịch không giới hạn: không phí dữ liệu mạng, không phí token AI.
+- Không đăng ký hàng tháng, không phí ẩn. Sử dụng toàn bộ tính năng hoàn toàn miễn phí.
+
+✈️ PHẦN 4. Hoạt Động Ngoại Tuyến 100%: Trên Máy Bay, Đi Nước Ngoài & Không Cần Mạng
+- Hoạt động 100% ở chế độ máy bay, du lịch nước ngoài không cần chuyển vùng hay nơi không có sóng.
+- Dịch trực tiếp 59 ngôn ngữ và nhập giọng nói AI mà không cần Wi-Fi hay dữ liệu di động.
+- Bảo mật Air-Gapped tuyệt đối giúp bảo vệ cuộc trò chuyện riêng tư của bạn. Bảo mật 100% Air-Gap & Hỗ trợ Chế độ máy bay
+- Hoạt động trơn tru không cần internet. Bảo mật tuyệt đối cho các cuộc họp kinh doanh quan trọng.
+
+🌐 Hỗ trợ ngôn ngữ:
+- Dịch ngoại tuyến On-Device: 59 ngôn ngữ toàn cầu (Tiếng Việt, Anh, Hàn, Nhật, Trung, Pháp, Đức, v.v.)
+- Giao diện và phong cách giọng điệu: Tiếng Việt, Tiếng Anh, Tiếng Hàn, Tiếng Indonesia.

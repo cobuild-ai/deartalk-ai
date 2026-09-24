@@ -1,0 +1,48 @@
+✨ DearTalk AI: %100 Cihaz İçi Yapay Zekalı Sesli Klavye ve 59 Dilde Canlı Çevirmen
+
+Buluta Sıfır Veri Gönderimi. Kusursuz Air-Gapped Gizlilik.
+DearTalk AI, harici sunuculara tek bir bayt ses veya metin göndermeden tamamen akıllı telefonunuzun NPU'sunda çalışır.
+
+🎙️ BÖLÜM 1. Akıllı Cihaz İçi Yapay Zekalı Sesli Klavye (Voice IME)
+Mesajlaşma, e-posta veya not uygulamalarında doğal konuşun; yapay zeka cümlelerinizi anında kusursuzlaştırsın.
+
+1. ⚡ Gerçek Zamanlı Dilbilgisi ve İmla Düzeltme
+- Cihaz içi üretici yapay zeka, bağlamı analiz ederek hatalı kelimeleri ve noktalama işaretlerini anında düzeltir.
+
+2. 🎭 Tek Dokunuşla Üslup ve Tarz Değiştirme
+- Mesajınızın tonunu duruma göre kolayca uyarlayın:
+  - 😼 Kendinden Emin (Cheeky): Esprili, cesur ve etkileyici
+  - 👔 Resmi (Formal): İş ve kurumsal yazışmalara uygun
+  - 🤝 Kibar (Polite): Saygılı ve nazik
+  - 💖 Empatik: Samimi, sıcak ve anlayışlı
+
+⚡ BÖLÜM 2. DearTalk Live: 59 Dilde Yüz Yüze Canlı Çeviri
+Yurt dışı seyahatlerinde, uçakta veya internetin olmadığı yerlerde kesintisiz iletişim kurun.
+
+1. 🚀 Ultra Düşük Gecikmeli 2-Track Hibrit Motor
+- Track 1 (~50ms): Google ML Kit On-Device NMT ile 59 dilde anında taslak çeviri.
+- Track 2 (~2s): Yerel yapay zeka modeliyle deyim ve bağlam zenginleştirmesi.
+
+2. 🔄 180° Simetrik Çift Yönlü Ekran (Flip View)
+- Telefonu masaya koyun: Karşı tarafın ekranı 180 derece döner, göz teması kurarak rahatça konuşun.
+
+3. 🔊 Tek Dokunuşla Sesli Okuma (Auto-Speak TTS)
+- Üst çubuktan çevirilerin sesli okunmasını tek dokunuşla açıp kapatın.
+
+4. 🧹 200 Mesajlık FIFO Halka Tamponu
+- O(1) bellek verimliliğiyle telefonunuz her zaman hafif ve hızlı kalır.
+
+💰 BÖLÜM 3. Sonsuza Kadar 100% Ücretsiz ve Sıfır AI Ücreti
+- Ücretli bulut API çağrıları yapmadan doğrudan telefonunuzun NPU biriminde çalışır.
+- Sınırsız konuşun ve çeviri yapın: veri ücreti veya AI token masrafı yok.
+- Aylık abonelik veya gizli ücret yok. Tüm özelliklerin keyfini ücretsiz çıkarın.
+
+✈️ BÖLÜM 4. 100% Çevrimdışı: Uçakta, Yurtdışında ve İnternet Olmayan Her Yerde
+- Uçak modunda, yurtdışı seyahatlerinde dolaşım olmadan ve sinyal olmayan alanlarda sorunsuz çalışır.
+- Wi-Fi veya mobil veri olmadan 59 dilde canlı yüz yüze çeviri ve AI sesli klavye kullanın.
+- Tam Air-Gapped güvenliği ile konuşmalarınız ve gizliliğiniz tamamen korunur. %100 Air-Gap Güvenliği ve Uçak Modu
+- İnternet bağlantısı olmadan tam işlevsellik. Gizli toplantılarınız için mutlak güvenlik.
+
+🌐 Desteklenen Diller:
+- Cihaz İçi Çevrimdışı Çeviri: Türkçe, İngilizce, Korece, Japonca, İspanyolca, Almanca dahil 59 dil.
+- Arayüz ve Yapay Zeka Tonları: Türkçe, İngilizce, Korece, Endonezce.

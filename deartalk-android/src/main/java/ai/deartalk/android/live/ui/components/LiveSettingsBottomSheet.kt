@@ -83,26 +83,16 @@ fun LiveSettingsBottomSheet(
     modelLifecycleManager: ModelLifecycleManager,
     diagnosticManager: SystemDiagnosticManager,
     intentEngine: DearTalkIntentEngine,
-    onOpenHistory: () -> Unit,
+    onOpenHistory: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showPurgeModelDialog by remember { mutableStateOf(false) }
 
     val packState by modelLifecycleManager.packState.collectAsState()
+    val loadedModelName by intentEngine.loadedModelNameFlow.collectAsState()
     var systemMetrics by remember { mutableStateOf(diagnosticManager.diagnose()) }
-
-    val retentionOptions = remember {
-        listOf(
-            3 to "3${UiStrings.liveDays}",
-            7 to "7${UiStrings.liveDays}",
-            10 to "10${UiStrings.liveDays}",
-            30 to "30${UiStrings.liveDays}",
-            0 to UiStrings.liveManualKeep
-        )
-    }
 
     if (showPurgeModelDialog) {
         AlertDialog(
@@ -135,46 +125,6 @@ fun LiveSettingsBottomSheet(
             },
             dismissButton = {
                 TextButton(onClick = { showPurgeModelDialog = false }) {
-                    Text(UiStrings.btnCancel, color = Color.Gray)
-                }
-            },
-            containerColor = DearTalkSurface,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-
-    if (showDeleteConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            title = {
-                Text(
-                    text = UiStrings.liveDeleteAllConfirmTitle,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFDC2626)
-                )
-            },
-            text = {
-                Text(
-                    text = UiStrings.liveDeleteAllConfirmMsg,
-                    color = DearTalkText,
-                    fontSize = 14.sp
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteConfirmDialog = false
-                        controller.deleteAllSessions()
-                        Toast.makeText(context, UiStrings.liveDeleteAllSuccess, Toast.LENGTH_SHORT).show()
-                        onDismiss()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
-                ) {
-                    Text(UiStrings.btnDelete, color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirmDialog = false }) {
                     Text(UiStrings.btnCancel, color = Color.Gray)
                 }
             },
@@ -230,6 +180,7 @@ fun LiveSettingsBottomSheet(
             HardwareDiagnosticCard(
                 metrics = systemMetrics,
                 packState = packState,
+                loadedModelName = loadedModelName,
                 onDownloadClick = {
                     modelLifecycleManager.startDownload(
                         onSuccess = { intentEngine.reloadModel() }
@@ -242,117 +193,7 @@ fun LiveSettingsBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🗓️ 2. 대화 기록 자동 삭제 주기 (Auto-Delete Retention)
-            SettingsCard(title = "🗓️ ${UiStrings.liveAutoDeleteTitle}") {
-                Text(
-                    text = UiStrings.liveAutoDeleteDesc,
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    lineHeight = 16.sp
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    retentionOptions.forEach { (days, label) ->
-                        val isSelected = controller.retentionDays == days
-                        val isDefault = (days == 10)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isSelected) DearTalkPrimary else DearTalkBackground
-                                )
-                                .border(
-                                    width = if (isSelected) 1.5.dp else 1.dp,
-                                    color = if (isSelected) DearTalkPrimary else Color.Gray.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .clickable {
-                                    controller.updateRetentionDays(days)
-                                    val msg = if (days == 0) UiStrings.liveManualKeep else "$days${UiStrings.liveDays}"
-                                    Toast.makeText(context, "$msg 설정 완료", Toast.LENGTH_SHORT).show()
-                                }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = label,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) Color.White else DearTalkText
-                                )
-                                if (isDefault) {
-                                    Text(
-                                        text = UiStrings.liveDefaultLabel,
-                                        fontSize = 9.sp,
-                                        color = if (isSelected) Color.White.copy(alpha = 0.8f) else DearTalkPrimary
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 💬 3. 대화록 공유 및 세션 관리
-            SettingsCard(title = "💬 ${UiStrings.liveSectionSharing}") {
-                // 카카오톡 / 시스템 공유
-                SettingsActionButton(
-                    icon = Icons.Default.Share,
-                    title = UiStrings.liveShareTranscript,
-                    subtitle = UiStrings.liveShareTranscriptSub,
-                    iconTint = Color(0xFFFBBF24),
-                    onClick = {
-                        controller.shareTranscript(context)
-                    }
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = Color.Gray.copy(alpha = 0.15f)
-                )
-
-                // 지난 대화 기록 보기
-                SettingsActionButton(
-                    icon = Icons.Default.Folder,
-                    title = UiStrings.livePastSessions,
-                    subtitle = UiStrings.livePastSessionsSub,
-                    iconTint = DearTalkPrimary,
-                    onClick = {
-                        onDismiss()
-                        onOpenHistory()
-                    }
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = Color.Gray.copy(alpha = 0.15f)
-                )
-
-                // 새 대화 시작하기
-                SettingsActionButton(
-                    icon = Icons.Default.Add,
-                    title = UiStrings.liveStartNewSession,
-                    subtitle = UiStrings.liveStartNewSessionSub,
-                    iconTint = Color(0xFF10B981),
-                    onClick = {
-                        controller.createNewSession()
-                        Toast.makeText(context, UiStrings.liveNewSessionCreated, Toast.LENGTH_SHORT).show()
-                        onDismiss()
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ⚙️ 4. 통역 편의 기능
+            // ⚙️ 2. 통역 편의 기능
             SettingsCard(title = "⚙️ ${UiStrings.liveSectionConvenience}") {
                 // 🔊 자동 음성 읽기 토글
                 Row(
@@ -400,99 +241,6 @@ fun LiveSettingsBottomSheet(
                         onCheckedChange = { controller.toggleAutoSpeak() },
                         colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DearTalkPrimary)
                     )
-                }
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = Color.Gray.copy(alpha = 0.15f)
-                )
-
-                // 🔁 연속 청취 토글
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEF4444).copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Repeat,
-                                contentDescription = null,
-                                tint = Color(0xFFEF4444),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = UiStrings.liveContinuousTitle,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = DearTalkText
-                            )
-                            Text(
-                                text = UiStrings.liveContinuousDesc,
-                                fontSize = 11.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                    Switch(
-                        checked = controller.isContinuousListening.value,
-                        onCheckedChange = { controller.toggleContinuousListening() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFEF4444))
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ⚠️ 5. 위험 구역 (모든 대화 기록 삭제)
-            SettingsCard(title = "⚠️ 저장 공간 관리") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFDC2626).copy(alpha = 0.08f))
-                        .border(1.dp, Color(0xFFDC2626).copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .clickable { showDeleteConfirmDialog = true }
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteForever,
-                            contentDescription = null,
-                            tint = Color(0xFFDC2626),
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = UiStrings.liveDeleteAll,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFDC2626)
-                            )
-                            Text(
-                                text = "모든 세션과 메시지를 DB에서 영구 삭제",
-                                fontSize = 11.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
                 }
             }
         }

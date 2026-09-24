@@ -48,12 +48,13 @@ import ai.deartalk.android.ime.ui.theme.DearTalkTextDim
 import java.util.Locale
 
 /**
- * 🛡️ 하드웨어 진단 및 Qwen 온디바이스 AI 팩 상태 카드
+ * 🛡️ 하드웨어 진단 및 Gemma 4 온디바이스 AI 팩 상태 카드
  */
 @Composable
 fun HardwareDiagnosticCard(
     metrics: SystemMetrics,
     packState: ModelPackState,
+    loadedModelName: String = "",
     onDownloadClick: () -> Unit,
     onPurgeClick: () -> Unit
 ) {
@@ -104,7 +105,7 @@ fun HardwareDiagnosticCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                            Text(UiStrings.diagModelTitle, fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                            Text(UiStrings.diagModelTitle, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
                             Text(UiStrings.diagModelSubtitle, fontSize = 11.sp, color = DearTalkTextDim)
                         }
                         Button(
@@ -140,10 +141,17 @@ fun HardwareDiagnosticCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(UiStrings.diagActiveLabel, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DearTalkText)
+                            Text(
+                                UiStrings.diagActiveLabel,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DearTalkText,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
                         }
                         IconButton(onClick = onPurgeClick) {
                             Icon(Icons.Default.Delete, contentDescription = UiStrings.diagPurgeContentDesc, tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))

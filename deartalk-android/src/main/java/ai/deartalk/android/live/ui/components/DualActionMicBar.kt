@@ -110,7 +110,7 @@ fun SpeechIntentChipsBar(
         ) {
             Icon(
                 imageVector = Icons.Default.SmartToy,
-                contentDescription = "AI 자동 감지 (기본)",
+                contentDescription = if (UiStrings.isKo) "AI 자동 감지 (기본)" else if (UiStrings.isId) "Deteksi Otomatis AI (Bawaan)" else "AI Auto Detection (Default)",
                 tint = if (isAutoSelected) Color(0xFF38BDF8) else Color.Gray,
                 modifier = Modifier.size(17.dp)
             )
@@ -139,7 +139,7 @@ fun SpeechIntentChipsBar(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = intent.getLabel(langCode),
+                    text = intent.getLabel(UiStrings.currentLocale.language),
                     fontSize = 10.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     color = if (isSelected) Color.White else DearTalkText,

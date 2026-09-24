@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.CustomToneManager
+import ai.deartalk.android.data.pref.KeyboardMode
 import ai.deartalk.android.data.pref.TranslationTarget
 import ai.deartalk.android.data.pref.UiStrings
 import ai.deartalk.android.ime.ui.theme.*
@@ -53,6 +54,7 @@ fun DearTalkScreen(
     aiModes: List<ai.deartalk.android.data.pref.AiModeItem> = emptyList(),
     // 🌐 신규 모드 & 톤 & 화행 파라미터
     isTranslationMode: Boolean = false,
+    keyboardMode: ai.deartalk.android.data.pref.KeyboardMode = ai.deartalk.android.data.pref.KeyboardMode.BASIC,
     selectedTargetLanguage: TranslationTarget = CustomToneManager.DEFAULT_TRANSLATIONS.first(),
     availableLanguages: List<TranslationTarget> = CustomToneManager.DEFAULT_TRANSLATIONS,
     onToggleTranslationMode: () -> Unit = {},
@@ -189,27 +191,29 @@ fun DearTalkScreen(
                     }
                 }
 
-                // 🎙️ 실시간 대면 통역 바로가기 아이콘 (Live)
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onLiveClick()
-                    },
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            androidx.compose.ui.graphics.Brush.linearGradient(
-                                listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
+                // 🎙️ 실시간 대면 통역 바로가기 아이콘 (Live) - 프로 모드 전용!
+                if (keyboardMode == KeyboardMode.PRO) {
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onLiveClick()
+                        },
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
+                                )
                             )
+                    ) {
+                        Icon(
+                            Icons.Default.Translate,
+                            contentDescription = UiStrings.liveTitle,
+                            tint = Color.White,
+                            modifier = Modifier.size(21.dp)
                         )
-                ) {
-                    Icon(
-                        Icons.Default.Translate,
-                        contentDescription = UiStrings.liveTitle,
-                        tint = Color.White,
-                        modifier = Modifier.size(21.dp)
-                    )
+                    }
                 }
 
                 // ⚙️ 설정 아이콘
@@ -290,63 +294,82 @@ fun DearTalkScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // [✨ 다듬기] 토글 칩
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (!isTranslationMode) Color(0xFF4338CA) else Color(0xFF334155).copy(alpha = 0.6f))
-                                    .border(
-                                        width = 1.dp,
-                                        color = if (!isTranslationMode) Color(0xFFA5B4FC) else Color.Transparent,
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        if (isTranslationMode) onToggleTranslationMode()
-                                    }
-                                    .padding(horizontal = 7.dp, vertical = 3.dp)
-                            ) {
-                                Text(
-                                    text = UiStrings.modeRefine,
-                                    fontSize = 10.5.sp,
-                                    fontWeight = if (!isTranslationMode) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (!isTranslationMode) Color.White else DearTalkTextDim
-                                )
-                            }
-
-                            // [🌐 번역 ▾] 인라인 토글 칩
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isTranslationMode) Color(0xFF0284C7) else Color(0xFF334155).copy(alpha = 0.6f))
-                                    .border(
-                                        width = 1.dp,
-                                        color = if (isTranslationMode) Color(0xFF7DD3FC) else Color.Transparent,
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        isLangMenuExpanded = !isLangMenuExpanded
-                                        isToneMenuExpanded = false
-                                    }
-                                    .padding(horizontal = 7.dp, vertical = 3.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (keyboardMode == ai.deartalk.android.data.pref.KeyboardMode.PRO) {
+                                // [✨ 다듬기] 토글 칩
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (!isTranslationMode) Color(0xFF4338CA) else Color(0xFF334155).copy(alpha = 0.6f))
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (!isTranslationMode) Color(0xFFA5B4FC) else Color.Transparent,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            if (isTranslationMode) onToggleTranslationMode()
+                                        }
+                                        .padding(horizontal = 7.dp, vertical = 3.dp)
+                                ) {
                                     Text(
-                                        text = "${selectedTargetLanguage.flag} ${selectedTargetLanguage.name}",
+                                        text = UiStrings.modeRefine,
                                         fontSize = 10.5.sp,
-                                        fontWeight = if (isTranslationMode) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isTranslationMode) Color.White else DearTalkTextDim
+                                        fontWeight = if (!isTranslationMode) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (!isTranslationMode) Color.White else DearTalkTextDim
                                     )
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Icon(
-                                        Icons.Default.ArrowDropDown,
-                                        contentDescription = null,
-                                        tint = if (isTranslationMode) Color.White else DearTalkTextDim,
-                                        modifier = Modifier.size(13.dp)
+                                }
+
+                                // [🌐 번역 ▾] 인라인 토글 칩
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (isTranslationMode) Color(0xFF0284C7) else Color(0xFF334155).copy(alpha = 0.6f))
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (isTranslationMode) Color(0xFF7DD3FC) else Color.Transparent,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            isLangMenuExpanded = !isLangMenuExpanded
+                                            isToneMenuExpanded = false
+                                        }
+                                        .padding(horizontal = 7.dp, vertical = 3.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "${selectedTargetLanguage.flag} ${selectedTargetLanguage.name}",
+                                            fontSize = 10.5.sp,
+                                            fontWeight = if (isTranslationMode) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isTranslationMode) Color.White else DearTalkTextDim
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Icon(
+                                            Icons.Default.ArrowDropDown,
+                                            contentDescription = null,
+                                            tint = if (isTranslationMode) Color.White else DearTalkTextDim,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                    }
+                                }
+                            } else {
+                                // 🟢 [기본 모드] 단순화 뱃지 (번역 노이즈 제거)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0xFF4338CA).copy(alpha = 0.35f))
+                                        .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 7.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "💬 " + if (UiStrings.isKo) "기본 모드" else if (UiStrings.isId) "Mode Dasar" else "Basic Mode",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFA5B4FC)
                                     )
                                 }
                             }
+
 
                             // 중앙/우측: [💼 비즈니스 ▾] 톤 토글 뱃지
                             Box(
@@ -406,7 +429,7 @@ fun DearTalkScreen(
 
                     // [인라인 언어 선택 바 - PopupWindow 제거로 화면 깜빡임 0%]
                     AnimatedVisibility(
-                        visible = isLangMenuExpanded,
+                        visible = keyboardMode == ai.deartalk.android.data.pref.KeyboardMode.PRO && isLangMenuExpanded,
                         enter = expandVertically(animationSpec = tween(150)) + fadeIn(animationSpec = tween(150)),
                         exit = shrinkVertically(animationSpec = tween(120)) + fadeOut(animationSpec = tween(120))
                     ) {

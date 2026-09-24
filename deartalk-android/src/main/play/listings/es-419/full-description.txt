@@ -1,0 +1,48 @@
+✨ DearTalk AI: Teclado de voz con IA 100% on-device y traductor en vivo para 59 idiomas
+
+Sin envío de datos a servidores. Privacidad total Air-Gapped.
+DearTalk AI corre completamente en tu celular mediante NPU y redes neuronales locales, sin mandar audios ni textos a la nube.
+
+🎙️ PARTE 1. Teclado de voz inteligente con IA (Voice IME)
+Habla en cualquier chat, correo o notas. La IA local redacta y corrige por ti en tiempo real.
+
+1. ⚡ Corrección instantánea de errores y gramática
+- La IA generativa local analiza el contexto y corrige automáticamente errores de dictado, palabras mal reconocidas y signos de puntuación.
+
+2. 🎭 Cambia el tono de tu mensaje con 1 toque
+- Ajusta el estilo según la ocasión:
+  - 😼 Seguro (Cheeky): Directo, audaz y carismático
+  - 👔 Formal: Ideal para el trabajo y negocios
+  - 🤝 Cortés (Polite): Educado y respetuoso
+  - 💖 Empático: Agradable, cálido y comprensivo
+
+⚡ PARTE 2. DearTalk Live: Traducción cara a cara en 59 idiomas
+Habla sin límites en tus viajes o vuelos, totalmente fuera de línea (offline).
+
+1. 🚀 Motor 2-Track de respuesta inmediata
+- Track 1 (~50ms): Traducción rápida en pantalla para 59 idiomas con Google ML Kit local.
+- Track 2 (~2s): Pulido de modismos y oraciones naturales mediante modelos neuronales de IA local.
+
+2. 🔄 Pantalla volteada a 180° para hablar de frente
+- Pon el teléfono en la mesa: la pantalla de la otra persona se gira 180° para charlar mirándose a los ojos.
+
+3. 🔊 Lectura de voz instantánea (Auto-Speak TTS)
+- Activa o apaga la voz de traducción con un toque en la barra superior.
+
+4. 🧹 Memoria ligera con 200 mensajes
+- Búfer de 200 mensajes que no satura la memoria ni el almacenamiento de tu celular.
+
+💰 PARTE 3. 100% Gratis para Siempre y Cero Costos de IA
+- Se ejecuta localmente en la NPU de tu smartphone sin llamadas a APIs en la nube de pago.
+- Habla y traduce sin límites: sin consumo de datos ni cobros por tokens de IA.
+- Sin suscripciones mensuales ni compras ocultas. Disfruta de todas las funciones gratis.
+
+✈️ PARTE 4. 100% Offline: En Aviones, Viajes al Extranjero y Sin Red
+- Funciona al 100% en modo avión, en viajes internacionales sin roaming y en lugares sin cobertura.
+- Traduce en vivo en 59 idiomas y usa el teclado de voz IA sin necesidad de Wi-Fi ni datos móviles.
+- Seguridad Air-Gapped absoluta para proteger tu privacidad y confidencialidad. Privacidad 100% Air-Gap y Modo Avión
+- Funciona sin internet ni datos móviles. Total seguridad para tus charlas personales y de negocios.
+
+🌐 Idiomas:
+- Traducción local offline: 59 idiomas globales (español, inglés, portugués, francés, alemán, japonés, etc.)
+- Interfaz y tonos IA: Optimizado para español, inglés, coreano e indonesio.

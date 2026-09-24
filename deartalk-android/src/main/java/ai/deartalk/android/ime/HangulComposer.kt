@@ -20,19 +20,22 @@ class HangulComposer {
         "", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"
     )
 
-    // 복합 모음 매핑 (ㅗ + ㅏ = ㅘ 등)
+    // 복합 모음 매핑 (ㅗ + ㅏ = ㅘ, ㅘ + ㅣ = ㅙ 등)
     private val doubleJung = mapOf(
         Pair(8, 0) to 9,   // ㅗ + ㅏ = ㅘ
         Pair(8, 1) to 10,  // ㅗ + ㅐ = ㅙ
         Pair(8, 20) to 11, // ㅗ + ㅣ = ㅚ
+        Pair(9, 20) to 10, // ㅘ + ㅣ = ㅙ (3단 결합)
         Pair(13, 4) to 14, // ㅜ + ㅓ = ㅝ
         Pair(13, 5) to 15, // ㅜ + ㅔ = ㅞ
         Pair(13, 20) to 16,// ㅜ + ㅣ = ㅟ
+        Pair(14, 20) to 15,// ㅝ + ㅣ = ㅞ (3단 결합)
         Pair(18, 20) to 19 // ㅡ + ㅣ = ㅢ
     )
 
-    // 복합 받침 매핑 (ㄱ + ㅅ = ㄳ 등)
+    // 복합 받침 매핑 (ㄱ + ㅅ = ㄳ, ㅅ + ㅅ = ㅆ 연타 등)
     private val doubleJong = mapOf(
+        Pair(1, 1) to 2,    // ㄱ + ㄱ = ㄲ (연타 쌍받침)
         Pair(1, 19) to 3,   // ㄱ + ㅅ = ㄳ
         Pair(4, 22) to 5,   // ㄴ + ㅈ = ㄵ
         Pair(4, 27) to 6,   // ㄴ + ㅎ = ㄶ
@@ -43,7 +46,8 @@ class HangulComposer {
         Pair(8, 25) to 13,  // ㄹ + ㅌ = ㄾ
         Pair(8, 26) to 14,  // ㄹ + ㅍ = ㄿ
         Pair(8, 27) to 15,  // ㄹ + ㅎ = ㅀ
-        Pair(17, 19) to 18  // ㅂ + ㅅ = ㅄ
+        Pair(17, 19) to 18, // ㅂ + ㅅ = ㅄ
+        Pair(19, 19) to 20  // ㅅ + ㅅ = ㅆ (연타 쌍받침)
     )
 
     val isComposing: Boolean
@@ -166,7 +170,7 @@ class HangulComposer {
             var nextCho = -1
 
             for ((pair, result) in doubleJong) {
-                if (result == jong) {
+                if (result == jong && pair.first != pair.second) {
                     prevJong = pair.first
                     nextCho = chosungs.indexOf(jongsungs[pair.second])
                     break

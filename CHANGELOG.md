@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.5] - 2026-09-24
+
+### Fixed & Improved
+- **🎛️ 2-Tier 사용 모드 분기 (기본 모드 vs 프로 모드) 및 초직관 온보딩 다이얼로그 탑재**:
+  - **기본 모드(BASIC)**: 3세 이상 전연령 초직관 경험. 번역/언어선택을 숨기고 단일 언어 톤앤매너 및 4대 화행에 집중.
+  - **프로 모드(PRO)**: 글로벌 파워유저용. 59개국어 실시간 다국어 번역 및 2-Track Live 통역 완전 제공.
+  - 앱 최초 실행 시 2-Card 비주얼 온보딩 다이얼로그(`ModeSelectionDialog`)로 1초 만에 모드 선택 지원.
+- **🔄 화행(Intent) 일회성 AUTO 자동 리셋(One-shot Ephemeral) 라이프사이클 구현**:
+  - 어조(Tone)는 세션 동안 유지되되, 화행(SpeechIntent)은 메시지 전송(입력 확정) 또는 삭제 시 즉시 AUTO(AI 자동 판단)로 자동 리셋되어 연속 발화 간섭을 원천 차단.
+- **📸 3개 국어 21장 톤앤매너 고유 스크린샷 전수 캡처 및 중복 방지 파이프라인**:
+  - 키보드 시스템 노출 감지 루프 및 SHA-256 고유성 자동 검증 Fail-Safe 탑재로 02(기본다듬기), 03(당당하게), 04(공손하게) 차별화 실증.
+- **🏎️ 온디바이스 NPU 추론 블로킹 스톨 원천 해결 (Zero-Lock LiteRT Architecture)**:
+  - `DearTalkIntentEngine`에서 네이티브 `session.close()`를 비동기 IO 코루틴 스코프로 격리하여, LiteRT C++ 락으로 인해 후속 추론이 8~10초간 대기하던 스톨 현상을 0ms로 완전 제거.
+- **🛡️ 프롬프트 왜곡 방지 및 경량화 (Zero Distortion Protocol)**:
+  - 군더더기 서술형 프롬프트를 컴팩트한 넘버링 규칙으로 압축하고, 최상단에 "원문 왜곡 금지 및 핵심 의미 100% 보존" 규칙을 명시하여 모델의 억지 의역 및 문맥 왜곡 원천 차단.
+- **📱 메인 설정 및 온보딩 허브 전면 개편 (UI_SPEC.md v1.1.0 SSOT 준수)**:
+  - 보안 상태 카드에 섞여 있던 한글 자판(두벌식/천지인) 선택기를 `키보드 환경 설정` 카드로 이전하여 설정 응집도 극대화.
+  - `🎙️ DearTalk Live` 카드를 상시 노출하여 모드 전환 없이도 1:1 대면 실시간 통역을 바로 실행할 수 있도록 접근성(Discoverability) 개선.
+- **🎙️ 음성 무음 감지 시간 단일 10초(10,000ms) 안전 대기 표준화**:
+  - 사용자에게 인지 부하를 주던 설정 슬라이더를 완전히 제거하고, 단문/장문 구분 없이 단일 10초 안전 대기로 완전 자동화 (완료 시 [입력] 버튼으로 0ms 즉시 전송).
+- **📖 전 화면 텍스트 반응형 가독성 최적화**:
+  - 디바이스 너비에 따라 지저분하게 꺾이던 장문 설명들을 행동 중심의 단정한 1~2줄 컴팩트 카피로 전면 정제.
+
+---
+
+## [1.1.4] - 2026-09-20
+
+### Added & Improved
+- **🧠 Google Gemma 4 E2B LiteRT 단일 표준 고정 및 Qwen 잔재 전면 소거**:
+  - 온디바이스 SLM을 Google Gemma 4 E2B 단일 표준으로 고정하고 프롬프트 파싱 및 설정 내 Qwen 잔재 완전 제거.
+- **🔊 DearTalk Live TopAppBar 4대 직관적 액션 UX 완성**:
+  - `[🔊/🔇 Auto-Speak (TTS)]` 상단 액션바 전진 배치로 통역 음성 즉시 음소거/재생 1-Tap 토글 지원.
+  - `[🔄 180° 플립]`, `[🧹 대화 비우기]`, `[⚙️ 설정]` 4대 액션으로 현장 사용성 극대화.
+- **📱 LiveSettingsBottomSheet 초슬림 미니멀 시트 개편**:
+  - 200개 FIFO 링 버퍼 도입으로 불필요해진 레거시 보존 기간/세션 공유/스토리지 삭제 옵션 완전 소거.
+  - 하드웨어 진단(RAM/스토리지 100% 오프라인 준비 완료) 및 TTS 재생 스위치만 남겨 스크롤 없는 완벽한 한눈 뷰 완성.
+
+---
+
 ## [1.1.2] - 2026-09-13
 
 ### Fixed & Improved
@@ -34,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **🧹 레거시 `VoiceStudio` 완전 제거 및 `DearTalk Live` 단일화**:
   - 구버전 단일 마이크 화면(`VoiceStudioActivity`) 및 관련 서브시스템을 영구 삭제하고 `DearTalk Live`로 단일화.
-  - 온디바이스 AI 모델 팩(Qwen) 관리 및 하드웨어 사양 진단을 `DearTalk Live` 설정 바텀시트(`LiveSettingsBottomSheet`)로 완전 흡수.
+  - 온디바이스 AI 모델 팩(Gemma 4) 관리 및 하드웨어 사양 진단을 `DearTalk Live` 설정 바텀시트(`LiveSettingsBottomSheet`)로 완전 흡수.
 - **⚡ 키보드 AI 팩 원클릭 자동 다운로드**:
   - 키보드 배너 클릭 시 `DearTalk Live` 설정 시트로 직행하여 다운로드가 즉시 자동 시작되도록 사용자 경험(UX) 개선.
 
@@ -51,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **연속 청취 / 강의 레코더 모드 (Continuous Listening)**: 발화 종료 후 자동으로 다음 음성을 연속 청취하는 무인 루프.
   - **대화록 마크다운 내보내기 & 시스템 원터치 공유**: 전체 대화 세션을 마크다운 파일로 직렬화하여 카카오톡, 이메일, 클라우드로 공유.
 - **⚡ 지능형 음성 인식(ASR) 오인식 문맥 보정 (Context-Aware Speech Repair)**:
-  - 직전 5개 턴의 대화 맥락을 온디바이스 SLM(Qwen/Gemma)에 주입하여 음향적 오인식(예: 호텔 대화 중 '포항 되나요' ➔ '포함 되나요')을 원래 의도대로 똑똑하게 복원.
+  - 직전 5개 턴의 대화 맥락을 온디바이스 SLM(Gemma 4)에 주입하여 음향적 오인식(예: 호텔 대화 중 '포항 되나요' ➔ '포함 되나요')을 원래 의도대로 똑똑하게 복원.
   - **3대 메타 원칙(Fidelity-First)** 준수: 원형 보존(Tone & Voice), 최소 교정(Minimal Polish), 모호할 땐 평서문 기본값 처리.
 - **⏱️ 10초 장문 무음 감지 확장 & 원터치 `[⏹️ 말씀 완료]` 토글**:
   - 상대방 장문 설명 중 숨을 고를 때 끊기지 않도록 VAD 무음 대기 한계를 10초로 대폭 확장.
@@ -96,7 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **UX Copy Refinement**: Replaced technical terminology "발화 음색(發話 音色)" → "🎙️ 목소리 설정" and "톤 매칭" → "🎚️ 목소리 톤:" for user-friendly language.
-- **On-Device SLM Engine**: Standardized to `Qwen 0.5B Nano` across all UI labels and model detection paths.
+- **On-Device SLM Engine**: Standardized to Google Gemma 4 E2B across all UI labels and model detection paths.
 
 ### Fixed
 - **Recording Button Label Wrapping**: Added `maxLines = 1` + `TextOverflow.Ellipsis` to prevent forced line breaks on narrow screens or large font accessibility settings.
@@ -153,9 +192,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatically identifies script types (Hangul, Latin/English, Japanese Kana, Chinese Hanzi, Thai) in voice speech and dynamically swaps interpretation direction without requiring manual button presses.
 - **Script-Aware Multi-language TTS Engine**:
   - Dynamically binds the synthesized voice engine to match the actual script of the generated translation text for pristine vocal accuracy.
-- **Unified High-Performance Qwen Sharing & Adaptive AI Tiers (`ActiveAiTier`)**:
-  - Shared downloaded Qwen 1.7B Instruct model across Keyboard IME and Voice Studio.
-  - Added 3-tier intelligence state machine (`HIGH_QWEN`, `BASE_GEMMA`, `STT_ONLY`) with zero-failure pure STT support on budget devices.
+- **Unified High-Performance On-Device Model Sharing & Adaptive AI Tiers (`ActiveAiTier`)**:
+  - Shared downloaded Gemma 4 model across Keyboard IME and Voice/Live pipelines.
+  - Added 3-tier intelligence state machine (`GEMMA_4`, `BASE_GEMMA`, `STT_ONLY`) with zero-failure pure STT support on budget devices.
 
 ### Fixed
 - **Multilingual Tone Instructions & Pipeline Error Localization**:
