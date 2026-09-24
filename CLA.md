@@ -31,4 +31,4 @@ You represent and warrant that:
 ---
 
 ## 5. Contact
-For questions regarding this CLA or licensing, please contact the cobuild-ai core team at  (or ).
+For questions regarding this CLA or licensing, please contact the cobuild-ai core team at `onthelogic@gmail.com`.
