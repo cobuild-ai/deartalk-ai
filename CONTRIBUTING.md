@@ -76,7 +76,7 @@ Before writing any code, please review our inviolable governance principles in [
 
 ### Android Module (`deartalk-android`)
 - **JDK:** OpenJDK 17 or higher
-- **Android SDK:** `compileSdk = 35`, `targetSdk = 35` (Android 15 ready)
+- **Android SDK:** `compileSdk = 36`, `targetSdk = 36` (Android 16 ready)
 - **IDE:** Android Studio (Ladybug / Iguana or later) or VS Code
 - **Python:** Python 3.8+ (Used for automated testing scripts; standard library only, automatically creates isolated `.venv`)
 
