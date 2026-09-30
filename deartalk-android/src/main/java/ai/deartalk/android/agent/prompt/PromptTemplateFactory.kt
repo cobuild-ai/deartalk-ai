@@ -1,7 +1,7 @@
 package ai.deartalk.android.agent.prompt
 
 import ai.deartalk.android.agent.language.LanguageProfileRegistry
-import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.data.SpeechIntent
 
 enum class ModelFamily {
     GEMMA,
@@ -31,6 +31,19 @@ object PromptTemplateFactory {
         Regex("""^(Ya|Tidak|Tentu|Saya|Sebagai AI|Jawaban untuk pertanyaan)[,\s]+.*""", RegexOption.IGNORE_CASE)
     )
 
+    private val REGEX_INTENT_TAG = Regex("""\[?INTENT:\s*(STATEMENT|QUESTION|REQUEST|CONFIRM)[^\]\n]*\]?""", RegexOption.IGNORE_CASE)
+    private val REGEX_INTENT_ENCLOSED = Regex("""\[?INTENT:\s*([^\]\n]+)\]?""", RegexOption.IGNORE_CASE)
+    private val REGEX_INTENT_SLASH = Regex("""^[/\s]*(STATEMENT|QUESTION|REQUEST|CONFIRM)[/\]\s]*""", RegexOption.IGNORE_CASE)
+    private val REGEX_LINE_PREFIX = Regex("""^Line\s*[12]\s*[:：]?\s*""", RegexOption.IGNORE_CASE)
+    private val REGEX_TRANSLATION_PREFIX = Regex("""^Translation\s*[:：]?\s*""", RegexOption.IGNORE_CASE)
+    private val REGEX_THINK = Regex("""<think>[\s\S]*?(</think>|$)""", RegexOption.IGNORE_CASE)
+    private val REGEX_CONTROL_TAGS_OPEN = Regex("""<(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>\s*(model|user|assistant)?""", RegexOption.IGNORE_CASE)
+    private val REGEX_CONTROL_TAGS_CLOSE = Regex("""</(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)>""", RegexOption.IGNORE_CASE)
+    private val REGEX_GENERIC_XML = Regex("""</?[a-zA-Z0-9_-]+(\s+[^>]*)?>""")
+    private val REGEX_TRAILING_UNCLOSED_TAG = Regex("""<[^>]*$""")
+    private val REGEX_REWRITTEN_PREFIX = Regex("""^(변환|결과|수정|Result|Output|Rewritten)\s*[:：]\s*""", RegexOption.IGNORE_CASE)
+    private val REGEX_TRAILING_EMOJIS = Regex("""[\u2728\u2729\u2b50\u2b51\u2747\u2748\u2749\u2733\u2734\u2744]+$""")
+
     /**
      * 🎯 SLM 출력 텍스트에서 [INTENT: ...] 메타 태그를 파싱하고 본문 텍스트를 분리 정제합니다.
      */
@@ -38,8 +51,7 @@ object PromptTemplateFactory {
         rawOutput: String,
         fallbackIntent: SpeechIntent = SpeechIntent.STATEMENT
     ): Pair<SpeechIntent, String> {
-        val knownIntentTagRegex = Regex("""\[?INTENT:\s*(STATEMENT|QUESTION|REQUEST|CONFIRM)[^\]\n]*\]?""", RegexOption.IGNORE_CASE)
-        val match = knownIntentTagRegex.find(rawOutput)
+        val match = REGEX_INTENT_TAG.find(rawOutput)
         val parsedIntent = if (match != null) {
             val tagStr = match.groupValues[1].uppercase().trim()
             when {
@@ -53,14 +65,14 @@ object PromptTemplateFactory {
             fallbackIntent
         }
 
-        var cleaned = rawOutput.replace(knownIntentTagRegex, "")
-            .replace(Regex("""^[/\s]*(STATEMENT|QUESTION|REQUEST|CONFIRM)[/\]\s]*""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""^Line\s*[12]\s*[:：]?\s*""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""^Translation\s*[:：]?\s*""", RegexOption.IGNORE_CASE), "")
+        var cleaned = rawOutput.replace(REGEX_INTENT_TAG, "")
+            .replace(REGEX_INTENT_SLASH, "")
+            .replace(REGEX_LINE_PREFIX, "")
+            .replace(REGEX_TRANSLATION_PREFIX, "")
             // 모델이 [INTENT: 번역문] 형태로 출력한 경우 껍질만 벗겨내어 번역문 보존
-            .replace(Regex("""\[?INTENT:\s*([^\]\n]+)\]?""", RegexOption.IGNORE_CASE)) { it.groupValues[1].trim() }
-            .replace(Regex("""^Line\s*[12]\s*[:：]?\s*""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""^Translation\s*[:：]?\s*""", RegexOption.IGNORE_CASE), "")
+            .replace(REGEX_INTENT_ENCLOSED) { it.groupValues[1].trim() }
+            .replace(REGEX_LINE_PREFIX, "")
+            .replace(REGEX_TRANSLATION_PREFIX, "")
             .replace(Regex("""^[/\]]+"""), "")
             .replace(Regex("""[/\]]+$"""), "")
             .trim()
@@ -73,19 +85,19 @@ object PromptTemplateFactory {
     fun cleanLlmOutput(raw: String, targetLangCode: String = ""): String {
         var text = raw
             // 1. Thinking / Reasoning 블록 완전 제거 (<think>...</think> 및 닫히지 않은 <think>...$)
-            .replace(Regex("""<think>[\s\S]*?(</think>|$)""", RegexOption.IGNORE_CASE), "")
+            .replace(REGEX_THINK, "")
             // 2. Gemma 4 및 표준 특수 제어 토큰 제거
-            .replace(Regex("""<(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)[^>]*>\s*(model|user|assistant)?""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""</(start_of_turn|end_of_turn|bos|eos|pad|model|user|turn|instruction|response|context)>""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""</?[a-zA-Z0-9_-]+(\s+[^>]*)?>"""), "")
+            .replace(REGEX_CONTROL_TAGS_OPEN, "")
+            .replace(REGEX_CONTROL_TAGS_CLOSE, "")
+            .replace(REGEX_GENERIC_XML, "")
             // 3. 닫히지 않고 잘린 불완전한 제어 태그 및 특수 토큰 조각 제거 (<로 시작하여 끝까지 닫히지 않은 태그 조각 전수 소거)
-            .replace(Regex("""<[^>]*$"""), "")
+            .replace(REGEX_TRAILING_UNCLOSED_TAG, "")
             // 4. 메타 태그 및 찌꺼기 제거 ([INTENT: ...], /QUESTION/REQUEST/CONFIRM], Line 1/2, Translation: 등)
-            .replace(Regex("""\[?INTENT:\s*(STATEMENT|QUESTION|REQUEST|CONFIRM)[^\]\n]*\]?""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""\[?INTENT:\s*([^\]\n]+)\]?""", RegexOption.IGNORE_CASE)) { it.groupValues[1].trim() }
-            .replace(Regex("""^[/\s]*(STATEMENT|QUESTION|REQUEST|CONFIRM)[/\]\s]*""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""^Line\s*[12]\s*[:：]?\s*""", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("""^Translation\s*[:：]?\s*""", RegexOption.IGNORE_CASE), "")
+            .replace(REGEX_INTENT_TAG, "")
+            .replace(REGEX_INTENT_ENCLOSED) { it.groupValues[1].trim() }
+            .replace(REGEX_INTENT_SLASH, "")
+            .replace(REGEX_LINE_PREFIX, "")
+            .replace(REGEX_TRANSLATION_PREFIX, "")
             .replace(Regex("""^[/\]]+"""), "")
             .replace(Regex("""[/\]]+$"""), "")
             .trim()
@@ -116,7 +128,7 @@ object PromptTemplateFactory {
             }
         }
         text = text
-            .replace(Regex("""^(변환|결과|수정|Result|Output|Rewritten)\s*[:：]\s*""", RegexOption.IGNORE_CASE), "")
+            .replace(REGEX_REWRITTEN_PREFIX, "")
             .trim()
 
         val profile = if (targetLangCode.isNotBlank()) LanguageProfileRegistry.get(targetLangCode) else null
@@ -126,7 +138,7 @@ object PromptTemplateFactory {
         }
 
         text = text
-            .replace(Regex("""[\u2728\u2729\u2b50\u2b51\u2747\u2748\u2749\u2733\u2734\u2744]+$"""), "")
+            .replace(REGEX_TRAILING_EMOJIS, "")
             .trim()
 
         return text.trim()
@@ -235,199 +247,164 @@ object PromptTemplateFactory {
     }
 
     /**
-     * 📝 [기본 다듬기] 입력 언어 및 맥락에 맞는 최적화된 교정 프롬프트 조합
+     * 📝 [기본 다듬기] 전 세계 모든 언어에 공통 적용되는 단일 표준 교정 프롬프트 (Unified English Instruction)
+     * - Gemma 4 E2B의 영어 지시문 해석 극대화 (Instruction-Following Peak)
+     * - 비문(Broken Grammar), 오탈자, 띄어쓰기, 런온 구어를 입력 언어와 동일한 언어로 자연스럽게 완성
+     * - 원문의 모든 의미와 의도 100% 무손실 보존
+     */
+    /**
+     * 📝 [기본 다듬기] 통합 3대 불변 규칙 기반 교정 프롬프트 (Unified 3-Pillar Refinement)
+     * - Rule 1: Language Consistency (입력 언어와 100% 동일한 언어 출력)
+     * - Rule 2: Meaning Preservation (의미, 사실, 이유, 의도 100% 무손실 보존)
+     * - Rule 3: Grammar & Fluency (비문, 오탈자, 띄어쓰기, 런온 구어 교정 및 완성)
+     * - 영어 및 기타 모든 글로벌 언어는 단일 표준 영어 지시문(Universal English Prompt)으로 처리
+     * - 온디바이스 2B SLM(Gemma 4 E2B)의 토큰 억제 방지를 위해 핵심 언어(KO, ID)는 동일한 3대 규칙을 네이티브 스크립트로 1:1 매핑
      */
     fun buildCorrectionPrompt(
         trimmed: String,
         currentEditorText: String = "",
         priorContext: List<String> = emptyList(),
-        isInputKorean: Boolean,
-        isIndonesianLocale: Boolean,
-        isInputEnglish: Boolean,
+        isInputKorean: Boolean = false,
+        isIndonesianLocale: Boolean = false,
+        isInputEnglish: Boolean = false,
+        langCode: String = "",
         speechIntent: SpeechIntent = SpeechIntent.AUTO,
         modelFamily: ModelFamily = ModelFamily.GEMMA
     ): String {
-        return when {
-            isInputKorean -> buildKoreanPrompt(trimmed, currentEditorText, priorContext, speechIntent, modelFamily)
-            isIndonesianLocale -> buildIndonesianPrompt(trimmed, currentEditorText, priorContext, speechIntent, modelFamily)
-            isInputEnglish -> buildEnglishPrompt(trimmed, currentEditorText, priorContext, speechIntent, modelFamily)
-            else -> buildUniversalPrompt(trimmed, priorContext, modelFamily)
-        }
-    }
-
-    private fun buildKoreanPrompt(
-        trimmed: String,
-        currentEditorText: String,
-        priorContext: List<String>,
-        speechIntent: SpeechIntent,
-        modelFamily: ModelFamily
-    ): String {
-        return if (modelFamily == ModelFamily.GEMMA) {
-            val user = "모바일 키보드의 문장 교정 및 다듬기 엔진. 잡담/설명 금지, 교정 문장 1줄만 출력.\n" +
-                    "1. 원문 왜곡 금지 및 내용 생략 금지: 이유, 상황, 요구 등 원문의 모든 의미 요소를 빠짐없이 100% 온전히 포함하고, 억지 치환이나 임의 생략/축약 절대 금지.\n" +
-                    "2. 오탈자와 띄어쓰기를 올바르게 교정하여 자연스러운 문장으로 완성.\n" +
-                    "원문: \"$trimmed\" -> 교정:"
-            wrapTurn("", user, modelFamily)
-        } else {
-            val system = "문장 교정 및 다듬기 엔진: 원문의 모든 의미 요소(이유/요구)를 100% 보존하고 오탈자/띄어쓰기만 교정한 단 한 줄 출력. 대화/설명/임의생략 금지."
-            val fewShot = "예시: \"밥 머것어\" -> 밥 먹었어? / \"오늘 날씨 조타\" -> 오늘 날씨 좋다."
-            val editorPart = if (currentEditorText.isNotBlank()) "[맥락: $currentEditorText]\n" else ""
-            val intentPart = if (speechIntent != SpeechIntent.AUTO) "[INTENT: ${speechIntent.name}]\n" else ""
-            val user = "$editorPart$intentPart$fewShot\n원문: \"$trimmed\" -> 교정:"
-            wrapTurn(system, user, modelFamily)
-        }
-    }
-
-    private fun buildIndonesianPrompt(
-        trimmed: String,
-        currentEditorText: String,
-        priorContext: List<String>,
-        speechIntent: SpeechIntent,
-        modelFamily: ModelFamily
-    ): String {
-        val system = "Anda adalah mesin perapih kalimat untuk papan ketik ponsel.\n" +
-                "Aturan: JANGAN menjawab pertanyaan atau mengobrol. Keluarkan HANYA kalimat yang sudah diperbaiki ejaan dan tanda bacanya dalam satu baris tanpa penjelasan."
-
-        val fewShotExamples = """
-            [Contoh Perbaikan]
-            Masukan: "kamu udah makan blm"
-            Koreksi: Kamu sudah makan belum?
-            Masukan: "besok ketemu jam brp"
-            Koreksi: Besok ketemu jam berapa?
-            Masukan: "hari ini cuaca bgs ya"
-            Koreksi: Hari ini cuaca bagus ya.
-        """.trimIndent()
-
-        val editorPart = if (currentEditorText.isNotBlank()) "[Konteks: $currentEditorText]\n" else ""
-        val user = "$editorPart$fewShotExamples\n\nMasukan: \"$trimmed\"\nKoreksi:"
-        return wrapTurn(system, user, modelFamily)
-    }
-
-    private fun buildEnglishPrompt(
-        trimmed: String,
-        currentEditorText: String,
-        priorContext: List<String>,
-        speechIntent: SpeechIntent,
-        modelFamily: ModelFamily
-    ): String {
-        val system = "You are a mobile keyboard sentence refinement engine.\n" +
-                "Rule: Do NOT answer questions or converse. Output ONLY the refined sentence with correct spelling and punctuation on a single line."
-
-        val fewShotExamples = """
-            [Refinement Examples]
-            Input: "did u eat lunch"
-            Refined: Did you eat lunch?
-            Input: "what time we meet tmrw"
-            Refined: What time do we meet tomorrow?
-            Input: "weather is great today"
-            Refined: The weather is great today.
-        """.trimIndent()
-
         val editorPart = if (currentEditorText.isNotBlank()) "[Context: $currentEditorText]\n" else ""
-        val user = "$editorPart$fewShotExamples\n\nInput: \"$trimmed\"\nRefined:"
-        return wrapTurn(system, user, modelFamily)
-    }
+        val isKorean = isInputKorean || langCode.equals("KO", ignoreCase = true)
+        val isIndonesian = isIndonesianLocale || langCode.equals("ID", ignoreCase = true)
 
-    private fun buildUniversalPrompt(
-        trimmed: String,
-        priorContext: List<String>,
-        modelFamily: ModelFamily = ModelFamily.GEMMA
-    ): String {
-        val system = "Mobile keyboard punctuation corrector. Add appropriate punctuation. Output ONLY the single line refined text without explanation. Do NOT answer questions."
-        val contextBlock = if (priorContext.isNotEmpty()) "[Context: ${priorContext.takeLast(2).joinToString(" / ")}]\n" else ""
-        val user = "${contextBlock}Input: \"$trimmed\""
-        return wrapTurn(system, user, modelFamily)
+        val userContent = when {
+            isKorean -> {
+                val intentDirective = when (speechIntent) {
+                    SpeechIntent.QUESTION -> "의문문 어미로 변경하고 물음표('?')로 끝내세요."
+                    SpeechIntent.REQUEST -> "정중한 요청 어조로 작성하세요."
+                    SpeechIntent.CONFIRM -> "확인 어미로 변경하고 물음표('?')로 끝내세요."
+                    SpeechIntent.STATEMENT -> "명확한 평서문 어미로 마침표('.')로 끝내세요."
+                    SpeechIntent.AUTO -> "원문 화행 보존(질문은 '?', 평서문은 '.' 또는 '!')."
+                }
+                "모바일 키보드 문장 다듬기 엔진입니다. 대화나 설명을 하지 말고 교정된 단 한 문장만 출력하세요.\n" +
+                "1. 언어 일치: 반드시 입력과 동일한 한국어로 출력하세요.\n" +
+                "2. 의미 보존: 원문의 사실, 이유, 상황, 의도를 100% 온전히 보존하세요.\n" +
+                "3. 문법 및 완성도: 오탈자, 띄어쓰기, 어색한 비문 및 구어를 자연스러운 문장으로 완성하세요.\n" +
+                "4. 화행: $intentDirective\n" +
+                editorPart +
+                "\n입력: \"$trimmed\" ->"
+            }
+            isIndonesian -> {
+                val intentDirective = when (speechIntent) {
+                    SpeechIntent.QUESTION -> "Gunakan struktur pertanyaan dan akhiri dengan tanda tanya ('?')."
+                    SpeechIntent.REQUEST -> "Gunakan gaya bahasa permintaan yang sopan."
+                    SpeechIntent.CONFIRM -> "Gunakan bentuk konfirmasi dan akhiri dengan tanda tanya ('?')."
+                    SpeechIntent.STATEMENT -> "Gunakan kalimat deklaratif dan akhiri dengan titik ('.')."
+                    SpeechIntent.AUTO -> "Pertahankan maksud tutur asli ('?' untuk pertanyaan, '.' atau '!' untuk pernyataan)."
+                }
+                "Mesin penyempurnaan kalimat keyboard. JANGAN mengobrol. HANYA keluarkan satu kalimat hasil perbaikan.\n" +
+                "1. Konsistensi Bahasa: Keluarkan dalam bahasa yang PERSIS SAMA dengan input.\n" +
+                "2. Pelestarian Makna: Pertahankan 100% makna, alasan, dan maksud asli tanpa pengurangan.\n" +
+                "3. Tata Bahasa: Perbaiki kesalahan ketik dan tata bahasa rusak menjadi kalimat yang lancar dan alami.\n" +
+                "4. Maksud Tutur: $intentDirective\n" +
+                editorPart +
+                "\nInput: \"$trimmed\" ->"
+            }
+            else -> {
+                val intentDirective = when (speechIntent) {
+                    SpeechIntent.QUESTION -> "Ensure question structure and end with '?'."
+                    SpeechIntent.REQUEST -> "Use polite request phrasing."
+                    SpeechIntent.CONFIRM -> "Use confirmation phrasing and end with '?'."
+                    SpeechIntent.STATEMENT -> "Use declarative statement phrasing."
+                    SpeechIntent.AUTO -> "Preserve original speech act ('?' for question, '.' or '!' for statement)."
+                }
+                "Mobile keyboard sentence refinement engine. Do NOT converse or explain. Output ONLY the single refined sentence.\n" +
+                "1. Language Consistency: Output in the EXACT SAME language as the input.\n" +
+                "2. Meaning Preservation: Preserve 100% of original meaning, reasons, facts, and intent completely without omission.\n" +
+                "3. Grammar & Fluency: Fix broken grammar, speech disfluencies, typos, and run-on sentences into natural, fluent phrasing.\n" +
+                "4. Intent: $intentDirective\n" +
+                editorPart +
+                "\nInput: \"$trimmed\" ->"
+            }
+        }
+        return wrapTurn("", userContent, modelFamily)
     }
 
     /**
-     * 🎭 [어조/톤 변환] 모바일 키보드 톤 변환 프롬프트 빌더 (화행 및 의도 100% 보존)
+     * 🎭 [어조/톤 변환] 통합 3대 불변 규칙 기반 어조 변환 프롬프트 (Unified 3-Pillar Tone Transformer)
+     * - Rule 1: Language Consistency (입력 언어와 100% 동일한 언어 출력)
+     * - Rule 2: Meaning Preservation (이유, 상황, 요청사항 100% 무손실 보존)
+     * - Rule 3: Grammar & Fluency (비문 및 거친 표현 정상화)
+     * - Rule 4: Tone & Intent (선택된 어조 및 화행 규칙 반영)
+     * - 글로벌 다국어 처리는 단일 표준 영어 지시문(Universal English Prompt)으로 완전 자동 단일화
      */
     fun buildTonePrompt(
         trimmed: String,
         toneName: String,
         toneInstruction: String,
-        examples: String,
-        isInputKorean: Boolean,
-        isInputIndonesian: Boolean,
+        examples: String = "",
+        isInputKorean: Boolean = false,
+        isInputIndonesian: Boolean = false,
+        langCode: String = "",
         speechIntent: SpeechIntent = SpeechIntent.AUTO,
         modelFamily: ModelFamily = ModelFamily.GEMMA
     ): String {
-        return if (isInputKorean) {
-            val intentDirective = when (speechIntent) {
-                SpeechIntent.QUESTION -> "질문/의문문 형태를 유지하고 물음표('?')로 끝내세요"
-                SpeechIntent.REQUEST -> "정중한 요청/부탁 어미 사용"
-                SpeechIntent.CONFIRM -> "확인 의문문 유지 및 물음표('?') 종결"
-                SpeechIntent.STATEMENT -> "설명/서술형 종결"
-                SpeechIntent.AUTO -> "원문이 의문문이면 '?', 평서문이면 '.' 종결"
+        val isKorean = isInputKorean || langCode.equals("KO", ignoreCase = true)
+        val isIndonesian = isInputIndonesian || langCode.equals("ID", ignoreCase = true)
+        val examplesBlock = if (examples.isNotBlank()) "\n[Examples]\n$examples\n" else ""
+
+        val userContent = when {
+            isKorean -> {
+                val intentDirective = when (speechIntent) {
+                    SpeechIntent.QUESTION -> "의문문 구조를 유지하고 물음표('?')로 끝내세요."
+                    SpeechIntent.REQUEST -> "정중한 부탁/요청 어조로 작성하세요."
+                    SpeechIntent.CONFIRM -> "확인 어조로 작성하고 물음표('?')로 끝내세요."
+                    SpeechIntent.STATEMENT -> "명확한 평서문 어미로 마침표('.')로 끝내세요."
+                    SpeechIntent.AUTO -> "원문 화행 보존(질문은 '?', 평서문은 '.' 또는 '!')."
+                }
+                "모바일 키보드 어조 변환 엔진입니다. 대화나 설명을 하지 말고 변환된 단 한 문장만 출력하세요.\n" +
+                "1. 언어 일치: 반드시 입력과 동일한 한국어로 출력하세요.\n" +
+                "2. 의미 보존: 원문의 의미, 이유, 상황, 요구사항을 100% 온전히 보존하세요.\n" +
+                "3. 문법 및 완성도: 오탈자, 띄어쓰기, 비문을 자연스러운 구어체 문장으로 완성하세요.\n" +
+                "4. 어조: '$toneName' ($toneInstruction)\n" +
+                "5. 화행: $intentDirective" +
+                examplesBlock +
+                "\n입력: \"$trimmed\" ->"
             }
-            val examplesBlock = if (examples.isNotBlank()) "\n[변환 예시]\n$examples\n" else ""
-            if (modelFamily == ModelFamily.GEMMA) {
-                val user = "모바일 키보드의 텍스트 어조/톤 변환기. 잡담/설명 금지, 변환 문장 1줄만 출력.\n" +
-                        "1. 원문 왜곡 금지 및 내용 생략 금지: 이유, 상황, 요구 등 원문의 모든 의미 요소를 빠짐없이 100% 온전히 보존하고, 억지 한자어 치환 절대 금지 및 임의 축약 절대 금지.\n" +
-                        "2. 톤: '$toneName' ($toneInstruction)\n" +
-                        "3. 화행: $intentDirective" +
-                        examplesBlock +
-                        "\n원문: \"$trimmed\" -> 변환:"
-                wrapTurn("", user, modelFamily)
-            } else {
-                val system = "모바일 키보드의 텍스트 어조/톤 변환기.\n" +
-                        "1. 원문 왜곡 금지 및 내용 생략 금지: 이유, 상황, 요구 등 원문의 모든 의미 요소를 빠짐없이 100% 보존, 억지 한자어 치환 절대 금지 및 임의 축약 금지.\n" +
-                        "2. 톤: '$toneName' ($toneInstruction)\n" +
-                        "3. 화행: $intentDirective"
-                val user = "$examples\n원문: \"$trimmed\" -> 변환:"
-                wrapTurn(system, user, modelFamily)
+            isIndonesian -> {
+                val intentDirective = when (speechIntent) {
+                    SpeechIntent.QUESTION -> "Gunakan struktur pertanyaan dan akhiri dengan tanda tanya ('?')."
+                    SpeechIntent.REQUEST -> "Gunakan gaya bahasa permintaan yang sopan."
+                    SpeechIntent.CONFIRM -> "Gunakan bentuk konfirmasi dan akhiri dengan tanda tanya ('?')."
+                    SpeechIntent.STATEMENT -> "Gunakan kalimat deklaratif dan akhiri dengan titik ('.')."
+                    SpeechIntent.AUTO -> "Pertahankan maksud tutur asli ('?' untuk pertanyaan, '.' atau '!' untuk pernyataan)."
+                }
+                "Mesin pengubah nada keyboard. JANGAN mengobrol. HANYA keluarkan satu kalimat hasil transformasi.\n" +
+                "1. Konsistensi Bahasa: Keluarkan dalam bahasa yang PERSIS SAMA dengan input.\n" +
+                "2. Pelestarian Makna: Pertahankan 100% makna, alasan, dan maksud asli tanpa pengurangan.\n" +
+                "3. Tata Bahasa: Perbaiki tata bahasa rusak dan kalimat rancu menjadi alami.\n" +
+                "4. Nada: '$toneName' ($toneInstruction)\n" +
+                "5. Maksud Tutur: $intentDirective" +
+                examplesBlock +
+                "\nInput: \"$trimmed\" ->"
             }
-        } else if (isInputIndonesian) {
-            val intentDirective = when (speechIntent) {
-                SpeechIntent.QUESTION -> "Pertahankan bentuk pertanyaan dan akhiri dengan tanda tanya ('?')."
-                SpeechIntent.REQUEST -> "Gunakan nada permohonan sopan."
-                SpeechIntent.CONFIRM -> "Gunakan nada konfirmasi dan akhiri tanda tanya ('?')."
-                SpeechIntent.STATEMENT -> "Gunakan bentuk pernyataan."
-                SpeechIntent.AUTO -> "Pertahankan maksud kalimat asli."
-            }
-            val examplesBlock = if (examples.isNotBlank()) "\n[Contoh]\n$examples\n" else ""
-            if (modelFamily == ModelFamily.GEMMA) {
-                val user = "Pengubah gaya teks papan ketik. DILARANG mengobrol/menjelaskan, keluarkan HANYA 1 baris.\n" +
-                        "1. Dilarang distorsi & pemotongan: Pertahankan SEMUA arti asli (alasan, konteks, permohonan) secara utuh tanpa memotong isi kalimat.\n" +
-                        "2. Gaya: '$toneName' ($toneInstruction)\n" +
-                        "3. Niat: $intentDirective" +
-                        examplesBlock +
-                        "\nTeks Asli: \"$trimmed\" -> Ubah:"
-                wrapTurn("", user, modelFamily)
-            } else {
-                val system = "Pengubah gaya teks papan ketik. DILARANG mengobrol.\n" +
-                        "1. Dilarang distorsi: Pertahankan arti asli.\n" +
-                        "2. Gaya: '$toneName' ($toneInstruction)\n" +
-                        "3. Niat: $intentDirective"
-                val user = "$examples\nMasukan: \"$trimmed\" -> Ubah:"
-                wrapTurn(system, user, modelFamily)
-            }
-        } else {
-            val intentDirective = when (speechIntent) {
-                SpeechIntent.QUESTION -> "Keep the question structure and end with a question mark ('?')."
-                SpeechIntent.REQUEST -> "Use polite request phrasing."
-                SpeechIntent.CONFIRM -> "Use confirmation phrasing and end with '?'."
-                SpeechIntent.STATEMENT -> "Use declarative statement phrasing."
-                SpeechIntent.AUTO -> "Preserve original speech act and intent."
-            }
-            val examplesBlock = if (examples.isNotBlank()) "\n[Examples]\n$examples\n" else ""
-            if (modelFamily == ModelFamily.GEMMA) {
-                val user = "Mobile keyboard tone transformer. Do NOT converse/explain. Output ONLY 1 line.\n" +
-                        "1. Zero Distortion & No Omission: Preserve ALL original meaning elements (reasons, context, requests) completely without omission.\n" +
-                        "2. Tone: '$toneName' ($toneInstruction)\n" +
-                        "3. Intent: $intentDirective" +
-                        examplesBlock +
-                        "\nInput: \"$trimmed\" -> Transformed:"
-                wrapTurn("", user, modelFamily)
-            } else {
-                val system = "Mobile keyboard tone transformer. Do NOT converse.\n" +
-                        "1. Zero Distortion: Preserve original meaning.\n" +
-                        "2. Tone: '$toneName' ($toneInstruction)\n" +
-                        "3. Intent: $intentDirective"
-                val user = "$examples\nInput: \"$trimmed\" -> Transformed:"
-                wrapTurn(system, user, modelFamily)
+            else -> {
+                val intentDirective = when (speechIntent) {
+                    SpeechIntent.QUESTION -> "Ensure question structure and end with a question mark ('?')."
+                    SpeechIntent.REQUEST -> "Use polite request phrasing."
+                    SpeechIntent.CONFIRM -> "Use confirmation phrasing and end with a question mark ('?')."
+                    SpeechIntent.STATEMENT -> "Use declarative statement phrasing."
+                    SpeechIntent.AUTO -> "Preserve original speech act ('?' for question, '.' or '!' for statement)."
+                }
+                "Mobile keyboard tone transformer. Do NOT converse or explain. Output ONLY the single transformed sentence.\n" +
+                "1. Language Consistency: Output in the EXACT SAME language as the input.\n" +
+                "2. Meaning Preservation: Preserve 100% of original meaning, reasons, context, and requests completely without omission.\n" +
+                "3. Grammar & Fluency: Fix broken grammar, speech disfluencies, typos, and run-on sentences into natural, fluent phrasing.\n" +
+                "4. Tone: '$toneName' ($toneInstruction)\n" +
+                "5. Speech Intent: $intentDirective" +
+                examplesBlock +
+                "\nInput: \"$trimmed\" ->"
             }
         }
+        return wrapTurn("", userContent, modelFamily)
     }
 
     /**

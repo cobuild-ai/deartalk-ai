@@ -1,6 +1,16 @@
 package ai.deartalk.android.ime
 
 import android.view.inputmethod.InputConnection
+import ai.deartalk.android.ime.CheonjiinTables.CHOSUNGS
+import ai.deartalk.android.ime.CheonjiinTables.CONSONANT_CYCLES
+import ai.deartalk.android.ime.CheonjiinTables.DOUBLE_JONG
+import ai.deartalk.android.ime.CheonjiinTables.JONGSUNGS
+import ai.deartalk.android.ime.CheonjiinTables.JUNGSUNGS
+import ai.deartalk.android.ime.CheonjiinTables.PUNCTUATION_CYCLE
+import ai.deartalk.android.ime.CheonjiinTables.buildSingleSyllable
+import ai.deartalk.android.ime.CheonjiinTables.canFormCompoundBatchim
+import ai.deartalk.android.ime.CheonjiinTables.splitJong
+import ai.deartalk.android.ime.CheonjiinTables.synthesizeJung
 
 /**
  * 천지인(Cheonjiin) 한글 입력 오토마타
@@ -9,43 +19,24 @@ import android.view.inputmethod.InputConnection
  */
 class CheonjiinComposer {
 
-    private val chosungs = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
-    private val jungsungs = listOf(
-        "ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ"
-    )
-    private val jongsungs = listOf(
-        "", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"
-    )
-
-    // 복합 받침 매핑 (Pair(첫째받침 종성 인덱스, 둘째자음 초성 인덱스) -> 복합받침 종성 인덱스)
-    private val doubleJong = mapOf(
-        Pair(1, 9) to 3,   // ㄱ(jong 1) + ㅅ(cho 9) = ㄳ(jong 3)
-        Pair(4, 12) to 5,  // ㄴ(jong 4) + ㅈ(cho 12) = ㄵ(jong 5)
-        Pair(4, 18) to 6,  // ㄴ(jong 4) + ㅎ(cho 18) = ㄶ(jong 6)
-        Pair(8, 0) to 9,   // ㄹ(jong 8) + ㄱ(cho 0) = ㄺ(jong 9)
-        Pair(8, 6) to 10,  // ㄹ(jong 8) + ㅁ(cho 6) = ㄻ(jong 10)
-        Pair(8, 7) to 11,  // ㄹ(jong 8) + ㅂ(cho 7) = ㄼ(jong 11)
-        Pair(8, 9) to 12,  // ㄹ(jong 8) + ㅅ(cho 9) = ㄽ(jong 12)
-        Pair(8, 16) to 13, // ㄹ(jong 8) + ㅌ(cho 16) = ㄾ(jong 13)
-        Pair(8, 17) to 14, // ㄹ(jong 8) + ㅍ(cho 17) = ㄿ(jong 14)
-        Pair(8, 18) to 15, // ㄹ(jong 8) + ㅎ(cho 18) = ㅀ(jong 15)
-        Pair(17, 9) to 18  // ㅂ(jong 17) + ㅅ(cho 9) = ㅄ(jong 18)
-    )
-
-    // 자음 키 그룹별 순환 목록
-    private val consonantCycles = mapOf(
-        'ㄱ' to listOf('ㄱ', 'ㅋ', 'ㄲ'),
-        'ㄴ' to listOf('ㄴ', 'ㄹ'),
-        'ㄷ' to listOf('ㄷ', 'ㅌ', 'ㄸ'),
-        'ㅂ' to listOf('ㅂ', 'ㅍ', 'ㅃ'),
-        'ㅅ' to listOf('ㅅ', 'ㅎ', 'ㅆ'),
-        'ㅈ' to listOf('ㅈ', 'ㅊ', 'ㅉ'),
-        'ㅇ' to listOf('ㅇ', 'ㅁ')
-    )
+    private val chosungs get() = CHOSUNGS
+    private val jungsungs get() = JUNGSUNGS
+    private val jongsungs get() = JONGSUNGS
+    private val doubleJong get() = DOUBLE_JONG
+    private val consonantCycles get() = CONSONANT_CYCLES
+    private val punctuationCycle get() = PUNCTUATION_CYCLE
 
     private var cho: Int = -1
     private var jung: Int = -1
     private var jong: Int = 0
+
+    // 복합받침 2타 합성을 위한 이전 음절 대기 버퍼 (예: "만" + "ㅅ" -> 2타째 "많")
+    private var pendingPrevCho: Int = -1
+    private var pendingPrevJung: Int = -1
+    private var pendingPrevJong: Int = 0
+
+    // 복합받침 순환 시(예: ㄼ -> ㄿ, ㄽ -> ㅀ) 첫째 받침 인덱스 보존
+    private var baseJongForCycle: Int = 0
 
     // 현재 자음 연타 상태 추적
     private var lastKeyGroup: Char? = null
@@ -54,7 +45,6 @@ class CheonjiinComposer {
     private val KEY_TIMEOUT_MS = 650L
 
     // 특수문자/구두점 (.,?!) 순환 연타 상태 추적
-    private val punctuationCycle = listOf('.', ',', '?', '!')
     private var lastPunctuationIndex: Int = -1
     private var lastPunctuationTime: Long = 0L
 
@@ -72,26 +62,28 @@ class CheonjiinComposer {
     private var vowelBuffer = StringBuilder()
 
     val isComposing: Boolean
-        get() = cho != -1 || jung != -1 || vowelBuffer.isNotEmpty()
+        get() = cho != -1 || jung != -1 || vowelBuffer.isNotEmpty() || pendingPrevCho != -1
 
     fun makeSyllable(): String {
-        if (cho != -1 && jung in 0..20) {
-            val code = 0xAC00 + (cho * 21 + jung) * 28 + jong
-            return code.toChar().toString()
+        val currentSyllable = buildSingleSyllable(cho, jung, jong, vowelBuffer)
+        if (pendingPrevCho != -1 && pendingPrevJung in 0..20) {
+            val prevSyllable = buildSingleSyllable(pendingPrevCho, pendingPrevJung, pendingPrevJong)
+            return prevSyllable + currentSyllable
         }
-        if (cho != -1 && jung == -1) {
-            if (vowelBuffer.isNotEmpty()) {
-                return chosungs[cho] + vowelBuffer.toString()
+        return currentSyllable
+    }
+
+    private fun commitPendingPrev(ic: InputConnection?) {
+        if (pendingPrevCho != -1 && pendingPrevJung in 0..20) {
+            val prevText = buildSingleSyllable(pendingPrevCho, pendingPrevJung, pendingPrevJong)
+            if (prevText.isNotEmpty()) {
+                ic?.commitText(prevText, 1)
             }
-            return chosungs[cho].toString()
+            pendingPrevCho = -1
+            pendingPrevJung = -1
+            pendingPrevJong = 0
+            baseJongForCycle = 0
         }
-        if (cho == -1 && jung in 0..20) {
-            return jungsungs[jung]
-        }
-        if (vowelBuffer.isNotEmpty()) {
-            return vowelBuffer.toString()
-        }
-        return ""
     }
 
     /**
@@ -113,7 +105,7 @@ class CheonjiinComposer {
                 return
             } else {
                 // 사이클을 모두 소진한 후 또 누른 경우:
-                // 종성이 있는 완성 음절이면 앞 글자를 확정하고 새 글자 초성으로 시작!
+                commitPendingPrev(ic)
                 if (cho != -1 && jung != -1 && jong != 0) {
                     commit(ic)
                     val targetChar = cycle[0]
@@ -135,17 +127,17 @@ class CheonjiinComposer {
         }
 
         // 2. 새로운 키 입력 또는 타임아웃 경과
-        lastKeyGroup = keyGroup
-        lastKeyIndex = 0
-        lastKeyTime = now
+        commitPendingPrev(ic)
         val targetChar = cycle[0]
-
         val choIdx = chosungs.indexOf(targetChar)
 
         // 상태 1: 아무것도 없는 상태 -> 초성 시작
         if (cho == -1 && jung == -1) {
             commitVowelBuffer(ic)
             cho = choIdx
+            lastKeyGroup = keyGroup
+            lastKeyIndex = 0
+            lastKeyTime = now
             ic?.setComposingText(makeSyllable(), 1)
             return
         }
@@ -154,6 +146,9 @@ class CheonjiinComposer {
         if (cho != -1 && jung == -1) {
             commit(ic)
             cho = choIdx
+            lastKeyGroup = keyGroup
+            lastKeyIndex = 0
+            lastKeyTime = now
             ic?.setComposingText(makeSyllable(), 1)
             return
         }
@@ -163,27 +158,57 @@ class CheonjiinComposer {
             val jongIdx = jongsungs.indexOf(targetChar.toString())
             if (jongIdx != -1) {
                 jong = jongIdx
+                baseJongForCycle = 0
+                lastKeyGroup = keyGroup
+                lastKeyIndex = 0
+                lastKeyTime = now
                 ic?.setComposingText(makeSyllable(), 1)
             } else {
                 commit(ic)
                 cho = choIdx
+                lastKeyGroup = keyGroup
+                lastKeyIndex = 0
+                lastKeyTime = now
                 ic?.setComposingText(makeSyllable(), 1)
             }
             return
         }
 
-        // 상태 4: 종성이 이미 있는 상태 -> 복합 받침 시도 또는 분리
+        // 상태 4: 종성이 이미 있는 상태 -> 복합 받침 시도 또는 분리/대기
         if (cho != -1 && jung != -1 && jong != 0) {
             val combined = doubleJong[Pair(jong, choIdx)]
             if (combined != null) {
+                baseJongForCycle = jong
                 jong = combined
+                lastKeyGroup = keyGroup
+                lastKeyIndex = 0
+                lastKeyTime = now
                 ic?.setComposingText(makeSyllable(), 1)
+                return
+            } else if (canFormCompoundBatchim(jong, keyGroup)) {
+                // 1타째에는 겹받침이 안 되지만, 2타째에 겹받침이 되는 경우 (예: "만" + "ㅅ" -> 2타째 "많")
+                pendingPrevCho = cho
+                pendingPrevJung = jung
+                pendingPrevJong = jong
+                baseJongForCycle = jong
+                cho = choIdx
+                jung = -1
+                jong = 0
+                vowelBuffer.clear()
+                lastKeyGroup = keyGroup
+                lastKeyIndex = 0
+                lastKeyTime = now
+                ic?.setComposingText(makeSyllable(), 1)
+                return
             } else {
                 commit(ic)
                 cho = choIdx
+                lastKeyGroup = keyGroup
+                lastKeyIndex = 0
+                lastKeyTime = now
                 ic?.setComposingText(makeSyllable(), 1)
+                return
             }
-            return
         }
     }
 
@@ -191,7 +216,37 @@ class CheonjiinComposer {
         val nextChoIdx = chosungs.indexOf(nextChar)
         val nextJongIdx = jongsungs.indexOf(nextChar.toString())
 
-        // 종성 자리에 있을 때 순환
+        // 1. 복합받침 대기 상태(pendingPrevCho != -1)에서의 순환 (예: "만ㅅ" -> "많")
+        if (pendingPrevCho != -1) {
+            val combined = doubleJong[Pair(pendingPrevJong, nextChoIdx)]
+            if (combined != null) {
+                cho = pendingPrevCho
+                jung = pendingPrevJung
+                jong = combined
+                baseJongForCycle = pendingPrevJong
+                pendingPrevCho = -1
+                pendingPrevJung = -1
+                pendingPrevJong = 0
+                ic?.setComposingText(makeSyllable(), 1)
+                return
+            } else {
+                cho = nextChoIdx
+                ic?.setComposingText(makeSyllable(), 1)
+                return
+            }
+        }
+
+        // 2. 이미 복합받침 상태(baseJongForCycle != 0)에서의 순환 (예: ㄼ -> ㄿ, ㄽ -> ㅀ)
+        if (cho != -1 && jung != -1 && baseJongForCycle != 0) {
+            val combined = doubleJong[Pair(baseJongForCycle, nextChoIdx)]
+            if (combined != null) {
+                jong = combined
+                ic?.setComposingText(makeSyllable(), 1)
+                return
+            }
+        }
+
+        // 3. 종성 자리에 있을 때 순환 (단일 받침 순환, 예: 안 -> 알, 잇 -> 잏 -> 있)
         if (cho != -1 && jung != -1 && jong != 0) {
             if (nextJongIdx != -1) {
                 jong = nextJongIdx
@@ -200,7 +255,7 @@ class CheonjiinComposer {
             return
         }
 
-        // 초성 자리에 있을 때 순환
+        // 4. 초성 자리에 있을 때 순환 (예: ㄱ -> ㅋ -> ㄲ)
         if (cho != -1 && jung == -1) {
             cho = nextChoIdx
             ic?.setComposingText(makeSyllable(), 1)
@@ -219,6 +274,9 @@ class CheonjiinComposer {
     fun inputVowelKey(ic: InputConnection?, vowelChar: Char) {
         lastPunctuationIndex = -1
         lastKeyGroup = null // 모음 입력 시 자음 연타 리셋
+
+        // 복합받침 대기 중인 이전 음절이 있다면 먼저 확정 커밋
+        commitPendingPrev(ic)
 
         // 종성이 있는 상태에서 모음 입력 시: 받침을 분리하여 다음 글자 초성으로 이동 (도깨비불 현상)
         if (cho != -1 && jung != -1 && jong != 0) {
@@ -264,67 +322,29 @@ class CheonjiinComposer {
         }
     }
 
-    /**
-     * 천지인 모음 버퍼 문자열을 표준 중성 인덱스로 합성
-     */
-    private fun synthesizeJung(buf: String): Int {
-        // 기본 모음 및 합성 규칙
-        return when (buf) {
-            "ㅣ" -> 20 // ㅣ
-            "ㅡ" -> 18 // ㅡ
-            "ㆍ", "·", "." -> -2 // 아래아 1개 (단독/조합 전이)
-            "ㆍㆍ", "··", "..", "ㆍ.", ".ㆍ" -> -2 // 아래아 2개 (ㅑ, ㅕ, ㅛ, ㅠ 전이)
-
-            "ㅣㆍ", "ㅣ·", "ㅣ." -> 0  // ㅏ
-            "ㅣㆍㆍ", "ㅣ··", "ㅣ..", "ㅣㆍ.", "ㅣ.ㆍ" -> 2 // ㅑ
-            "ㆍㅣ", "·ㅣ", ".ㅣ" -> 4  // ㅓ
-            "ㆍㆍㅣ", "··ㅣ", "..ㅣ", "ㆍ.ㅣ", ".ㆍㅣ" -> 6 // ㅕ
-
-            "ㆍㅡ", "·ㅡ", ".ㅡ" -> 8  // ㅗ
-            "ㆍㆍㅡ", "··ㅡ", "..ㅡ", "ㆍ.ㅡ", ".ㆍㅡ" -> 12 // ㅛ
-            "ㅡㆍ", "ㅡ·", "ㅡ." -> 13 // ㅜ
-            "ㅡㆍㆍ", "ㅡ··", "ㅡ..", "ㅡㆍ.", "ㅡ.ㆍ" -> 17 // ㅠ
-            "ㅡㅣ" -> 19 // ㅢ
-
-            // ㅐ, ㅒ, ㅔ, ㅖ
-            "ㅣㆍㅣ", "ㅣ·ㅣ", "ㅣ.ㅣ" -> 1  // ㅐ (ㅏ + ㅣ)
-            "ㅣㆍㆍㅣ", "ㅣ··ㅣ", "ㅣ..ㅣ", "ㅣㆍ.ㅣ", "ㅣ.ㆍㅣ" -> 3 // ㅒ (ㅑ + ㅣ)
-            "ㆍㅣㅣ", "·ㅣㅣ", ".ㅣㅣ" -> 5  // ㅔ (ㅓ + ㅣ)
-            "ㆍㆍㅣㅣ", "··ㅣㅣ", "..ㅣㅣ", "ㆍ.ㅣㅣ", ".ㆍㅣㅣ" -> 7 // ㅖ (ㅕ + ㅣ)
-
-            // ㅘ, ㅙ, ㅚ
-            "ㆍㅡㅣㆍ", "·ㅡㅣ·", ".ㅡㅣ." -> 9   // ㅘ (ㅗ + ㅏ)
-            "ㆍㅡㅣㆍㅣ", "·ㅡㅣ·ㅣ", ".ㅡㅣ.ㅣ" -> 10 // ㅙ (ㅗ + ㅐ)
-            "ㆍㅡㅣ", "·ㅡㅣ", ".ㅡㅣ" -> 11   // ㅚ (ㅗ + ㅣ)
-
-            // ㅝ, ㅞ, ㅟ
-            "ㅡㆍㆍㅣ", "ㅡ··ㅣ", "ㅡ..ㅣ", "ㅡㆍ.ㅣ", "ㅡ.ㆍㅣ" -> 14  // ㅝ (ㅜ + ㅓ)
-            "ㅡㆍㆍㅣㅣ", "ㅡ··ㅣㅣ", "ㅡ..ㅣㅣ", "ㅡㆍ.ㅣㅣ", "ㅡ.ㆍㅣㅣ" -> 15 // ㅞ (ㅜ + ㅔ)
-            "ㅡㆍㅣ", "ㅡ·ㅣ", "ㅡ.ㅣ" -> 16    // ㅟ (ㅜ + ㅣ)
-
-            else -> -1
-        }
-    }
-
-    private fun splitJong(j: Int): Pair<Int, Int> {
-        for ((pair, result) in doubleJong) {
-            if (result == j) {
-                return Pair(pair.first, pair.second)
-            }
-        }
-        val ch = jongsungs[j]
-        val choIdx = chosungs.indexOf(ch)
-        return Pair(0, choIdx)
-    }
-
     fun delete(ic: InputConnection?) {
         lastPunctuationIndex = -1
         lastKeyGroup = null
+
+        // 1. 복합받침 대기 상태에서 삭제 시 (예: "만ㅅ" -> "만")
+        if (pendingPrevCho != -1) {
+            cho = pendingPrevCho
+            jung = pendingPrevJung
+            jong = pendingPrevJong
+            pendingPrevCho = -1
+            pendingPrevJung = -1
+            pendingPrevJong = 0
+            baseJongForCycle = 0
+            vowelBuffer.clear()
+            ic?.setComposingText(makeSyllable(), 1)
+            return
+        }
 
         if (jong != 0) {
             // 복합 받침 분리 시도
             val (first, _) = splitJong(jong)
             jong = first
+            baseJongForCycle = 0
             ic?.setComposingText(makeSyllable(), 1)
             return
         }
@@ -425,6 +445,10 @@ class CheonjiinComposer {
         cho = -1
         jung = -1
         jong = 0
+        pendingPrevCho = -1
+        pendingPrevJung = -1
+        pendingPrevJong = 0
+        baseJongForCycle = 0
         vowelBuffer.clear()
         lastKeyGroup = null
         lastKeyIndex = 0

@@ -166,14 +166,14 @@ class DearTalkIntentEngineTest {
         val rewrittenQuestion = intentEngine.rewriteSentenceIntent(
             text = "이거 복잡한 문제야",
             langCode = "KO",
-            targetIntent = ai.deartalk.android.live.data.SpeechIntent.QUESTION
+            targetIntent = ai.deartalk.android.data.SpeechIntent.QUESTION
         )
         assertEquals("이거 복잡한 문제야?", rewrittenQuestion)
 
         val rewrittenStatement = intentEngine.rewriteSentenceIntent(
             text = "이거 너는 복잡한 문제라고 생각하니?",
             langCode = "KO",
-            targetIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+            targetIntent = ai.deartalk.android.data.SpeechIntent.STATEMENT
         )
         assertEquals("이거 너는 복잡한 문제라고 생각하니.", rewrittenStatement)
 
@@ -182,7 +182,7 @@ class DearTalkIntentEngineTest {
             rawSourceText = "이거 복잡한 문제야",
             sourceLangCode = "KO",
             targetLangCode = "KO",
-            targetIntent = ai.deartalk.android.live.data.SpeechIntent.QUESTION
+            targetIntent = ai.deartalk.android.data.SpeechIntent.QUESTION
         )
         assertEquals("이거 복잡한 문제야?", raw)
         assertEquals("이거 복잡한 문제야?", refined)
@@ -202,14 +202,14 @@ class DearTalkIntentEngineTest {
         val question = intentEngine.rewriteSentenceIntent(
             text = "You are at home",
             langCode = "EN",
-            targetIntent = ai.deartalk.android.live.data.SpeechIntent.QUESTION
+            targetIntent = ai.deartalk.android.data.SpeechIntent.QUESTION
         )
         assertEquals("You are at home?", question)
 
         val statement = intentEngine.rewriteSentenceIntent(
             text = "Are you at home?",
             langCode = "EN",
-            targetIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+            targetIntent = ai.deartalk.android.data.SpeechIntent.STATEMENT
         )
         assertEquals("You are at home.", statement)
     }
@@ -219,34 +219,34 @@ class DearTalkIntentEngineTest {
         // 1. QUESTION 태그 파싱
         val rawQuestion = "[INTENT: QUESTION]\n오늘은 며칠이야?"
         val (intentQ, textQ) = DearTalkIntentEngine.parseIntentTagAndClean(rawQuestion)
-        assertEquals(ai.deartalk.android.live.data.SpeechIntent.QUESTION, intentQ)
+        assertEquals(ai.deartalk.android.data.SpeechIntent.QUESTION, intentQ)
         assertEquals("오늘은 며칠이야?", textQ)
 
         // 2. REQUEST 태그 파싱 (대소문자 무시)
         val rawRequest = "[intent: request] 이 문서 좀 검토해줘."
         val (intentR, textR) = DearTalkIntentEngine.parseIntentTagAndClean(rawRequest)
-        assertEquals(ai.deartalk.android.live.data.SpeechIntent.REQUEST, intentR)
+        assertEquals(ai.deartalk.android.data.SpeechIntent.REQUEST, intentR)
         assertEquals("이 문서 좀 검토해줘.", textR)
 
         // 3. CONFIRM 태그 파싱
         val rawConfirm = "[INTENT: CONFIRM]\n내일 3시 맞지?"
         val (intentC, textC) = DearTalkIntentEngine.parseIntentTagAndClean(rawConfirm)
-        assertEquals(ai.deartalk.android.live.data.SpeechIntent.CONFIRM, intentC)
+        assertEquals(ai.deartalk.android.data.SpeechIntent.CONFIRM, intentC)
         assertEquals("내일 3시 맞지?", textC)
 
         // 4. STATEMENT 태그 파싱
         val rawStatement = "[INTENT: STATEMENT] 나 지금 가고 있어."
         val (intentS, textS) = DearTalkIntentEngine.parseIntentTagAndClean(rawStatement)
-        assertEquals(ai.deartalk.android.live.data.SpeechIntent.STATEMENT, intentS)
+        assertEquals(ai.deartalk.android.data.SpeechIntent.STATEMENT, intentS)
         assertEquals("나 지금 가고 있어.", textS)
 
         // 5. 태그 부재 시 fallback 반환
         val rawNoTag = "그냥 일반 텍스트입니다."
         val (intentFallback, textFallback) = DearTalkIntentEngine.parseIntentTagAndClean(
             rawNoTag,
-            fallbackIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+            fallbackIntent = ai.deartalk.android.data.SpeechIntent.STATEMENT
         )
-        assertEquals(ai.deartalk.android.live.data.SpeechIntent.STATEMENT, intentFallback)
+        assertEquals(ai.deartalk.android.data.SpeechIntent.STATEMENT, intentFallback)
         assertEquals("그냥 일반 텍스트입니다.", textFallback)
     }
 
@@ -265,7 +265,7 @@ class DearTalkIntentEngineTest {
             sourceLangCode = "KO"
         )
         assertEquals("너는 어떻게 생각해", output)
-        assertEquals(ai.deartalk.android.live.data.SpeechIntent.QUESTION, intent)
+        assertEquals(ai.deartalk.android.data.SpeechIntent.QUESTION, intent)
     }
 }
 

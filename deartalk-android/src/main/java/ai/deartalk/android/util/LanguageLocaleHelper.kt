@@ -58,8 +58,25 @@ object LanguageLocaleHelper {
         (ch in '\u0E00'..'\u0E7F')
     }
 
+    fun hasVietnamese(text: String): Boolean = text.any { ch ->
+        ch in "\u0110\u0111\u0102\u0103\u00C2\u00E2\u00CA\u00EA\u00D4\u00F4\u01A0\u01A1\u01AF\u01B0" ||
+        (ch in '\u1EA0'..'\u1EF9')
+    }
+
+    fun hasSpanish(text: String): Boolean = text.any { ch ->
+        ch == '¿' || ch == '¡' || ch == 'ñ' || ch == 'Ñ'
+    }
+
+    fun hasFrench(text: String): Boolean = text.any { ch ->
+        ch == 'ç' || ch == 'Ç' || ch == 'œ' || ch == 'Œ' || ch == 'æ' || ch == 'Æ'
+    }
+
+    fun hasGerman(text: String): Boolean = text.any { ch ->
+        ch == 'ä' || ch == 'ö' || ch == 'ü' || ch == 'ß' || ch == 'Ä' || ch == 'Ö' || ch == 'Ü'
+    }
+
     fun isEnglish(text: String): Boolean {
-        if (hasKorean(text) || hasJapanese(text) || hasChinese(text) || hasThai(text)) return false
+        if (hasKorean(text) || hasJapanese(text) || hasChinese(text) || hasThai(text) || hasVietnamese(text)) return false
         val letters = text.filter { it.isLetter() }
         if (letters.isEmpty()) return false
         return letters.all { it in 'a'..'z' || it in 'A'..'Z' }
@@ -68,12 +85,20 @@ object LanguageLocaleHelper {
     /**
      * 🔍 입력 문자열의 문자 체계(Script)를 감지하여 가장 유력한 언어 코드 반환
      */
-    fun detectLanguageCode(text: String, fallback: String = "KO"): String = when {
-        hasKorean(text) -> "KO"
-        hasJapanese(text) -> "JA"
-        hasThai(text) -> "TH"
-        hasChinese(text) -> "ZH"
-        isEnglish(text) -> "EN"
-        else -> fallback
+    fun detectLanguageCode(text: String, fallback: String = "KO"): String {
+        val fb = fallback.uppercase()
+        return when {
+            hasKorean(text) -> "KO"
+            hasJapanese(text) -> "JA"
+            hasChinese(text) -> "ZH"
+            hasThai(text) -> "TH"
+            hasVietnamese(text) -> "VI"
+            hasGerman(text) -> "DE"
+            hasFrench(text) -> "FR"
+            hasSpanish(text) -> "ES"
+            fb in listOf("ID", "ES", "FR", "DE", "VI") && text.any { it.isLetter() } -> fb
+            isEnglish(text) -> "EN"
+            else -> fb
+        }
     }
 }

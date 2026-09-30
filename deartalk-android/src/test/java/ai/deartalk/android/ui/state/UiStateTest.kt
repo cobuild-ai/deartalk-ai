@@ -3,7 +3,7 @@ package ai.deartalk.android.ui.state
 import ai.deartalk.android.data.ActiveAiTier
 import ai.deartalk.android.data.pref.KoreanKeyboardType
 import ai.deartalk.android.ime.ui.MicUiState
-import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.data.SpeechIntent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -17,16 +17,21 @@ class UiStateTest {
         assertFalse(defaultState.isImeEnabled)
         assertFalse(defaultState.isImeSelected)
         assertFalse(defaultState.isModelLoaded)
+        assertTrue(defaultState.isAutoLanguage)
         assertEquals("ko", defaultState.selectedLanguageCode)
         assertEquals(KoreanKeyboardType.DUBEOLSIK, defaultState.selectedKoreanKeyboardType)
 
         val updated = defaultState.copy(
             isImeEnabled = true,
             isModelLoaded = true,
+            isAutoLanguage = false,
+            selectedLanguageCode = "en",
             recognizedLiveText = "안녕하세요"
         )
         assertTrue(updated.isImeEnabled)
         assertTrue(updated.isModelLoaded)
+        assertFalse(updated.isAutoLanguage)
+        assertEquals("en", updated.selectedLanguageCode)
         assertEquals("안녕하세요", updated.recognizedLiveText)
     }
 
@@ -36,15 +41,12 @@ class UiStateTest {
         assertEquals(MicUiState.IDLE, defaultIme.micUiState)
         assertEquals(ActiveAiTier.STT_ONLY, defaultIme.activeTier)
         assertEquals(SpeechIntent.AUTO, defaultIme.selectedSpeechIntent)
-        assertFalse(defaultIme.isTranslationMode)
 
         val updated = defaultIme.copy(
             micUiState = MicUiState.LISTENING,
-            isTranslationMode = true,
             selectedSpeechIntent = SpeechIntent.QUESTION
         )
         assertEquals(MicUiState.LISTENING, updated.micUiState)
-        assertTrue(updated.isTranslationMode)
         assertEquals(SpeechIntent.QUESTION, updated.selectedSpeechIntent)
     }
 
@@ -71,31 +73,29 @@ class UiStateTest {
         assertEquals(SpeechIntent.AUTO, resetState.detectedSpeechIntent)
     }
 
-    @Test
-    fun testLiveUiState_defaultsAndCopy() {
-        val defaultLive = LiveUiState()
-        assertEquals(ai.deartalk.android.live.ActiveSpeaker.NONE, defaultLive.activeSpeaker)
-        assertEquals("KO", defaultLive.myLang)
-        assertEquals("EN", defaultLive.partnerLang)
-        assertEquals(SpeechIntent.AUTO, defaultLive.myIntent)
-        assertFalse(defaultLive.isProcessing)
-        assertFalse(defaultLive.isFlipViewEnabled)
 
-        val updated = defaultLive.copy(
-            activeSpeaker = ai.deartalk.android.live.ActiveSpeaker.ME,
-            myLang = "ID",
-            partnerLang = "KO",
-            myIntent = SpeechIntent.REQUEST,
-            isProcessing = true,
-            isFlipViewEnabled = true,
-            streamingText = "Bisa tolong bantu saya?"
-        )
-        assertEquals(ai.deartalk.android.live.ActiveSpeaker.ME, updated.activeSpeaker)
-        assertEquals("ID", updated.myLang)
-        assertEquals("KO", updated.partnerLang)
-        assertEquals(SpeechIntent.REQUEST, updated.myIntent)
-        assertTrue(updated.isProcessing)
-        assertTrue(updated.isFlipViewEnabled)
-        assertEquals("Bisa tolong bantu saya?", updated.streamingText)
+
+    @Test
+    fun testMockLlmEngine_generatesOutput() = kotlinx.coroutines.runBlocking {
+        val engine = ai.deartalk.android.agent.engine.MockLlmEngine("테스트 변환 성공")
+        assertTrue(engine.isModelLoaded)
+        val result = engine.generate("프롬프트")
+        assertEquals("테스트 변환 성공", result)
+    }
+
+    @Test
+    fun testImeUiEvent_typesInstantiable() {
+        val event1 = ai.deartalk.android.ime.ui.ImeUiEvent.MainMicClick
+        val event2 = ai.deartalk.android.ime.ui.ImeUiEvent.ApplyAiText("테스트")
+        assertTrue(event1 is ai.deartalk.android.ime.ui.ImeUiEvent)
+        assertEquals("테스트", event2.text)
+    }
+
+    @Test
+    fun testMainUiEvent_typesInstantiable() {
+        val event1 = ai.deartalk.android.ui.main.MainUiEvent.ToggleMic
+        val event2 = ai.deartalk.android.ui.main.MainUiEvent.TestPreset("예시")
+        assertTrue(event1 is ai.deartalk.android.ui.main.MainUiEvent)
+        assertEquals("예시", event2.preset)
     }
 }

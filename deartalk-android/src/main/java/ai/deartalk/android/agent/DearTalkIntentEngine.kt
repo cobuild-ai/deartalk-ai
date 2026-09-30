@@ -27,7 +27,7 @@ sealed interface IntentResult {
     data class Success(
         val text: String,
         val message: String = "",
-        val detectedIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+        val detectedIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.STATEMENT
     ) : IntentResult
     data class Error(val fallbackText: String, val error: String) : IntentResult
 }
@@ -38,7 +38,7 @@ sealed interface IntentResult {
  */
 class DearTalkIntentEngine(
     private val context: Context?
-) {
+) : ai.deartalk.android.agent.engine.OnDeviceLlmEngine {
     companion object {
         private const val TAG = "DearTalkAI"
         private val initScope = CoroutineScope(Dispatchers.IO)
@@ -75,15 +75,15 @@ class DearTalkIntentEngine(
          */
         fun parseIntentTagAndClean(
             rawOutput: String,
-            fallbackIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.STATEMENT
-        ): Pair<ai.deartalk.android.live.data.SpeechIntent, String> =
+            fallbackIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.STATEMENT
+        ): Pair<ai.deartalk.android.data.SpeechIntent, String> =
             ai.deartalk.android.agent.prompt.PromptTemplateFactory.parseIntentTagAndClean(rawOutput, fallbackIntent)
     }
 
-    val isModelLoaded: Boolean
+    override val isModelLoaded: Boolean
         get() = sharedLoaded
 
-    val isModelLoadedFlow: StateFlow<Boolean>
+    override val isModelLoadedFlow: StateFlow<Boolean>
         get() = DearTalkIntentEngine.isModelLoadedFlow
 
     val loadedModelNameFlow: StateFlow<String>
@@ -94,6 +94,10 @@ class DearTalkIntentEngine(
 
     val currentModelFamily: ai.deartalk.android.agent.prompt.ModelFamily
         get() = ai.deartalk.android.agent.prompt.ModelFamily.GEMMA
+
+    override suspend fun generate(prompt: String): String? {
+        return executeInference(prompt)
+    }
 
     init {
         ensureModelLoaded()
@@ -207,7 +211,7 @@ class DearTalkIntentEngine(
     /**
      * 🔄 모델 핫 리로드: Gemma 4 패키지 다운로드 완료 또는 삭제 시 새 모델 경로 즉시 재바인딩
      */
-    fun reloadModel() {
+    override fun reloadModel() {
         if (context == null) return
         synchronized(DearTalkIntentEngine::class.java) {
             sharedInitJob = initScope.launch {
@@ -394,7 +398,7 @@ class DearTalkIntentEngine(
         voiceInput: String,
         currentEditorText: String = "",
         packageName: String = "",
-        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
+        speechIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.AUTO
     ): IntentResult = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) {
@@ -456,8 +460,8 @@ class DearTalkIntentEngine(
                 val output = executeInference(prompt)
 
                 if (!output.isNullOrBlank()) {
-                    val defaultFallbackIntent = if (isExplicitQuestion) ai.deartalk.android.live.data.SpeechIntent.QUESTION else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
-                    val expectedFallback = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else defaultFallbackIntent
+                    val defaultFallbackIntent = if (isExplicitQuestion) ai.deartalk.android.data.SpeechIntent.QUESTION else ai.deartalk.android.data.SpeechIntent.STATEMENT
+                    val expectedFallback = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) speechIntent else defaultFallbackIntent
                     val (detectedIntent, cleanOutput) = parseIntentTagAndClean(output, expectedFallback)
                     val textToClean = if (cleanOutput.isNotBlank()) cleanOutput else trimmed
                     var refined = cleanLlmOutput(textToClean, detectedLangCode)
@@ -466,16 +470,16 @@ class DearTalkIntentEngine(
 
                     // 🎯 AI가 완성한 문장 기반 실시간 화행 확정 (SSOT Zero Hardcoding)
                     val hasExplicitIntentTag = output.contains("INTENT:", ignoreCase = true)
-                    val finalDetectedIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                    val finalDetectedIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
                         speechIntent
                     } else if (hasExplicitIntentTag) {
                         detectedIntent
                     } else {
-                        ai.deartalk.android.live.data.MultilingualIntentHeuristic.guessIntent(refined, detectedLangCode)
+                        ai.deartalk.android.data.MultilingualIntentHeuristic.guessIntent(refined, detectedLangCode)
                     }
 
                     val hasNaturalLanguageChars = refined.any { Character.isLetterOrDigit(it) }
-                    if (finalDetectedIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION && hasNaturalLanguageChars && !refined.endsWith("?") && !refined.endsWith("？")) {
+                    if (finalDetectedIntent == ai.deartalk.android.data.SpeechIntent.QUESTION && hasNaturalLanguageChars && !refined.endsWith("?") && !refined.endsWith("？")) {
                         refined = refined.removeSuffix(".").removeSuffix("!").trim() + "?"
                     }
                     try {
@@ -494,15 +498,15 @@ class DearTalkIntentEngine(
         }
 
         // 🌟 LLM 미로드 또는 폴백 시: 의문사/의문어미 판별 기반 폴백
-        val fallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+        val fallbackIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
             speechIntent
         } else if (isExplicitQuestion) {
-            ai.deartalk.android.live.data.SpeechIntent.QUESTION
+            ai.deartalk.android.data.SpeechIntent.QUESTION
         } else {
-            ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+            ai.deartalk.android.data.SpeechIntent.STATEMENT
         }
 
-        val fallbackText = if (fallbackIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION && !trimmed.endsWith("?")) {
+        val fallbackText = if (fallbackIntent == ai.deartalk.android.data.SpeechIntent.QUESTION && !trimmed.endsWith("?")) {
             trimmed.removeSuffix(".").removeSuffix("!").trim() + "?"
         } else {
             trimmed
@@ -523,7 +527,7 @@ class DearTalkIntentEngine(
         tone: CustomTone,
         currentEditorText: String = "",
         packageName: String = "",
-        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
+        speechIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.AUTO
     ): IntentResult = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext IntentResult.Success("")
@@ -539,7 +543,7 @@ class DearTalkIntentEngine(
         } ?: false
         val isInputIndonesian = !isInputKorean && (isIndonesianLocale || ai.deartalk.android.util.LanguageLocaleHelper.detectLanguageCode(trimmed) == "ID")
         val detectedLangCode = if (isInputKorean) "KO" else if (isInputIndonesian) "ID" else "EN"
-        val isExplicitQuestion = speechIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION ||
+        val isExplicitQuestion = speechIntent == ai.deartalk.android.data.SpeechIntent.QUESTION ||
                 ai.deartalk.android.stt.IntonationAnalyzer.isLikelyQuestion(text = trimmed, languageCode = detectedLangCode)
 
         if (isModelLoaded) {
@@ -623,14 +627,14 @@ class DearTalkIntentEngine(
                 }
 
                 val intentDirective = when (speechIntent) {
-                    ai.deartalk.android.live.data.SpeechIntent.QUESTION -> "화행 목표: [질문/의문문] 문맥에 맞게 질문 어미로 바꾸고 물음표('?')로 끝내세요."
-                    ai.deartalk.android.live.data.SpeechIntent.STATEMENT -> "화행 목표: [설명/평서문] 서술/설명 형태로 바꾸고 마침표('.')로 끝내세요."
-                    ai.deartalk.android.live.data.SpeechIntent.REQUEST -> "화행 목표: [부탁/요청] 공손하게 부탁하거나 요청하는 형태로 바꾸세요."
-                    ai.deartalk.android.live.data.SpeechIntent.CONFIRM -> "화행 목표: [확인/되묻기] 확인이나 동의를 구하는 형태로 바꾸고 물음표('?')로 끝내세요."
-                    ai.deartalk.android.live.data.SpeechIntent.AUTO -> ""
+                    ai.deartalk.android.data.SpeechIntent.QUESTION -> "화행 목표: [질문/의문문] 문맥에 맞게 질문 어미로 바꾸고 물음표('?')로 끝내세요."
+                    ai.deartalk.android.data.SpeechIntent.STATEMENT -> "화행 목표: [설명/평서문] 서술/설명 형태로 바꾸고 마침표('.')로 끝내세요."
+                    ai.deartalk.android.data.SpeechIntent.REQUEST -> "화행 목표: [부탁/요청] 공손하게 부탁하거나 요청하는 형태로 바꾸세요."
+                    ai.deartalk.android.data.SpeechIntent.CONFIRM -> "화행 목표: [확인/되묻기] 확인이나 동의를 구하는 형태로 바꾸고 물음표('?')로 끝내세요."
+                    ai.deartalk.android.data.SpeechIntent.AUTO -> ""
                 }
 
-                val intentInstruction = if (speechIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                val intentInstruction = if (speechIntent == ai.deartalk.android.data.SpeechIntent.AUTO) {
                     "[화행 자동 분류 및 출력 규칙]\n" +
                     "1. 원문의 문맥에 맞는 화행(STATEMENT, QUESTION, REQUEST, CONFIRM)을 스스로 판단하세요.\n" +
                     "2. 출력 첫 줄에 반드시 `[INTENT: 분류된화행]` 태그를 출력하고, 둘째 줄에 ${tone.name} 어조로 변환된 문장만 출력하세요.\n\n"
@@ -655,7 +659,7 @@ class DearTalkIntentEngine(
                 val output = executeInference(prompt)
 
                 if (!output.isNullOrBlank()) {
-                    val defaultFallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
+                    val defaultFallbackIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) speechIntent else ai.deartalk.android.data.SpeechIntent.STATEMENT
                     val (detectedIntent, cleanOutput) = parseIntentTagAndClean(output, defaultFallbackIntent)
                     val textToClean = cleanOutput.ifBlank { trimmed }
                     var refined = cleanLlmOutput(textToClean)
@@ -668,22 +672,22 @@ class DearTalkIntentEngine(
 
                     // 🎯 AI가 완성한 문장 기반 실시간 화행 확정 (SSOT Zero Hardcoding)
                     val hasExplicitIntentTag = output.contains("INTENT:", ignoreCase = true)
-                    val finalDetectedIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                    val finalDetectedIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
                         speechIntent
                     } else if (hasExplicitIntentTag) {
                         detectedIntent
                     } else {
-                        ai.deartalk.android.live.data.MultilingualIntentHeuristic.guessIntent(refined, detectedLangCode)
+                        ai.deartalk.android.data.MultilingualIntentHeuristic.guessIntent(refined, detectedLangCode)
                     }
 
                     val hasNaturalLanguageChars = refined.any { Character.isLetterOrDigit(it) }
-                    if ((finalDetectedIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION || finalDetectedIntent == ai.deartalk.android.live.data.SpeechIntent.CONFIRM) &&
+                    if ((finalDetectedIntent == ai.deartalk.android.data.SpeechIntent.QUESTION || finalDetectedIntent == ai.deartalk.android.data.SpeechIntent.CONFIRM) &&
                         hasNaturalLanguageChars) {
-                        if (isToneActuallyChanged || isExplicitQuestion || speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                        if (isToneActuallyChanged || isExplicitQuestion || speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
                             refined = refined.trimEnd('?', '!', '.', ' ', '？') + "?"
                         }
-                    } else if ((finalDetectedIntent == ai.deartalk.android.live.data.SpeechIntent.STATEMENT || finalDetectedIntent == ai.deartalk.android.live.data.SpeechIntent.REQUEST) &&
-                        speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO &&
+                    } else if ((finalDetectedIntent == ai.deartalk.android.data.SpeechIntent.STATEMENT || finalDetectedIntent == ai.deartalk.android.data.SpeechIntent.REQUEST) &&
+                        speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO &&
                         hasNaturalLanguageChars) {
                         refined = refined.trimEnd('?', '!', '.', ' ', '？') + "."
                     }
@@ -711,20 +715,20 @@ class DearTalkIntentEngine(
             }
         }
 
-        val fallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+        val fallbackIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
             speechIntent
         } else {
-            ai.deartalk.android.live.data.MultilingualIntentHeuristic.guessIntent(trimmed, detectedLangCode)
+            ai.deartalk.android.data.MultilingualIntentHeuristic.guessIntent(trimmed, detectedLangCode)
         }
         var fallbackText = trimmed
-        if ((fallbackIntent == ai.deartalk.android.live.data.SpeechIntent.QUESTION || fallbackIntent == ai.deartalk.android.live.data.SpeechIntent.CONFIRM) &&
-            (isExplicitQuestion || speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO)) {
+        if ((fallbackIntent == ai.deartalk.android.data.SpeechIntent.QUESTION || fallbackIntent == ai.deartalk.android.data.SpeechIntent.CONFIRM) &&
+            (isExplicitQuestion || speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO)) {
             val cleanBase = fallbackText.trimEnd('?', '!', '.', ' ', '？')
             if (cleanBase.any { Character.isLetterOrDigit(it) }) {
                 fallbackText = "$cleanBase?"
             }
-        } else if ((fallbackIntent == ai.deartalk.android.live.data.SpeechIntent.STATEMENT || fallbackIntent == ai.deartalk.android.live.data.SpeechIntent.REQUEST) &&
-            speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+        } else if ((fallbackIntent == ai.deartalk.android.data.SpeechIntent.STATEMENT || fallbackIntent == ai.deartalk.android.data.SpeechIntent.REQUEST) &&
+            speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
             val cleanBase = fallbackText.trimEnd('?', '!', '.', ' ', '？')
             if (cleanBase.any { Character.isLetterOrDigit(it) }) {
                 fallbackText = "$cleanBase."
@@ -743,7 +747,7 @@ class DearTalkIntentEngine(
         currentEditorText: String = "",
         packageName: String = "",
         tone: String? = null,
-        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
+        speechIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.AUTO
     ): IntentResult = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
         if (trimmed.isBlank()) return@withContext IntentResult.Success("")
@@ -760,10 +764,10 @@ class DearTalkIntentEngine(
         )
 
         val targetCode = ai.deartalk.android.agent.language.LanguageProfileRegistry.resolveCode(target)
-        val effectiveIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+        val effectiveIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
             speechIntent
         } else {
-            ai.deartalk.android.live.data.MultilingualIntentHeuristic.guessIntent(translated, targetCode)
+            ai.deartalk.android.data.MultilingualIntentHeuristic.guessIntent(translated, targetCode)
         }
 
         if (translated.isNotBlank() && translated != trimmed) {
@@ -805,11 +809,11 @@ class DearTalkIntentEngine(
     suspend fun rewriteSentenceIntent(
         text: String,
         langCode: String = "KO",
-        targetIntent: ai.deartalk.android.live.data.SpeechIntent,
+        targetIntent: ai.deartalk.android.data.SpeechIntent,
         packageName: String = ""
     ): String = withContext(Dispatchers.IO) {
         val trimmed = text.trim()
-        if (trimmed.isBlank() || targetIntent == ai.deartalk.android.live.data.SpeechIntent.AUTO) return@withContext trimmed
+        if (trimmed.isBlank() || targetIntent == ai.deartalk.android.data.SpeechIntent.AUTO) return@withContext trimmed
 
         if (!isModelLoaded && sharedInitJob?.isActive == true) {
             try { sharedInitJob?.join() } catch (_: Throwable) {}
@@ -851,17 +855,17 @@ class DearTalkIntentEngine(
         // 🛡️ 휴리스틱 폴백: 부호 및 기본 어미 보정
         val clean = trimmed.trimEnd('?', '.', '!', ',', '"', '\'', '`')
         when (targetIntent) {
-            ai.deartalk.android.live.data.SpeechIntent.QUESTION -> "$clean?"
-            ai.deartalk.android.live.data.SpeechIntent.STATEMENT -> {
+            ai.deartalk.android.data.SpeechIntent.QUESTION -> "$clean?"
+            ai.deartalk.android.data.SpeechIntent.STATEMENT -> {
                 if (effectiveLang == "EN") {
                     ai.deartalk.android.stt.IntonationAnalyzer.convertToDeclarativeEnglish(clean)
                 } else {
                     "$clean."
                 }
             }
-            ai.deartalk.android.live.data.SpeechIntent.REQUEST -> "$clean."
-            ai.deartalk.android.live.data.SpeechIntent.CONFIRM -> "$clean?"
-            ai.deartalk.android.live.data.SpeechIntent.AUTO -> trimmed
+            ai.deartalk.android.data.SpeechIntent.REQUEST -> "$clean."
+            ai.deartalk.android.data.SpeechIntent.CONFIRM -> "$clean?"
+            ai.deartalk.android.data.SpeechIntent.AUTO -> trimmed
         }
     }
 
@@ -874,7 +878,7 @@ class DearTalkIntentEngine(
         rawSourceText: String,
         sourceLangCode: String,
         targetLangCode: String,
-        targetIntent: ai.deartalk.android.live.data.SpeechIntent,
+        targetIntent: ai.deartalk.android.data.SpeechIntent,
         tone: String? = null,
         packageName: String = "",
         conversationContext: List<String> = emptyList()
@@ -914,10 +918,10 @@ class DearTalkIntentEngine(
         tone: String? = null,
         packageName: String = "",
         conversationContext: List<String> = emptyList(),
-        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
-    ): Pair<String, ai.deartalk.android.live.data.SpeechIntent> = withContext(Dispatchers.IO) {
+        speechIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.AUTO
+    ): Pair<String, ai.deartalk.android.data.SpeechIntent> = withContext(Dispatchers.IO) {
         val trimmed = voiceInput.trim()
-        if (trimmed.isBlank()) return@withContext Pair("", ai.deartalk.android.live.data.SpeechIntent.STATEMENT)
+        if (trimmed.isBlank()) return@withContext Pair("", ai.deartalk.android.data.SpeechIntent.STATEMENT)
 
         if (!isModelLoaded && sharedInitJob?.isActive == true) {
             try { sharedInitJob?.join() } catch (_: Throwable) {}
@@ -951,10 +955,10 @@ class DearTalkIntentEngine(
             text = trimmed,
             languageCode = effectiveSourceLangCode
         )
-        val defaultFallbackIntent = if (isExplicitQuestion) ai.deartalk.android.live.data.SpeechIntent.QUESTION else ai.deartalk.android.live.data.SpeechIntent.STATEMENT
-        val expectedFallback = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) speechIntent else defaultFallbackIntent
+        val defaultFallbackIntent = if (isExplicitQuestion) ai.deartalk.android.data.SpeechIntent.QUESTION else ai.deartalk.android.data.SpeechIntent.STATEMENT
+        val expectedFallback = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) speechIntent else defaultFallbackIntent
 
-        val intentRuleSection = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+        val intentRuleSection = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
             "Target Intent: ${speechIntent.name}"
         } else ""
 
@@ -983,12 +987,12 @@ class DearTalkIntentEngine(
                     if (processed.isBlank()) processed = trimmed
                     processed = ai.deartalk.android.agent.prompt.PromptTemplateFactory.sanitizeKeyboardOutput(trimmed, processed, isExplicitQuestion)
                     
-                    val finalDetectedIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+                    val finalDetectedIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
                         speechIntent
                     } else if (hasExplicitIntentTag) {
                         detectedIntent
                     } else {
-                        ai.deartalk.android.live.data.MultilingualIntentHeuristic.guessIntent(processed, targetProfile.code)
+                        ai.deartalk.android.data.MultilingualIntentHeuristic.guessIntent(processed, targetProfile.code)
                     }
 
                     processed = targetProfile.applyPostProcessing(processed, finalDetectedIntent)
@@ -1006,10 +1010,10 @@ class DearTalkIntentEngine(
         if (packageName.isNotBlank()) {
             AppScopedUtteranceCache.shared.addUtterance(packageName, trimmed)
         }
-        val fallbackIntent = if (speechIntent != ai.deartalk.android.live.data.SpeechIntent.AUTO) {
+        val fallbackIntent = if (speechIntent != ai.deartalk.android.data.SpeechIntent.AUTO) {
             speechIntent
         } else {
-            ai.deartalk.android.live.data.MultilingualIntentHeuristic.guessIntent(trimmed, effectiveSourceLangCode)
+            ai.deartalk.android.data.MultilingualIntentHeuristic.guessIntent(trimmed, effectiveSourceLangCode)
         }
         Pair(trimmed, fallbackIntent)
     }
@@ -1024,7 +1028,7 @@ class DearTalkIntentEngine(
         tone: String? = null,
         packageName: String = "",
         conversationContext: List<String> = emptyList(),
-        speechIntent: ai.deartalk.android.live.data.SpeechIntent = ai.deartalk.android.live.data.SpeechIntent.AUTO
+        speechIntent: ai.deartalk.android.data.SpeechIntent = ai.deartalk.android.data.SpeechIntent.AUTO
     ): String = translateWithIntent(
         voiceInput = voiceInput,
         targetLangCode = targetLangCode,

@@ -1,4 +1,4 @@
-# ✨ DearTalkAI: 100% On-Device AI Android Keyboard (IME)
+# ✨ DearTalk Voice Keyboard: 100% On-Device AI Android Keyboard (IME)
 
 <div align="center">
 
@@ -11,12 +11,13 @@
 [![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-key-platform-features)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-core-principles)
 [![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-privacy--security-guarantee)
+[![P2P Model Vault: Enabled](https://img.shields.io/badge/Storage-Zero%20Duplicate-brightgreen.svg)](#-cobuild-ai-ecosystem--dedicated-family-apps)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen)](https://github.com/smilelife/deartalk-ai/actions)
 
-**DearTalkAI** is an open-source, privacy-first, 100% on-device AI communication assistant built as an **Android Custom Keyboard (IME)**.
+**DearTalk Voice Keyboard** is an open-source, privacy-first, 100% on-device AI communication assistant built as an **Android Custom Keyboard (IME)**.
 
-It refines typed text and spoken voice (STT) with real-time, context-aware tone adjustments, typo correction, and multilingual translations — powered strictly by local on-device neural networks (Google Gemma via LiteRT GPU) without any network connection.
+It refines typed text and spoken voice (STT) with real-time, context-aware tone adjustments, typo correction, and natural speech refinement — powered strictly by local on-device neural networks (Google Gemma via LiteRT GPU) without any network connection.
 
 [Key Features](#-key-platform-features) • [Before & After Samples](#-tone-transformation-samples) • [Architecture](docs/ARCHITECTURE.md) • [Long-Term Roadmap](docs/ROADMAP.md) • [Model Specs](docs/MODELS.md) • [Testing](docs/TESTING.md) • [Contributing](CONTRIBUTING.md)
 
@@ -28,27 +29,25 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.5` | **Android 16 (API 36)** | **Production Stable** | Zero-Lock NPU Architecture (Zero Inference Stall), Anti-Distortion Prompt, Settings Hub Redesign (Live Always Visible), Unified 10s Speech Silence Timeout |
+| 🤖 **DearTalk Voice Keyboard** | `v1.1.5` | **Android 16 (API 36)** | **Production Stable** | Dedicated Voice Keyboard IME, 6 Tone Presets, Zero-Lock NPU Architecture, P2P Mesh Model Vault Integration |
 
 ---
 
 ## 📱 On-Device AI Showcase (Samsung Galaxy S22 Ultra)
 
-| 🎙️ Voice Studio & Tone Refinement | 🌐 2-Way Live Multilingual Interpreter | 🔒 On-Device Privacy & Interactive Sandbox |
+| 🎙️ Voice Studio & Tone Refinement | 🏛️ P2P Mesh Model Vault | 🔒 On-Device Privacy & Interactive Sandbox |
 | :---: | :---: | :---: |
 | <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI Voice Studio Tone Refinement"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI Live Multilingual Interpreter"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI Privacy Sandbox"> |
-| **0ms Speech Tone Transformation**<br>Refines informal/raw speech (*"오늘 밥 같이 먹을래?"*) into polite, context-aware expressions (*"오늘 식사 함께 하실 수 있으실까요?"*). | **Simultaneous 2-Way Interpreter**<br>`🇰🇷 KO ⇄ 🇺🇸 EN` (and ID, JA, ES) with dual-gender vocal timbre and 4-tier pitch calibration. | **100% Air-Gapped Privacy Sandbox**<br>Zero network transmission (`🔒 100% Safe - 0% Server Traffic`). Local neural inference running inside your device. |
+| **0ms Speech Tone Transformation**<br>Refines informal/raw speech (*"오늘 밥 같이 먹을래?"*) into polite, context-aware expressions (*"오늘 식사 함께 하실 수 있으실까요?"*). | **Zero Duplicate Storage (P2P Vault)**<br>Shares on-device SLM weights (Gemma 4 E2B) seamlessly with sibling apps (**DearTalk Voice Translator** & **DearMind**) with **0MB duplicate storage**. | **100% Air-Gapped Privacy Sandbox**<br>Zero network transmission (`🔒 100% Safe - 0% Server Traffic`). Local neural inference running inside your device. |
 
 ---
 
 ## 🌟 Key Platform Features
 
-### 🎙️ 1:1 Real-Time Face-to-Face Live Interpreter & Recorder (`DearTalkLiveActivity`)
-- **Memory-Isolated Full-Screen Session:** Dedicated activity executing 1:1 bidirectional real-time interpretation with SQLite persistent history safely outside IME memory space.
-- **2-Way Dual Mic & 180° Face-to-Face Stage:** Symmetric top-down rotation view for counterparty conversations and `[🙋 Speak]` / `[👂 Listen]` dual action bars.
-- **On-Device AI Pack & Hardware Diagnostics:** Integrated inside Settings bottom sheet for device RAM/storage diagnostics and Gemma 4 local AI pack (PAD) download/purge management.
-- **Zero-Hardcoding Post-Hoc Intent Rewriting:** Real-time conversational tone tuning into Questions, Declarative Statements, or Requests preserving core context.
-- **Zero-Latency Audio Replay & Multilingual TTS:** Instant natural voice synthesis and playback for counterparties.
+### 🏛️ Cobuild AI Ecosystem & Dedicated Family Apps
+- **Standalone Separation:** To maximize performance and domain focus, face-to-face live interpretation is now independently available as **[DearTalk Voice Translator (`ai.deartalk.translator`)](../deartalk-translator)**.
+- **P2P Mesh Model Vault:** Both `DearTalk Voice Keyboard` and `DearTalk Voice Translator` (along with `DearMind`) share local on-device SLM weights seamlessly via Android `signature`-protected `ContentProvider` (0MB duplicate storage, 0MB additional downloads).
+- **Direct Family Launcher:** Built-in family apps hub card lets users launch or install sibling apps with a single tap.
 
 ### 📱 Android Custom Keyboard (`deartalk-android`)
 - **Android 15 & Target SDK 35 Ready:** Built on modern modular Jetpack Compose UI architecture.

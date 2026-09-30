@@ -1,6 +1,6 @@
 package ai.deartalk.android.agent.language
 
-import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.data.SpeechIntent
 
 /**
  * 🎯 언어별 특정 화행(Speech Intent)에 대한 프롬프트 지침 및 종결 부호 스펙
