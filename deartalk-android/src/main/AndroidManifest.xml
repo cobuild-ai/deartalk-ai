@@ -4,8 +4,18 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Android 11+ (API 30+) On-Device Speech Recognition & TTS Package Visibility -->
+    <!-- 🏛️ Cobuild AI 온디바이스 공통 모델 공유 전용 서명 권한 (동일 Keystore 보호) -->
+    <permission
+        android:name="ai.cobuild.permission.ACCESS_ONDEVICE_MODEL"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="ai.cobuild.permission.ACCESS_ONDEVICE_MODEL" />
+
+    <!-- Android 11+ (API 30+) On-Device Speech Recognition, TTS & Family Apps Package Visibility -->
     <queries>
+        <package android:name="ai.deartalk.android" />
+        <package android:name="ai.deartalk.translator" />
+        <package android:name="ai.dearmind.android" />
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
@@ -22,6 +32,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DearTalk">
+
+        <!-- 🏛️ Cobuild AI 온디바이스 공통 모델 공유 프로바이더 (P2P Mesh) -->
+        <provider
+            android:name=".data.vault.CobuildModelProvider"
+            android:authorities="${applicationId}.modelprovider"
+            android:exported="true"
+            android:readPermission="ai.cobuild.permission.ACCESS_ONDEVICE_MODEL" />
 
         <!-- 🏎️ Qualcomm Hexagon NPU DSP RPC Native Library (Zero Crash via required=false) -->
         <uses-native-library
@@ -41,13 +58,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 🎙️ 온디바이스 AI 1:1 대면 대화 & 보이스 레코더 (DearTalk Live) 액티비티 -->
-        <activity
-            android:name=".live.DearTalkLiveActivity"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:label="DearTalk Live"
-            android:theme="@style/Theme.DearTalk" />
+
 
         <!-- DearTalk IME Service (핵심 키보드 서비스) -->
         <service

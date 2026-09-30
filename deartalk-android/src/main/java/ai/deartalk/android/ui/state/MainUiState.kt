@@ -9,9 +9,8 @@ data class MainUiState(
     val isImeEnabled: Boolean = false,
     val isImeSelected: Boolean = false,
     val isModelLoaded: Boolean = false,
-    val isAutoLanguage: Boolean = true,
-    val selectedLanguageCode: String = "ko",
-    val languageDisplayTitle: String = "한국어",
+    val loadedModelName: String = "온디바이스 음성 AI 키보드",
+    val languageDisplayTitle: String = "한국어 (시스템 언어 자동 연동)",
     val isListening: Boolean = false,
     val recognizedLiveText: String = "",
     val rawUtteranceText: String = "",
@@ -20,5 +19,7 @@ data class MainUiState(
     val testInputText: String = "",
     val activePresetText: String = "",
     val silenceTimeoutMs: Float = 1500f,
+    val isAutoLanguage: Boolean = true,
+    val selectedLanguageCode: String = "ko",
     val selectedKoreanKeyboardType: KoreanKeyboardType = KoreanKeyboardType.DUBEOLSIK
 )

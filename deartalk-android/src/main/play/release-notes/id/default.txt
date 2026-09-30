@@ -1,3 +1,4 @@
-- Mengatasi hambatan inferensi NPU on-device untuk kinerja latar belakang yang mulus
-- Memperkuat prompt SLM untuk mempertahankan 100% maksud kalimat asli tanpa pemotongan
-- Privasi air-gap 100% on-device dan penerjemahan langsung 59 bahasa
+- 🎨 Visual & Ikon Minimalis Google Modern: Ikon launcher dan grafis Play Store baru sesuai panduan Material 3.
+- 🧠 Arsitektur SLM On-Device (Gemma 4 E2B LiteRT): Peningkatan manajemen siklus hidup AI dengan struktur memori Zero-Leak.
+- ⚡ Intent Bicara & Sandbox Suara: Peningkatan inferensi intent multibahasa dan stabilitas input suara untuk pengetikan optimal.
+- 📸 Sinkronisasi Aset Toko: Pembaruan 21 screenshot (KO/EN/ID) dengan pipeline rilis otomatis on-device.

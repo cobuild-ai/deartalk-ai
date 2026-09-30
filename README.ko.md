@@ -1,4 +1,4 @@
-# ✨ DearTalkAI: 100% 온디바이스 AI 안드로이드 키보드 (IME)
+# ✨ DearTalk 음성 키보드 (DearTalk Voice Keyboard): 100% 온디바이스 AI 키보드 (IME)
 
 <div align="center">
 
@@ -10,12 +10,13 @@
 
 [![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-안드로이드-키보드-주요-기능)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-핵심-엔지니어링-원칙)
-[![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-완벽한-개인정보-보호-보증)
+[![Zero Network](https://img.shields.io/badge/Privacy-100%25%20오프라인%20(Zero%20Network)-success)](#-완벽한-개인정보-보호-보증)
+[![P2P Model Vault: Enabled](https://img.shields.io/badge/저장공간-중복0MB-brightgreen.svg)](#-cobuild-ai-패밀리-앱-생태계--p2p-메쉬-모델-볼트)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**DearTalkAI**는 외부 네트워크 연결 없이 사용자 기기 내부에서 100% 동작하는 오픈소스 온디바이스 AI **안드로이드 커스텀 키보드(IME)**입니다.
+**DearTalk 음성 키보드 (DearTalk Voice Keyboard)**는 외부 네트워크 연결 없이 사용자 기기 내부에서 100% 동작하는 오픈소스 온디바이스 AI **안드로이드 커스텀 키보드(IME)**입니다.
 
-타이핑한 텍스트와 오프라인 음성 입력(STT)을 실시간으로 분석하여, 문맥에 맞는 6종 어조 변환, 맞춤법 교정, 다국어 번역을 완전한 보안 환경에서 즉시 제공합니다. (Google Gemma LiteRT GPU 온디바이스 추론 탑재)
+타이핑한 텍스트와 오프라인 음성 입력(STT)을 실시간으로 분석하여, 문맥에 맞는 6종 어조 변환, 맞춤법 교정, 자연스러운 문맥 다듬기를 완전한 보안 환경에서 즉시 제공합니다. (Google Gemma LiteRT GPU 온디바이스 추론 탑재)
 
 [주요 기능](#-안드로이드-키보드-주요-기능) • [어조 변환 예시](#-어조-변환-사례) • [시스템 아키텍처](docs/ARCHITECTURE.md) • [기술 로드맵](docs/ROADMAP.md) • [검증 및 테스트](docs/TESTING.md) • [기여 가이드](CONTRIBUTING.md)
 
@@ -27,27 +28,25 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.5` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | NPU 제로 락 아키텍처(추론 스톨 원천 해결), 원문 왜곡 방지 프롬프트, 메인 설정 허브 개편(Live 상시 노출), 단일 10초 무음 안전 대기 |
+| 🤖 **DearTalk 음성 키보드** | `v1.1.5` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 키보드 IME 기능 집중, 6종 어조 변환, NPU 제로 락 아키텍처, P2P 메쉬 모델 볼트(0MB 중복 저장) 탑재 |
 
 ---
 
 ## 📱 온디바이스 AI 실기기 쇼케이스 (Samsung Galaxy S22 Ultra)
 
-| 🎙️ 보이스 스튜디오 & 고운말 톤 스피킹 | 🌐 양방향 실시간 다국어 통역기 | 🔒 온디바이스 프라이버시 & 대화형 샌드박스 |
+| 🎙️ 보이스 스튜디오 & 고운말 톤 스피킹 | 🏛️ P2P 메쉬 모델 볼트 | 🔒 온디바이스 프라이버시 & 대화형 샌드박스 |
 | :---: | :---: | :---: |
 | <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI 보이스 스튜디오 고운말 톤 변환"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI 실시간 다국어 통역기"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI 온디바이스 프라이버시 샌드박스"> |
-| **0ms 즉각 음성 톤 조율**<br>날것의 구어체 발화(*"오늘 밥 같이 먹을래?"*)를 정중하고 단정한 표현(*"오늘 식사 함께 하실 수 있으실까요?"*)으로 즉각 교정. | **실시간 양방향 동시통역**<br>`🇰🇷 한국어 ⇄ 🇺🇸 영어` (및 인도네시아어, 일본어, 스페인어) 지원, 여성/남성 음색 및 4단계 피치 조율. | **100% 에어갭 안심 샌드박스**<br>외부 네트워크 전송 0% (`🔒 100% 안전 - 외부 서버 통신 0%`). 내 스마트폰 내부에서만 완벽히 격리 실행. |
+| **0ms 즉각 음성 톤 조율**<br>날것의 구어체 발화(*"오늘 밥 같이 먹을래?"*)를 정중하고 단정한 표현(*"오늘 식사 함께 하실 수 있으실까요?"*)으로 즉각 교정. | **저장공간 중복 0MB (P2P Vault)**<br>패밀리 앱(**DearTalk 음성 통역기**, **DearMind**)과 온디바이스 SLM 모델(Gemma 4 E2B)을 안전하게 공유하여 용량 낭비 원천 차단. | **100% 에어갭 안심 샌드박스**<br>외부 네트워크 전송 0% (`🔒 100% 안전 - 외부 서버 통신 0%`). 내 스마트폰 내부에서만 완벽히 격리 실행. |
 
 ---
 
 ## 🌟 안드로이드 키보드 주요 기능
 
-### 🎙️ 1:1 실시간 대면 통역기 & 지능형 보이스 레코더 (`DearTalkLiveActivity`)
-- **메모리 격리 독립 풀스크린 대화 세션:** 키보드 IME 프로세스의 메모리 안정성을 위해 분리된 전용 액티비티에서 1:1 양방향 실시간 대면 통역 및 SQLite 대화록 영속화.
-- **2-Way 듀얼 마이크 & 180° 대면 회전:** 맞은편 상대방과의 대화를 위한 상하 대칭 회전 뷰 및 `[🙋 내가 말하기]`, `[👂 상대방 듣기]` 듀얼 액션 바.
-- **온디바이스 AI 팩 & 하드웨어 진단 통합:** 설정 바텀시트에서 RAM/스토리지 상태 진단 및 Gemma 4 온디바이스 AI 모델 팩(PAD) 다운로드/퍼지 관리.
-- **Zero-Hardcoding 사후 의도 조율:** 대화 완료 후에도 의문문, 평서문, 요청문으로 톤을 자유롭게 재작성하는 실시간 지능형 엔진.
-- **0ms 즉각 다시 듣기 & 다국어 TTS:** 상대방 발화 및 번역문 즉시 음성 재생 지원.
+### 🏛️ Cobuild AI 패밀리 앱 생태계 & P2P 메쉬 모델 볼트
+- **독립 통역 앱 분리:** 대화 상호작용 및 통역 기능의 몰입도를 극대화하기 위해 1:1 대면 실시간 통역기는 **[DearTalk 음성 통역기 (`ai.deartalk.translator`)](../deartalk-translator)**로 완전 독립 분리되었습니다.
+- **Cobuild AI P2P 메쉬 모델 볼트:** `DearTalk 음성 키보드`와 `DearTalk 음성 통역기`(및 `DearMind`)는 Android `signature` 보호 권한 기반의 `ContentProvider`를 통해 기기 내 1.5GB~2.4GB 모델을 1회만 저장하고 무손실 제로카피로 공유합니다.
+- **원터치 패밀리 런처:** 키보드 설정 내 패밀리 앱 섹션을 통해 통역기 및 마음 케어 일기 앱으로 언제든 즉시 이동/설치 가능합니다.
 
 ### 📱 커스텀 키보드 (`deartalk-android`)
 - **Android 15 & Target SDK 35 완벽 대응:** 최신 모듈형 Jetpack Compose 기반의 가볍고 미려한 UI.

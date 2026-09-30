@@ -1,6 +1,6 @@
 package ai.deartalk.android.agent.prompt
 
-import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.data.SpeechIntent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -138,7 +138,7 @@ class PromptTemplateFactoryTest {
 
     @Test
     fun testBuildCorrectionPrompt_korean_gemmaDefault() {
-        // 단일 표준 모델 Gemma 4 E2B 기본값 검증
+        // 단일 표준 모델 Gemma 4 E2B 기본값 검증 (한국어 네이티브 스크립트 3대 기둥)
         val prompt = PromptTemplateFactory.buildCorrectionPrompt(
             trimmed = "밥 먹었어",
             isInputKorean = true,
@@ -147,8 +147,9 @@ class PromptTemplateFactoryTest {
             speechIntent = SpeechIntent.QUESTION
         )
         assertTrue(prompt.contains("<start_of_turn>user"))
-        assertTrue(prompt.contains("모바일 키보드의 문장 교정 및 다듬기 엔진"))
-        assertTrue(prompt.contains("원문 왜곡 금지 및 내용 생략 금지"))
+        assertTrue(prompt.contains("문장 다듬기 엔진"))
+        assertTrue(prompt.contains("언어 일치"))
+        assertTrue(prompt.contains("의미 보존"))
         assertTrue(prompt.contains("밥 먹었어"))
         assertTrue(prompt.contains("<end_of_turn>"))
         assertTrue(prompt.contains("<start_of_turn>model"))
@@ -178,7 +179,7 @@ class PromptTemplateFactoryTest {
             isInputEnglish = false,
             speechIntent = SpeechIntent.AUTO
         )
-        assertTrue(prompt.contains("mesin perapih kalimat"))
+        assertTrue(prompt.contains("penyempurnaan kalimat"))
         assertTrue(prompt.contains("kamu mau kemana"))
         assertTrue(prompt.contains("<start_of_turn>user"))
         assertTrue(prompt.contains("<end_of_turn>"))
@@ -197,10 +198,9 @@ class PromptTemplateFactoryTest {
             speechIntent = SpeechIntent.QUESTION
         )
         assertTrue(prompt.contains("<start_of_turn>user"))
-        assertTrue(prompt.contains("텍스트 어조/톤 변환기"))
-        assertTrue(prompt.contains("원문 왜곡 금지"))
-        assertTrue(prompt.contains("내용 생략 금지"))
-        assertTrue(prompt.contains("억지 한자어 치환 절대 금지"))
+        assertTrue(prompt.contains("어조 변환 엔진"))
+        assertTrue(prompt.contains("언어 일치"))
+        assertTrue(prompt.contains("의미 보존"))
         assertTrue(prompt.contains("공손하게"))
         assertTrue(prompt.contains("식사 같이 하실래요"))
         assertTrue(prompt.contains("<end_of_turn>"))
@@ -216,8 +216,7 @@ class PromptTemplateFactoryTest {
             isIndonesianLocale = false,
             isInputEnglish = false
         )
-        assertTrue(prompt.contains("원문 왜곡 금지 및 내용 생략 금지"))
-        assertTrue(prompt.contains("이유, 상황, 요구 등 원문의 모든 의미 요소를 빠짐없이 100% 온전히 포함"))
+        assertTrue(prompt.contains("의미 보존"))
         assertTrue(prompt.contains("천원만 주세요 배고파요"))
     }
 

@@ -36,31 +36,29 @@ object DearTalkSettings {
         return getPrefs(context).getBoolean(KEY_USE_AUTO_LANGUAGE, true)
     }
 
-    fun setAutoLanguage(context: Context, isAuto: Boolean) {
-        getPrefs(context).edit().putBoolean(KEY_USE_AUTO_LANGUAGE, isAuto).apply()
+    fun setAutoLanguage(context: Context, auto: Boolean) {
+        getPrefs(context).edit().putBoolean(KEY_USE_AUTO_LANGUAGE, auto).apply()
     }
 
     fun getSelectedLanguageCode(context: Context): String {
-        val defaultLang = Locale.getDefault().language
-        return getPrefs(context).getString(KEY_SELECTED_LANGUAGE_CODE, if (defaultLang == "ko") "ko" else "en") ?: "ko"
+        return getPrefs(context).getString(KEY_SELECTED_LANGUAGE_CODE, "ko") ?: "ko"
     }
 
     fun setSelectedLanguageCode(context: Context, code: String) {
         getPrefs(context).edit().putString(KEY_SELECTED_LANGUAGE_CODE, code).apply()
     }
 
-    fun getEffectiveLocale(context: Context): Locale {
-        if (isAutoLanguage(context)) {
-            return Locale.getDefault()
+    /**
+     * 🌐 기본 언어 연동:
+     * - 자동 모드(기본값): 기기 시스템 기본 언어(Locale.getDefault()) 100% 자동 연동
+     * - 수동 모드: 사용자가 직접 선택한 언어(ko, en, id, ja, zh 등) 적용
+     */
+    fun getEffectiveLocale(context: Context? = null): Locale {
+        if (context != null && !isAutoLanguage(context)) {
+            val code = getSelectedLanguageCode(context)
+            return Locale.forLanguageTag(code)
         }
-        val code = getSelectedLanguageCode(context)
-        return when {
-            code.contains("-") -> {
-                val parts = code.split("-")
-                Locale(parts[0], parts[1])
-            }
-            else -> Locale(code)
-        }
+        return Locale.getDefault()
     }
 
     private const val KEY_SPEECH_SILENCE_MILLIS = "key_speech_silence_millis"
@@ -74,16 +72,20 @@ object DearTalkSettings {
     }
 
     fun getLanguageDisplayTitle(context: Context): String {
-        val isAuto = isAutoLanguage(context)
         val locale = getEffectiveLocale(context)
+        val isAuto = isAutoLanguage(context)
         val targetLang = SUPPORTED_LANGUAGES.firstOrNull { it.code.startsWith(locale.language) }
         val name = targetLang?.let { "${it.flag} ${it.nativeName}" } ?: locale.displayLanguage
         val isKorean = UiStrings.isKo
         val isIndonesian = UiStrings.isId
         return if (isAuto) {
-            if (isKorean) "$name (시스템 기본)" else if (isIndonesian) "$name (Otomatis)" else "$name (Auto)"
+            if (isKorean) "$name (시스템 언어 자동 연동)"
+            else if (isIndonesian) "$name (Otomatis Sistem)"
+            else "$name (System Auto)"
         } else {
-            if (isKorean) "$name (사용자 지정)" else if (isIndonesian) "$name (Manual)" else "$name (Custom)"
+            if (isKorean) "$name (수동 선택)"
+            else if (isIndonesian) "$name (Dipilih Manual)"
+            else "$name (Manual)"
         }
     }
 
@@ -101,30 +103,6 @@ object DearTalkSettings {
     fun setKoreanKeyboardType(context: Context, type: KoreanKeyboardType) {
         getPrefs(context).edit().putString(KEY_KOREAN_KEYBOARD_TYPE, type.name).apply()
     }
-
-    private const val KEY_KEYBOARD_MODE = "key_keyboard_mode"
-    private const val KEY_ONBOARDING_MODE_SHOWN = "key_onboarding_mode_shown"
-
-    fun getKeyboardMode(context: Context): KeyboardMode {
-        val name = getPrefs(context).getString(KEY_KEYBOARD_MODE, KeyboardMode.BASIC.name)
-        return try {
-            KeyboardMode.valueOf(name ?: KeyboardMode.BASIC.name)
-        } catch (_: Exception) {
-            KeyboardMode.BASIC
-        }
-    }
-
-    fun setKeyboardMode(context: Context, mode: KeyboardMode) {
-        getPrefs(context).edit().putString(KEY_KEYBOARD_MODE, mode.name).apply()
-    }
-
-    fun isOnboardingModeShown(context: Context): Boolean {
-        return getPrefs(context).getBoolean(KEY_ONBOARDING_MODE_SHOWN, false)
-    }
-
-    fun setOnboardingModeShown(context: Context, shown: Boolean) {
-        getPrefs(context).edit().putBoolean(KEY_ONBOARDING_MODE_SHOWN, shown).apply()
-    }
 }
 
 enum class KoreanKeyboardType {
@@ -132,12 +110,3 @@ enum class KoreanKeyboardType {
     CHEONJIIN
 }
 
-/**
- * 🎛️ 2-Tier 키보드 경험 모드
- * - BASIC (기본 모드): 언어 고정, 번역 숨김, 톤앤매너/화행 보정에 집중 (3세 이상 전연령 초직관 경험)
- * - PRO (프로 모드): 다국어 실시간 번역 + 톤앤매너 + 2-Track 통역 결합 (글로벌 파워 유저)
- */
-enum class KeyboardMode {
-    BASIC,
-    PRO
-}

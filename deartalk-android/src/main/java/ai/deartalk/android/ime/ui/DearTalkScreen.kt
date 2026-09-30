@@ -7,6 +7,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,18 +32,58 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.CustomToneManager
-import ai.deartalk.android.data.pref.KeyboardMode
-import ai.deartalk.android.data.pref.TranslationTarget
 import ai.deartalk.android.data.pref.UiStrings
 import ai.deartalk.android.ime.ui.theme.*
-import ai.deartalk.android.live.data.SpeechIntent
-import ai.deartalk.android.live.data.getLabel
+import ai.deartalk.android.data.SpeechIntent
+import ai.deartalk.android.data.getLabel
+import ai.deartalk.android.ui.state.ImeUiState
 
 enum class MicUiState {
     IDLE,
     PREPARING,
     LISTENING,
     PROCESSING_AI
+}
+
+/**
+ * 🎯 DearTalk 키보드 화면 (MVI Presentation)
+ * - 단일 불변 ImeUiState를 수신하고 ImeUiEvent 단일 채널로 모든 사용자 액션을 전달
+ */
+@Composable
+fun DearTalkScreen(
+    uiState: ImeUiState,
+    onEvent: (ImeUiEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    DearTalkScreen(
+        micUiState = uiState.micUiState,
+        activeTier = uiState.activeTier,
+        recognizedText = uiState.recognizedText,
+        statusMessage = uiState.statusMessage,
+        aiText = uiState.aiText,
+        tones = uiState.tones,
+        aiModes = uiState.aiModes,
+        selectedTone = uiState.selectedTone,
+        availableTones = if (uiState.tones.isNotEmpty()) uiState.tones else CustomToneManager.DEFAULT_TONES,
+        onSelectTone = { onEvent(ImeUiEvent.SelectTone(it)) },
+        selectedSpeechIntent = uiState.selectedSpeechIntent,
+        detectedSpeechIntent = uiState.detectedSpeechIntent,
+        onSelectSpeechIntent = { onEvent(ImeUiEvent.SelectSpeechIntent(it)) },
+        isRetransforming = uiState.isRetransforming,
+        onApplyTone = { onEvent(ImeUiEvent.ApplyTone(it)) },
+        onApplyAiMode = { onEvent(ImeUiEvent.ApplyAiMode(it)) },
+        onMainMicClick = { onEvent(ImeUiEvent.MainMicClick) },
+        onApplyAiText = { onEvent(ImeUiEvent.ApplyAiText(it)) },
+        onClearAiTextClick = { onEvent(ImeUiEvent.ClearAiTextClick) },
+        onDeleteClick = { onEvent(ImeUiEvent.DeleteClick) },
+        onDeleteSentenceClick = { onEvent(ImeUiEvent.DeleteSentenceClick) },
+        onSpaceClick = { onEvent(ImeUiEvent.SpaceClick) },
+        onEnterClick = { onEvent(ImeUiEvent.EnterClick) },
+        onSwitchToKeyboardClick = { onEvent(ImeUiEvent.SwitchToKeyboardClick) },
+        onSettingsClick = { onEvent(ImeUiEvent.SettingsClick) },
+        onLiveClick = { onEvent(ImeUiEvent.LiveClick) },
+        onDownloadPackClick = { onEvent(ImeUiEvent.DownloadPackClick) }
+    )
 }
 
 @Composable
@@ -52,13 +95,6 @@ fun DearTalkScreen(
     aiText: String,
     tones: List<CustomTone> = emptyList(),
     aiModes: List<ai.deartalk.android.data.pref.AiModeItem> = emptyList(),
-    // 🌐 신규 모드 & 톤 & 화행 파라미터
-    isTranslationMode: Boolean = false,
-    keyboardMode: ai.deartalk.android.data.pref.KeyboardMode = ai.deartalk.android.data.pref.KeyboardMode.BASIC,
-    selectedTargetLanguage: TranslationTarget = CustomToneManager.DEFAULT_TRANSLATIONS.first(),
-    availableLanguages: List<TranslationTarget> = CustomToneManager.DEFAULT_TRANSLATIONS,
-    onToggleTranslationMode: () -> Unit = {},
-    onSelectTargetLanguage: (TranslationTarget) -> Unit = {},
     selectedTone: CustomTone = CustomToneManager.DEFAULT_TONES.first(),
     availableTones: List<CustomTone> = CustomToneManager.DEFAULT_TONES,
     onSelectTone: (CustomTone) -> Unit = {},
@@ -91,9 +127,6 @@ fun DearTalkScreen(
     val refinedAi = aiText.trim()
     val displayText = refinedAi.ifBlank { rawStt }
     val hasContent = displayText.isNotBlank()
-
-    var isToneMenuExpanded by remember { mutableStateOf(false) }
-    var isLangMenuExpanded by remember { mutableStateOf(false) }
 
     val transition = rememberInfiniteTransition(label = "mic_pulse")
     val pulseScale by transition.animateFloat(
@@ -179,40 +212,15 @@ fun DearTalkScreen(
                     },
                     modifier = Modifier
                         .height(44.dp)
-                        .width(52.dp),
+                        .width(58.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DearTalkKeyActive),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Keyboard, contentDescription = UiStrings.keyboardContentDesc, tint = Color.White, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Keyboard, contentDescription = UiStrings.keyboardContentDesc, tint = Color.White, modifier = Modifier.size(17.dp))
                         Spacer(modifier = Modifier.height(1.dp))
-                        Text(UiStrings.keyboard, color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                    }
-                }
-
-                // 🎙️ 실시간 대면 통역 바로가기 아이콘 (Live) - 프로 모드 전용!
-                if (keyboardMode == KeyboardMode.PRO) {
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onLiveClick()
-                        },
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                androidx.compose.ui.graphics.Brush.linearGradient(
-                                    listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
-                                )
-                            )
-                    ) {
-                        Icon(
-                            Icons.Default.Translate,
-                            contentDescription = UiStrings.liveTitle,
-                            tint = Color.White,
-                            modifier = Modifier.size(21.dp)
-                        )
+                        Text(UiStrings.keyboard, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
 
@@ -276,136 +284,67 @@ fun DearTalkScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = if (hasContent) Color(0xFF1E293B) else DearTalkSurface
                 ),
-                border = if (hasContent) androidx.compose.foundation.BorderStroke(1.dp, DearTalkSecondary.copy(alpha = 0.5f)) else null
+                border = if (hasContent) androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF38BDF8).copy(alpha = 0.6f)) else null
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 6.dp)
                 ) {
-                    // [캔버스 상단 툴바 스트립] 모드(다듬기/번역) + 톤(비즈니스 등) + 비우기
+                    // [캔버스 상단 툴바 스트립] 펼쳐진 톤앤매너 칩 바 (가로 스크롤) + 우측 [✕] 비우기
+                    val tonesList = if (tones.isNotEmpty()) tones else availableTones
+                    val toneListState = rememberLazyListState()
+                    LaunchedEffect(selectedTone.id) {
+                        val idx = tonesList.indexOfFirst { it.id == selectedTone.id }
+                        if (idx >= 0) {
+                            toneListState.scrollToItem(idx)
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 좌측: [✨ 다듬기] ↔ [🌐 ➔ 영어 ▾] 세그먼트
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        // 좌측: 펼쳐진 톤앤매너 버튼들 (가로 스크롤, 원터치 선택)
+                        LazyRow(
+                            state = toneListState,
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (keyboardMode == ai.deartalk.android.data.pref.KeyboardMode.PRO) {
-                                // [✨ 다듬기] 토글 칩
+                            items(tonesList, key = { it.id }) { tone ->
+                                val isSelected = selectedTone.id == tone.id
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(if (!isTranslationMode) Color(0xFF4338CA) else Color(0xFF334155).copy(alpha = 0.6f))
+                                        .background(if (isSelected) Color(0xFF4338CA) else Color(0xFF1E293B))
                                         .border(
-                                            width = 1.dp,
-                                            color = if (!isTranslationMode) Color(0xFFA5B4FC) else Color.Transparent,
+                                            width = if (isSelected) 1.5.dp else 1.dp,
+                                            color = if (isSelected) Color(0xFFA5B4FC) else Color(0xFF334155),
                                             shape = RoundedCornerShape(6.dp)
                                         )
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            if (isTranslationMode) onToggleTranslationMode()
+                                            onSelectTone(tone)
                                         }
-                                        .padding(horizontal = 7.dp, vertical = 3.dp)
-                                ) {
-                                    Text(
-                                        text = UiStrings.modeRefine,
-                                        fontSize = 10.5.sp,
-                                        fontWeight = if (!isTranslationMode) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (!isTranslationMode) Color.White else DearTalkTextDim
-                                    )
-                                }
-
-                                // [🌐 번역 ▾] 인라인 토글 칩
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(if (isTranslationMode) Color(0xFF0284C7) else Color(0xFF334155).copy(alpha = 0.6f))
-                                        .border(
-                                            width = 1.dp,
-                                            color = if (isTranslationMode) Color(0xFF7DD3FC) else Color.Transparent,
-                                            shape = RoundedCornerShape(6.dp)
-                                        )
-                                        .clickable {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            isLangMenuExpanded = !isLangMenuExpanded
-                                            isToneMenuExpanded = false
-                                        }
-                                        .padding(horizontal = 7.dp, vertical = 3.dp)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tone.icon, fontSize = 11.5.sp)
+                                        Spacer(modifier = Modifier.width(3.5.dp))
                                         Text(
-                                            text = "${selectedTargetLanguage.flag} ${selectedTargetLanguage.name}",
-                                            fontSize = 10.5.sp,
-                                            fontWeight = if (isTranslationMode) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isTranslationMode) Color.White else DearTalkTextDim
-                                        )
-                                        Spacer(modifier = Modifier.width(2.dp))
-                                        Icon(
-                                            Icons.Default.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = if (isTranslationMode) Color.White else DearTalkTextDim,
-                                            modifier = Modifier.size(13.dp)
+                                            text = tone.name,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) Color.White else Color(0xFF94A3B8)
                                         )
                                     }
-                                }
-                            } else {
-                                // 🟢 [기본 모드] 단순화 뱃지 (번역 노이즈 제거)
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(Color(0xFF4338CA).copy(alpha = 0.35f))
-                                        .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                                        .padding(horizontal = 7.dp, vertical = 3.dp)
-                                ) {
-                                    Text(
-                                        text = "💬 " + if (UiStrings.isKo) "기본 모드" else if (UiStrings.isId) "Mode Dasar" else "Basic Mode",
-                                        fontSize = 10.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFFA5B4FC)
-                                    )
-                                }
-                            }
-
-
-                            // 중앙/우측: [💼 비즈니스 ▾] 톤 토글 뱃지
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0xFF1E293B))
-                                    .border(1.dp, Color(0xFF475569), RoundedCornerShape(6.dp))
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        isToneMenuExpanded = !isToneMenuExpanded
-                                        isLangMenuExpanded = false
-                                    }
-                                    .padding(horizontal = 6.dp, vertical = 3.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(selectedTone.icon, fontSize = 10.5.sp)
-                                    Spacer(modifier = Modifier.width(3.dp))
-                                    Text(
-                                        text = selectedTone.name,
-                                        fontSize = 10.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFFE2E8F0)
-                                    )
-                                    Spacer(modifier = Modifier.width(1.dp))
-                                    Icon(
-                                        Icons.Default.ArrowDropDown,
-                                        contentDescription = null,
-                                        tint = DearTalkTextDim,
-                                        modifier = Modifier.size(13.dp)
-                                    )
                                 }
                             }
                         }
 
                         // 우측: [✕] 내용 비우기 미니 버튼 (내용이 있을 때만 노출)
                         if (hasContent) {
+                            Spacer(modifier = Modifier.width(6.dp))
                             Box(
                                 modifier = Modifier
                                     .size(24.dp)
@@ -427,100 +366,8 @@ fun DearTalkScreen(
                         }
                     }
 
-                    // [인라인 언어 선택 바 - PopupWindow 제거로 화면 깜빡임 0%]
-                    AnimatedVisibility(
-                        visible = keyboardMode == ai.deartalk.android.data.pref.KeyboardMode.PRO && isLangMenuExpanded,
-                        enter = expandVertically(animationSpec = tween(150)) + fadeIn(animationSpec = tween(150)),
-                        exit = shrinkVertically(animationSpec = tween(120)) + fadeOut(animationSpec = tween(120))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            availableLanguages.forEach { lang ->
-                                val isSelected = selectedTargetLanguage.id == lang.id
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isSelected) Color(0xFF0284C7) else Color(0xFF1E293B))
-                                        .border(
-                                            1.dp,
-                                            if (isSelected) Color(0xFF7DD3FC) else Color(0xFF334155),
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            isLangMenuExpanded = false
-                                            onSelectTargetLanguage(lang)
-                                        }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(lang.flag, fontSize = 13.sp)
-                                        Spacer(modifier = Modifier.width(5.dp))
-                                        Text(
-                                            lang.name,
-                                            fontSize = 11.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else Color(0xFFCBD5E1)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
 
-                    // [인라인 톤앤매너 선택 바 - PopupWindow 제거로 화면 깜빡임 0%]
-                    AnimatedVisibility(
-                        visible = isToneMenuExpanded,
-                        enter = expandVertically(animationSpec = tween(150)) + fadeIn(animationSpec = tween(150)),
-                        exit = shrinkVertically(animationSpec = tween(120)) + fadeOut(animationSpec = tween(120))
-                    ) {
-                        val tonesList = if (tones.isNotEmpty()) tones else availableTones
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            tonesList.forEach { tone ->
-                                val isSelected = selectedTone.id == tone.id
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isSelected) Color(0xFF0284C7) else Color(0xFF1E293B))
-                                        .border(
-                                            1.dp,
-                                            if (isSelected) Color(0xFF7DD3FC) else Color(0xFF334155),
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            isToneMenuExpanded = false
-                                            onSelectTone(tone)
-                                        }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(tone.icon, fontSize = 13.sp)
-                                        Spacer(modifier = Modifier.width(5.dp))
-                                        Text(
-                                            tone.name,
-                                            fontSize = 11.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else Color(0xFFCBD5E1)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 4.dp),
@@ -606,12 +453,17 @@ fun DearTalkScreen(
                             } else if (hasContent) {
                                 // 🌟 100% 가로폭 스마트 DIFF 뷰
                                 if (rawStt.isNotBlank()) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.Top
+                                    ) {
                                         Box(
                                             modifier = Modifier
+                                                .padding(top = 2.dp)
                                                 .size(20.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFF334155)),
+                                                .background(Color(0xFF334155))
+                                                .border(1.dp, Color(0xFF475569), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(Icons.Default.Mic, contentDescription = UiStrings.sttRaw, tint = Color(0xFF94A3B8), modifier = Modifier.size(11.dp))
@@ -619,29 +471,37 @@ fun DearTalkScreen(
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
                                             text = rawStt,
+                                            modifier = Modifier.weight(1f),
                                             fontSize = 12.sp,
                                             color = Color(0xFF94A3B8),
                                             maxLines = 2
                                         )
                                     }
+                                    Spacer(modifier = Modifier.height(5.dp))
                                 }
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.Top
+                                ) {
                                     Box(
                                         modifier = Modifier
+                                            .padding(top = 2.dp)
                                             .size(20.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFF0C4A6E)),
+                                            .background(Color(0xFF0369A1))
+                                            .border(1.dp, Color(0xFF38BDF8), CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(Icons.Default.SmartToy, contentDescription = UiStrings.aiRefine, tint = Color(0xFF38BDF8), modifier = Modifier.size(12.dp))
+                                        Icon(Icons.Default.SmartToy, contentDescription = UiStrings.aiRefine, tint = Color.White, modifier = Modifier.size(12.dp))
                                     }
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = if (isRetransforming) "✨ AI 문맥 재점검 중..." else refinedAi.ifBlank { rawStt },
-                                        fontSize = 13.5.sp,
-                                        lineHeight = 18.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.weight(1f),
+                                        fontSize = 14.sp,
+                                        lineHeight = 19.sp,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (isRetransforming) Color(0xFF38BDF8) else Color.White
                                     )
                                 }
@@ -719,11 +579,11 @@ fun DearTalkScreen(
                             .height(32.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                if (isActive) Color(0xFF4338CA) else DearTalkKey
+                                if (isActive) Color(0xFF0369A1) else DearTalkKey
                             )
                             .border(
                                 width = if (isActive) 1.5.dp else 1.dp,
-                                color = if (isActive) Color(0xFFA5B4FC) else Color(0xFF6366F1).copy(alpha = 0.25f),
+                                color = if (isActive) Color(0xFF7DD3FC) else Color(0xFF0284C7).copy(alpha = 0.25f),
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .clickable {

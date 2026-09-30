@@ -1,4 +1,4 @@
-# ✨ DearTalkAI: Papan Ketik Android AI 100% On-Device (IME)
+# ✨ DearTalk Voice Keyboard: Papan Ketik Android AI 100% On-Device (IME)
 
 <div align="center">
 
@@ -11,11 +11,12 @@
 [![Platform: Android](https://img.shields.io/badge/Platform-Android%2016%20(API%2036)-3DDC84?logo=android&logoColor=white)](#-fitur-utama-papan-ketik-android)
 [![AI: Google Gemma LiteRT](https://img.shields.io/badge/LLM-Gemma%20LiteRT%20GPU-4285F4?logo=google&logoColor=white)](#-prinsip-utama-rekayasa)
 [![Zero Network](https://img.shields.io/badge/Privacy-100%25%20Offline%20(Zero%20Network)-success)](#-jaminan-privasi--keamanan-mutlak)
+[![P2P Model Vault: Enabled](https://img.shields.io/badge/Penyimpanan-Nol%20Duplikasi-brightgreen.svg)](#-ekosistem-aplikasi-cobuild-ai--p2p-mesh-model-vault)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**DearTalkAI** adalah asisten komunikasi AI sumber terbuka (open-source) yang mengutamakan privasi dan berjalan 100% langsung di dalam perangkat (on-device) tanpa koneksi internet, dibangun sebagai **Papan Ketik Kustom Android (IME)**.
+**DearTalk Voice Keyboard** adalah asisten komunikasi AI sumber terbuka (open-source) yang mengutamakan privasi dan berjalan 100% langsung di dalam perangkat (on-device) tanpa koneksi internet, dibangun sebagai **Papan Ketik Kustom Android (IME)**.
 
-Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesuaian nada bicara secara real-time, koreksi kesalahan ketik, dan terjemahan multibahasa — ditenagai sepenuhnya oleh model neural lokal Google Gemma melalui LiteRT GPU.
+Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesuaian nada bicara secara real-time, koreksi kesalahan ketik, dan penghalusan konteks kalimat alami — ditenagai sepenuhnya oleh model neural lokal Google Gemma melalui LiteRT GPU.
 
 [Fitur Utama](#-fitur-utama-papan-ketik-android) • [Contoh Perubahan Nada](#-contoh-transformasi-nada-bicara) • [Arsitektur Sistem](docs/ARCHITECTURE.md) • [Peta Jalan](docs/ROADMAP.md) • [Pengujian](docs/TESTING.md) • [Panduan Kontribusi](CONTRIBUTING.md)
 
@@ -27,27 +28,25 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Android IME & Live** | `v1.1.5` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Arsitektur Zero-Lock NPU (Bebas Macet Inferensi), Prompt Anti-Distorsi, Desain Ulang Pusat Pengaturan (Live Selalu Tampil), Batas Hening Suara Terpadu 10 Detik |
+| 🤖 **DearTalk Voice Keyboard** | `v1.1.5` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Fokus Papan Ketik IME, 6 Pilihan Nada Bicara, Arsitektur NPU Zero-Lock, P2P Mesh Model Vault (0MB Duplikasi) |
 
 ---
 
 ## 📱 Pameran AI On-Device (Samsung Galaxy S22 Ultra)
 
-| 🎙️ Voice Studio & Gaya Bicara Sopan | 🌐 Penerjemah Multibahasa 2-Arah | 🔒 Privasi On-Device & Kotak Pasir |
+| 🎙️ Voice Studio & Gaya Bicara Sopan | 🏛️ P2P Mesh Model Vault | 🔒 Privasi On-Device & Kotak Pasir |
 | :---: | :---: | :---: |
 | <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI Voice Studio Perubahan Gaya Bicara"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI Penerjemah Langsung Multibahasa"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI Kotak Pasir Privasi On-Device"> |
-| **Transformasi Nada Bicara 0ms**<br>Merombak ucapan santai (*"오늘 밥 같이 먹을래?"*) menjadi kalimat sopan dan tertata (*"오늘 식사 함께 하실 수 있으실까요?"*). | **Penerjemah Simultan 2-Arah**<br>`🇰🇷 Korea ⇄ 🇺🇸 Inggris` (serta ID, JA, ES) dengan pilihan vokal pria/wanita dan 4 tingkat kalibrasi nada. | **Kotak Pasir Privasi 100% Aman**<br>Nol transmisi jaringan ke server luar (`🔒 100% Aman - 0% Lalu Lintas Server`). Berjalan lokal di perangkat Anda. |
+| **Transformasi Nada Bicara 0ms**<br>Merombak ucapan santai (*"오늘 밥 같이 먹을래?"*) menjadi kalimat sopan dan tertata (*"오늘 식사 함께 하실 수 있으실까요?"*). | **Nol Duplikasi Penyimpanan (P2P Vault)**<br>Berbagi bobot model SLM on-device (Gemma 4 E2B) secara mulus dengan aplikasi keluarga (**DearTalk Voice Translator** & **DearMind**) tanpa pemborosan kuota dan ruang. | **Kotak Pasir Privasi 100% Aman**<br>Nol transmisi jaringan ke server luar (`🔒 100% Aman - 0% Lalu Lintas Server`). Berjalan lokal di perangkat Anda. |
 
 ---
 
 ## 🌟 Fitur Utama Papan Ketik Android
 
-### 🎙️ Penerjemah Langsung Tatap Muka 1:1 & Perekam Suara (`DearTalkLiveActivity`)
-- **Sesi Percakapan Layar Penuh Terisolasi Memori:** Aktivitas mandiri untuk penerjemahan tatap muka langsung 2-arah 1:1 dan pencatatan riwayat SQLite tanpa membebani memori keyboard IME.
-- **Mikrofon Ganda 2-Arah & Tampilan Rotasi 180°:** Tampilan simetris atas-bawah untuk percakapan tatap muka dan bilah aksi ganda `[🙋 Bicara]` / `[👂 Dengar]`.
-- **Integrasi Paket AI On-Device & Diagnostik Perangkat Keras:** Terintegrasi di lembar pengaturan untuk diagnostik RAM/penyimpanan dan manajemen unduh/hapus paket model AI lokal Gemma 4 (PAD).
-- **Penyesuaian Niat Pasca-Bicara Tanpa Hardcoding:** Mesin cerdas waktu nyata untuk merombak nada percakapan menjadi Pertanyaan, Pernyataan, atau Permintaan dengan menjaga konteks asli.
-- **Pemutaran Ulang Audio 0ms & TTS Multibahasa:** Sintesis suara alami instan untuk lawan bicara.
+### 🏛️ Ekosistem Aplikasi Cobuild AI & P2P Mesh Model Vault
+- **Pemisahan Aplikasi Mandiri:** Untuk memaksimalkan kenyamanan dan fokus, fitur penerjemah tatap muka langsung 1:1 kini tersedia secara independen sebagai **[DearTalk Penerjemah Suara (`ai.deartalk.translator`)](../deartalk-translator)**.
+- **Cobuild AI P2P Mesh Model Vault:** `DearTalk Voice Keyboard` dan `DearTalk Penerjemah Suara` (serta `DearMind`) berbagi model lokal SLM yang sama melalui `ContentProvider` Android berizin `signature` (0MB duplikasi penyimpanan, 0MB unduhan tambahan).
+- **Peluncur Cepat Keluarga Aplikasi:** Kartu pintasan di pengaturan memungkinkan pengguna membuka atau menginstal aplikasi keluarga hanya dengan satu ketukan.
 
 ### 📱 Papan Ketik Android (`deartalk-android`)
 - **Android 15 & Target SDK 35:** Arsitektur UI modular modern berbasis Jetpack Compose yang ringan dan elegan.

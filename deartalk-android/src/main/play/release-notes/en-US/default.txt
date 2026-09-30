@@ -1,3 +1,4 @@
-- Resolved on-device NPU inference stall for smooth background processing
-- Strengthened SLM prompt to preserve 100% of complex speech intent (reasons/requests)
-- 100% on-device air-gap privacy and 59-language real-time interpretation
+- 🎨 Modern Google Minimalist Visual & Icon: Reimagined app launcher icons and Play Store graphics following Material 3 guidelines.
+- 🧠 On-Device SLM (Gemma 4 E2B LiteRT) Architecture: Upgraded AI lifecycle management with Zero-Leak memory architecture.
+- ⚡ Speech Intent & Voice Sandbox: Enhanced multilingual intent inference and stabilized voice input sandbox for seamless typing.
+- 📸 Store Assets Sync: Updated 21 screenshots across KO/EN/ID with automated on-device release pipeline.

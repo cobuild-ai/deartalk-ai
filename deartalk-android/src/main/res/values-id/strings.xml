@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">DearTalk Voice Keyboard</string>
+    <string name="ime_name">DearTalk Papan Ketik Suara</string>
+    <string name="subtype_ko">Bahasa Korea (DearTalkAI)</string>
+    <string name="subtype_en">Bahasa Inggris (DearTalkAI)</string>
+    <string name="mic_listening">Mendengarkan…</string>
+    <string name="mic_idle">Masukan Suara AI</string>
+    <string name="ai_processing">Menganalisis dan memproses dengan AI…</string>
+</resources>

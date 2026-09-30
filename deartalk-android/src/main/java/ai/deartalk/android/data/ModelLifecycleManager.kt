@@ -149,6 +149,27 @@ class ModelLifecycleManager(private val context: Context) {
 
         if (appLlm != null) {
             paths[KEY_LLM] = appLlm.absolutePath
+            return paths
+        }
+
+        // 3. 🔄 Cobuild AI 패밀리 앱 P2P 메쉬 볼트 감지 (Zero Duplicate Storage)
+        try {
+            val vaultResult = ai.deartalk.android.data.vault.ModelVaultClient.acquireSharedModel(context)
+            if (vaultResult != null) {
+                val targetFile = File(modelDir, "gemma-4-E2B-it.litertlm")
+                if (!targetFile.exists() || targetFile.length() < MIN_VALID_MODEL_BYTES) {
+                    ai.deartalk.android.data.vault.ModelVaultClient.copyToLocalFile(vaultResult.pfd, targetFile)
+                }
+                if (targetFile.exists() && targetFile.length() >= MIN_VALID_MODEL_BYTES) {
+                    paths[KEY_LLM] = targetFile.absolutePath
+                    return paths
+                } else {
+                    paths[KEY_LLM] = vaultResult.procFdPath
+                    return paths
+                }
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "P2P ModelVault query skipped: ${e.message}")
         }
 
         return paths

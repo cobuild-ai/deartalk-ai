@@ -359,5 +359,140 @@ class CheonjiinComposerTest {
         composer.inputVowelKey(mockConnection, 'ㅣ')
         assertEquals("달기", handler.getFullText())
     }
+
+    @Test
+    fun testMultiTapCompoundBatchim_Manhi() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // 1. "만" (ㅁ: ㅇ 2회 + ㅏ: ㅣ ㆍ + ㄴ: ㄴ 1회)
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        assertEquals("마", handler.getFullText())
+
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        assertEquals("만", handler.getFullText())
+
+        // 2. [ㅅ ㅎ] 키 1타 -> "만ㅅ" (2타째 ㄶ 합성 대기 상태)
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        assertEquals("만ㅅ", handler.getFullText())
+
+        // 3. [ㅅ ㅎ] 키 2타 -> "많" ('ㄴ' + 'ㅎ' = 'ㄶ' 복합받침 합성 성공!)
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        assertEquals("많", handler.getFullText())
+
+        // 4. "이" (ㅇ: ㅇ 1회 + ㅣ: ㅣ 1회) -> "많이" 완성!
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        assertEquals("많ㅇ", handler.getFullText())
+
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        assertEquals("많이", handler.getFullText())
+    }
+
+    @Test
+    fun testMultiTapCompoundBatchim_PendingSeparationWithVowel_Mansi() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // "만" 입력
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        assertEquals("만", handler.getFullText())
+
+        // [ㅅ ㅎ] 1타 -> "만ㅅ"
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        assertEquals("만ㅅ", handler.getFullText())
+
+        // 2타를 치지 않고 바로 모음 [ㅣ] 입력 -> "만시"로 분리 완성!
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        assertEquals("만시", handler.getFullText())
+    }
+
+    @Test
+    fun testMultiTapCompoundBatchim_Salm() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // "살" (ㅅ: ㅅ 1회 + ㅏ: ㅣ ㆍ + ㄹ: ㄴ 2회)
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        assertEquals("살", handler.getFullText())
+
+        // [ㅇ ㅁ] 1타 -> "살ㅇ" (2타째 ㄻ 합성 대기)
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        assertEquals("살ㅇ", handler.getFullText())
+
+        // [ㅇ ㅁ] 2타 -> "삶" ('ㄹ' + 'ㅁ' = 'ㄻ' 복합받침 합성 성공!)
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        assertEquals("삶", handler.getFullText())
+    }
+
+    @Test
+    fun testMultiTapCompoundBatchim_Ilhta() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // "일" (ㅇ + ㅣ + ㄹ(ㄴ 2회))
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        assertEquals("일", handler.getFullText())
+
+        // [ㅅ ㅎ] 1타 -> "잀" (ㄹ + ㅅ = ㄽ 1타 즉시 결합)
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        assertEquals("잀", handler.getFullText())
+
+        // [ㅅ ㅎ] 2타 -> "잃" (ㄽ -> ㅀ 2타 순환 결합 성공!)
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        assertEquals("잃", handler.getFullText())
+    }
+
+    @Test
+    fun testPendingDelete() {
+        val handler = FakeInputConnection()
+        val mockConnection = java.lang.reflect.Proxy.newProxyInstance(
+            android.view.inputmethod.InputConnection::class.java.classLoader,
+            arrayOf(android.view.inputmethod.InputConnection::class.java),
+            handler
+        ) as android.view.inputmethod.InputConnection
+
+        // "만" 입력 후 [ㅅ] 1타 -> "만ㅅ"
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputConsonantKey(mockConnection, 'ㅇ')
+        composer.inputVowelKey(mockConnection, 'ㅣ')
+        composer.inputVowelKey(mockConnection, 'ㆍ')
+        composer.inputConsonantKey(mockConnection, 'ㄴ')
+        composer.inputConsonantKey(mockConnection, 'ㅅ')
+        assertEquals("만ㅅ", handler.getFullText())
+
+        // 삭제 키 -> "ㅅ"만 지워지고 "만"으로 복원
+        composer.delete(mockConnection)
+        assertEquals("만", handler.getFullText())
+    }
 }
 

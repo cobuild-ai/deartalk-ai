@@ -5,9 +5,8 @@ import ai.deartalk.android.data.pref.AiModeItem
 import ai.deartalk.android.data.pref.CustomTone
 import ai.deartalk.android.data.pref.CustomToneManager
 import ai.deartalk.android.data.pref.KoreanKeyboardType
-import ai.deartalk.android.data.pref.TranslationTarget
 import ai.deartalk.android.ime.ui.MicUiState
-import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.data.SpeechIntent
 
 /**
  * ⌨️ DearTalkIME 단일 불변 UI 상태 모델 (UDF / MVI)
@@ -21,15 +20,12 @@ data class ImeUiState(
     val aiText: String = "",
     val tones: List<CustomTone> = emptyList(),
     val aiModes: List<AiModeItem> = emptyList(),
-    val isTranslationMode: Boolean = false,
-    val selectedTargetLanguage: TranslationTarget = CustomToneManager.DEFAULT_TRANSLATIONS.first(),
     val selectedTone: CustomTone = CustomToneManager.DEFAULT_TONES.first(),
     val selectedSpeechIntent: SpeechIntent = SpeechIntent.AUTO,
     val detectedSpeechIntent: SpeechIntent? = null,
     val isRetransforming: Boolean = false,
     val isStandardKeyboardMode: Boolean = false,
     val koreanKeyboardType: KoreanKeyboardType = KoreanKeyboardType.DUBEOLSIK,
-    val keyboardMode: ai.deartalk.android.data.pref.KeyboardMode = ai.deartalk.android.data.pref.KeyboardMode.BASIC,
     val clipboardText: String? = null
 ) {
     /**

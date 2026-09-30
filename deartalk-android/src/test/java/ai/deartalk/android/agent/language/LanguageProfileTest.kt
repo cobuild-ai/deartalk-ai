@@ -1,7 +1,7 @@
 package ai.deartalk.android.agent.language
 
 import ai.deartalk.android.data.pref.TranslationTarget
-import ai.deartalk.android.live.data.SpeechIntent
+import ai.deartalk.android.data.SpeechIntent
 import org.junit.Assert.*
 import org.junit.Test
 
