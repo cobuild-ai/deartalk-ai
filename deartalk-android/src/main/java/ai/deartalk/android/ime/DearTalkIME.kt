@@ -375,7 +375,14 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
             setViewTreeSavedStateRegistryOwner(this@DearTalkIME)
 
             setContent {
-                DearTalkTheme {
+                val themeMode = DearTalkSettings.getThemeMode(this@DearTalkIME)
+                val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+                val isDark = when (themeMode) {
+                    ai.deartalk.android.data.pref.KeyboardThemeMode.SYSTEM -> isSystemDark
+                    ai.deartalk.android.data.pref.KeyboardThemeMode.LIGHT -> false
+                    ai.deartalk.android.data.pref.KeyboardThemeMode.DARK -> true
+                }
+                DearTalkTheme(darkTheme = isDark) {
                     if (isStandardKeyboardModeState) {
                         StandardKeyboardView(
                             koreanKeyboardType = koreanKeyboardTypeState,
@@ -593,6 +600,16 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
         }
     }
 
+    override fun onEvaluateFullscreenMode(): Boolean {
+        // 🛡️ 가로 모드에서도 전체 화면을 덮는 ExtractEditText(풀스크린 모드) 강제 전환 차단 (세로 콤팩트 키보드 뷰 유지)
+        return false
+    }
+
+    override fun onEvaluateInputViewShown(): Boolean {
+        super.onEvaluateInputViewShown()
+        return true
+    }
+
     private fun toggleMainMic() {
         when (micUiState) {
             MicUiState.LISTENING -> {
@@ -603,6 +620,26 @@ class DearTalkIME : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, S
                 // 준비 중 또는 변환 중에는 중복 터치 무시하여 하드웨어 안정성 보장
             }
             MicUiState.IDLE -> {
+                // 🎙️ 마이크 권한 실시간 안전 검증 (Zero Silent Failure)
+                if (androidx.core.content.ContextCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.RECORD_AUDIO
+                    ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    android.widget.Toast.makeText(
+                        this,
+                        "🎙️ 음성 인식을 위해 마이크 권한이 필요합니다.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    statusMessageState = "🎙️ 마이크 권한이 필요합니다. 앱에서 허용해 주세요."
+                    val intent = android.content.Intent(this, ai.deartalk.android.MainActivity::class.java).apply {
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        putExtra("request_mic_permission", true)
+                    }
+                    startActivity(intent)
+                    return
+                }
+
                 recognizedTextState = ""
                 aiTextState = ""
                 // 🌟 [UX 원칙]: 신규 음성 녹음 시작 시 톤앤매너(기본다듬기) 및 화행(AUTO) 선택을 일괄 초기화

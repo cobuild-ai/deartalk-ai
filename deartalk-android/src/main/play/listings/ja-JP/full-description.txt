@@ -1,47 +1,40 @@
-✨ DearTalk AI: 完全オンデバイスAI音声キーボード＆59言語リアルタイム対面通訳
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-外部サーバーへのデータ送信ゼロ！100%エアギャップ（Air-Gapped）プライバシー。
-DearTalk AIは外部クラウドへ音声やテキストデータを一切送信せず、スマートフォンのNPUとオンデバイスニューラルネットワーク上で直接動作する次世代プライベートAIソリューションです。
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ PART 1. スマート・オンデバイスAI音声キーボード (Voice IME)
-チャット、メール、メモ帳など、どのアプリでも話すだけ。AIが文脈を読み取って自動入力します。
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ リアルタイムAI文章補正＆誤字脱字修正
-- 早口で話しても、100%スマホ内で動作するオンデバイス生成AIモデルが文脈を瞬時に解析し、誤字脱字や不自然な言い回し、句読点を完璧な文章に自動補正します。
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 1タップ・トーン＆マナー変換
-- 同じ内容でも状況に合わせて最適な口調にスマート変換：
-  - 😼 自信を持って (Cheeky): ウィットに富んだ堂々とした表現
-  - 👔 フォーマル (Formal): ビジネスや公の場に最適な敬語表現
-  - 🤝 丁寧 (Polite): 配慮と思いやりのある表現
-  - 💖 温かい (Empathetic): 優しく共感あふれる会話
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ PART 2. DearTalk Live: 世界59言語リアルタイム1対1対面通訳
-海外旅行、グローバルビジネス会議、飛行機内でもインターネットなしで会話できます。
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 2-Track 超低遅延ハイブリッドエンジン
-- Track 1 (~50ms): Google ML Kit On-Device NMTにより、世界59言語の高速ドラフト翻訳を画面に即座に表示。
-- Track 2 (~2s): オンデバイスAI言語モデルが現地のニュアンスと文脈を捉えた洗練された完成版へリアルタイム更新。
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 180度対称フリップ（Flip）ビュー
-- 机の上にスマホを置いて向かい合って話す際、相手側の画面が180度自動回転し、お互い目を見ながら自然に対話できます。
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 ワンタッチ Auto-Speak (TTS音声読み上げ)
-- 上部のアクションバーからタップ1つで翻訳結果の音声読み上げを瞬時にオン/オフ切り替え可能。
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 200件リングバッファ＆O(1)メモリ最適化
-- 会話履歴を最大200件のFIFOリングバッファで自動管理し、メモリとストレージを常に軽快に保ちます。
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 PART 3. 永久完全無料＆サブスク・AI追加費用ゼロ
-- 外部の有料クラウドAPIを一切呼び出さず、スマホ内蔵のオンデバイスAIで直接処理します。
-- 1日何百回会話や通訳を行っても、データ通信料やAIトークン費用は一切発生しません。
-- 隠れた課金や有料サブスクリプションなしで、すべての機能を永久完全無料でお使いいただけます。
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ PART 4. 飛行機・海外旅行・オフライン完全対応（ネット不要）
-- 飛行機内（機内モード）、海外ローミング圏外、電波の届かない地下でも全機能が100%動作します。
-- Wi-Fiやモバイルデータ通信がなくても、59言語リアルタイム対面通訳とAI音声補正を制限なく利用可能。
-- 100%エアギャップ（Air-Gapped）セキュリティにより機密会話とプライバシーを完全保護。
-
-🌐 言語サポート詳細:
-- オンデバイス・オフライン通訳: 日本語、韓国語、英語、中国語、インドネシア語、スペイン語、フランス語、ドイツ語、ベトナム語、タイ語など世界59言語
-- アプリUI＆AIトーン最適化: 日本語、英語、韓国語、インドネシア語
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

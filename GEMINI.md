@@ -14,8 +14,22 @@
 
 ---
 
+## 📓 Journal 비공개 원칙 (Journal Zero-Exposure Policy)
+
+- 개발 일지(`docs/journal/`)는 **Gate 1 비공개 저장소(`01-production`) 전용** 자산입니다.
+- 이 저장소(Gate 2/3)에서는 일지를 **생성·수정·참조하지 않으며**, `docs/journal` 경로는 `.gitignore`로 영구 차단되어 있습니다.
+- 공식 오픈소스 저장소(`03-oss-public`)에는 **순수 코드와 코드 안내 문서**만 포함됩니다.
+
+---
+
 ## 🏛️ 엔터프라이즈 4대 불변 거버넌스 원칙 (Enterprise 4 Axioms)
 1. 🛡️ **`main` 브랜치 보호 (Protected Branch)**: `01-production`의 `main` 브랜치는 직접 커밋/푸시가 금지되며, 항상 배포 가능한 상태를 유지한다.
 2. 📦 **원자적 PR (Atomic Pull Request)**: 단일 목적의 기능/수정만 분리된 작업 브랜치(`feat/`, `refactor/`)에서 구현하고 PR로 머지한다.
 3. 🛡️ **3-Tier 아키텍처 (3-Tier Governance)**: `01-production` ➔ `02-oss-ready` ➔ `03-oss-public` 단계를 거쳐 시크릿 정제 및 독립 빌드 검증을 보장한다.
 4. 🔄 **역방향 백포트 (Backporting -x)**: 외부 기여 커밋은 `git cherry-pick -x`로 원본 작성자 맥락을 보존하며 프로덕션으로 흡수한다.
+
+---
+
+## 🔗 상위 거버넌스 참조
+- 전체 OSS 거버넌스 규칙, SkyBrain 라우팅 매트릭스, 3개 국어 README 동기화, 공식 연락처 등의 상세 규칙은 OSSProject 루트의 `GEMINI.md` 참조
+- 일상 서비스 개발 시에는 이 파일의 규칙만으로 충분

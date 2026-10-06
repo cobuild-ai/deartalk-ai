@@ -1,48 +1,40 @@
-✨ DearTalk AI: Teclado de voz com IA 100% on-device e tradutor em tempo real para 59 idiomas
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-Zero envio de dados para a nuvem. Privacidade absoluta Air-Gapped.
-O DearTalk AI roda inteiramente na NPU do seu celular, sem transmitir áudio ou texto para servidores externos.
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ PARTE 1. Teclado de voz inteligente com IA on-device (Voice IME)
-Fale com naturalidade no WhatsApp, e-mail ou notas. A IA local aprimora suas mensagens instantaneamente.
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ Correção de gramática e digitação em tempo real
-- A IA generativa local analisa o contexto e corrige erros de concordância, digitação e pontuação em frases perfeitas.
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 Transforme o tom da sua mensagem com 1 toque
-- Escolha o tom ideal para cada momento:
-  - 😼 Confiante (Cheeky): Direto, espirituoso e marcante
-  - 👔 Formal: Ideal para trabalho e negócios
-  - 🤝 Educado (Polite): Cordial e respeitoso
-  - 💖 Empático: Acolhedor, caloroso e amigável
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ PARTE 2. DearTalk Live: Tradução presencial em 59 idiomas
-Converse facilmente em viagens internacionais ou voos, mesmo 100% offline.
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 Motor híbrido 2-Track de baixíssima latência
-- Track 1 (~50ms): Rascunho de tradução instantâneo para 59 idiomas via Google ML Kit local.
-- Track 2 (~2s): Refinamento de gírias e expressões idiomáticas pelo modelo de IA local.
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 Tela dividida simétrica com giro de 180° (Flip View)
-- Coloque o smartphone na mesa: a tela da outra pessoa gira 180° para que vocês conversem mantendo contato visual.
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 Leitura por voz imediata (Auto-Speak TTS)
-- Ative ou silencie a voz da tradução com um toque na barra superior.
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 Buffer circular de 200 mensagens
-- Organização em FIFO que impede o consumo excessivo de memória e armazenamento.
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 PARTE 3. 100% Gratuito para Sempre e Sem Custos de IA
-- Funciona localmente na NPU do seu smartphone sem chamadas para APIs em nuvem pagas.
-- Fale e traduza sem limites: sem consumo de dados móveis e sem tarifas de tokens de IA.
-- Sem assinaturas mensais e sem compras ocultas. Aproveite todos os recursos grátis.
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ PARTE 4. 100% Offline: En Aviones, Viajes al Extranjero y Sin Red
-- Funciona al 100% en modo avión, en viajes internacionales sin roaming y en lugares sin cobertura.
-- Traduce en vivo en 59 idiomas y usa el teclado de voz IA sin necesidad de Wi-Fi ni datos móviles.
-- Seguridad Air-Gapped absoluta para proteger tu privacidad y confidencialidad. 100% Segurança Air-Gap e Modo Avião
-- Opera sem qualquer conexão à internet. Sigilo total para reuniões e conversas confidenciais.
-
-🌐 Idiomas suportados:
-- Tradução offline on-device: 59 idiomas (português, inglês, espanhol, francês, alemão, coreano, etc.)
-- Interface e estilos de tom: Português, Inglês, Coreano, Indonésio.
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

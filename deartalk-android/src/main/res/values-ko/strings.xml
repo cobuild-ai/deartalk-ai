@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">DearTalk 음성 키보드</string>
-    <string name="ime_name">DearTalk 음성 키보드</string>
-    <string name="subtype_ko">한국어 (DearTalkAI)</string>
+    <string name="app_name">디어톡(DearTalk) AI 음성키보드</string>
+    <string name="ime_name">디어톡(DearTalk) AI 음성키보드</string>
+    <string name="subtype_ko">한국어 (디어톡(DearTalk) AI)</string>
     <string name="subtype_en">English (DearTalkAI)</string>
     <string name="mic_listening">음성 인식 중...</string>
     <string name="mic_idle">AI 음성 입력</string>

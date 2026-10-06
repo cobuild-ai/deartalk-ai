@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 📸 DearTalk 3개 국어(KO, EN, ID) 실기기 대표 스크린샷 자동 캡처기
-- 대상: Samsung Galaxy S22 Ultra (192.168.1.136:39951)
+- 대상: Samsung Galaxy S22 Ultra (<DEVICE_IP>:<ADB_PORT>)
 - 1) DearTalk Live 실시간 2-Way 대화 화면 (KO, EN, ID)
 - 2) DearTalk Live AI 팩 & 하드웨어 진단 설정 시트 화면 (KO, EN, ID)
 """
@@ -13,7 +13,7 @@ import time
 import subprocess
 from datetime import datetime
 
-DEVICE = "192.168.1.136:39951"
+DEVICE = "<DEVICE_IP>:<ADB_PORT>"
 PKG = "ai.deartalk.android.debug"
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 OUT_DIR = os.path.join(ROOT_DIR, "Journal", "2026", "첨부파일")

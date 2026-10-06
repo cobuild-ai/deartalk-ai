@@ -1,4 +1,4 @@
-# ✨ DearTalk 음성 키보드 (DearTalk Voice Keyboard): 100% 온디바이스 AI 키보드 (IME)
+# ✨ 디어톡(DearTalk) AI 음성키보드 (DearTalk Voice Keyboard): 100% 온디바이스 AI 키보드 (IME)
 
 <div align="center">
 
@@ -14,7 +14,7 @@
 [![P2P Model Vault: Enabled](https://img.shields.io/badge/저장공간-중복0MB-brightgreen.svg)](#-cobuild-ai-패밀리-앱-생태계--p2p-메쉬-모델-볼트)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**DearTalk 음성 키보드 (DearTalk Voice Keyboard)**는 외부 네트워크 연결 없이 사용자 기기 내부에서 100% 동작하는 오픈소스 온디바이스 AI **안드로이드 커스텀 키보드(IME)**입니다.
+**디어톡(DearTalk) AI 음성키보드 (DearTalk Voice Keyboard)**는 외부 네트워크 연결 없이 사용자 기기 내부에서 100% 동작하는 오픈소스 온디바이스 AI **안드로이드 커스텀 키보드(IME)**입니다.
 
 타이핑한 텍스트와 오프라인 음성 입력(STT)을 실시간으로 분석하여, 문맥에 맞는 6종 어조 변환, 맞춤법 교정, 자연스러운 문맥 다듬기를 완전한 보안 환경에서 즉시 제공합니다. (Google Gemma LiteRT GPU 온디바이스 추론 탑재)
 
@@ -28,7 +28,7 @@
 
 | 컴포넌트 | 버전 | Target SDK | 출시 상태 | 핵심 변경사항 |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk 음성 키보드** | `v1.1.5` | **Android 16 (API 36)** | **상용 안정화 버전 (Production Stable)** | 키보드 IME 기능 집중, 6종 어조 변환, NPU 제로 락 아키텍처, P2P 메쉬 모델 볼트(0MB 중복 저장) 탑재 |
+| 🤖 **디어톡(DearTalk) AI 음성키보드** | `v1.2.2` | **Android 16 (API 36)** | **공개 테스트 (Open Testing - Beta)** | 3단계 온보딩 마법사, Day & Night 프리미엄 듀얼 테마, 마이크 권한 자동 복구, 100% 온디바이스 Zero-Network Gemma 4 E2B |
 
 ---
 
@@ -36,16 +36,16 @@
 
 | 🎙️ 보이스 스튜디오 & 고운말 톤 스피킹 | 🏛️ P2P 메쉬 모델 볼트 | 🔒 온디바이스 프라이버시 & 대화형 샌드박스 |
 | :---: | :---: | :---: |
-| <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="DearTalk AI 보이스 스튜디오 고운말 톤 변환"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="DearTalk AI 실시간 다국어 통역기"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="DearTalk AI 온디바이스 프라이버시 샌드박스"> |
-| **0ms 즉각 음성 톤 조율**<br>날것의 구어체 발화(*"오늘 밥 같이 먹을래?"*)를 정중하고 단정한 표현(*"오늘 식사 함께 하실 수 있으실까요?"*)으로 즉각 교정. | **저장공간 중복 0MB (P2P Vault)**<br>패밀리 앱(**DearTalk 음성 통역기**, **DearMind**)과 온디바이스 SLM 모델(Gemma 4 E2B)을 안전하게 공유하여 용량 낭비 원천 차단. | **100% 에어갭 안심 샌드박스**<br>외부 네트워크 전송 0% (`🔒 100% 안전 - 외부 서버 통신 0%`). 내 스마트폰 내부에서만 완벽히 격리 실행. |
+| <img src="docs/images/deartalk_voicestudio_tone.png" width="260" alt="디어톡(DearTalk) AI 보이스 스튜디오 고운말 톤 변환"> | <img src="docs/images/deartalk_voicestudio_translate.png" width="260" alt="디어톡(DearTalk) AI 실시간 다국어 통역기"> | <img src="docs/images/deartalk_sandbox_tone.png" width="260" alt="디어톡(DearTalk) AI 온디바이스 프라이버시 샌드박스"> |
+| **0ms 즉각 음성 톤 조율**<br>날것의 구어체 발화(*"오늘 밥 같이 먹을래?"*)를 정중하고 단정한 표현(*"오늘 식사 함께 하실 수 있으실까요?"*)으로 즉각 교정. | **저장공간 중복 0MB (P2P Vault)**<br>패밀리 앱(**디어톡(DearTalk) 음성 통역기**, **DearMind**)과 온디바이스 SLM 모델(Gemma 4 E2B)을 안전하게 공유하여 용량 낭비 원천 차단. | **100% 에어갭 안심 샌드박스**<br>외부 네트워크 전송 0% (`🔒 100% 안전 - 외부 서버 통신 0%`). 내 스마트폰 내부에서만 완벽히 격리 실행. |
 
 ---
 
 ## 🌟 안드로이드 키보드 주요 기능
 
 ### 🏛️ Cobuild AI 패밀리 앱 생태계 & P2P 메쉬 모델 볼트
-- **독립 통역 앱 분리:** 대화 상호작용 및 통역 기능의 몰입도를 극대화하기 위해 1:1 대면 실시간 통역기는 **[DearTalk 음성 통역기 (`ai.deartalk.translator`)](../deartalk-translator)**로 완전 독립 분리되었습니다.
-- **Cobuild AI P2P 메쉬 모델 볼트:** `DearTalk 음성 키보드`와 `DearTalk 음성 통역기`(및 `DearMind`)는 Android `signature` 보호 권한 기반의 `ContentProvider`를 통해 기기 내 1.5GB~2.4GB 모델을 1회만 저장하고 무손실 제로카피로 공유합니다.
+- **독립 통역 앱 분리:** 대화 상호작용 및 통역 기능의 몰입도를 극대화하기 위해 1:1 대면 실시간 통역기는 **[디어톡(DearTalk) 음성 통역기 (`ai.deartalk.translator`)](../deartalk-translator)**로 완전 독립 분리되었습니다.
+- **Cobuild AI P2P 메쉬 모델 볼트:** `디어톡(DearTalk) AI 음성키보드`와 `디어톡(DearTalk) 음성 통역기`(및 `DearMind`)는 Android `signature` 보호 권한 기반의 `ContentProvider`를 통해 기기 내 1.5GB~2.4GB 모델을 1회만 저장하고 무손실 제로카피로 공유합니다.
 - **원터치 패밀리 런처:** 키보드 설정 내 패밀리 앱 섹션을 통해 통역기 및 마음 케어 일기 앱으로 언제든 즉시 이동/설치 가능합니다.
 
 ### 📱 커스텀 키보드 (`deartalk-android`)
@@ -84,7 +84,7 @@ sequenceDiagram
     participant IME as ⌨️ DearTalkIME (Compose)
     participant Controller as 🎮 ImeActionController
     participant Engine as 🧠 DearTalkIntentEngine
-    participant LLM as ⚡ LiteRT GPU (Gemma 2B)
+    participant LLM as ⚡ LiteRT GPU (Gemma 4 E2B)
     participant Diff as 📊 DiffEngine (LCS)
 
     User->>HostApp: 텍스트 입력창 터치 포커스
@@ -110,6 +110,35 @@ sequenceDiagram
    - 외부 네트워크 트래픽 0%. 키 입력, 음성 데이터, 변환 텍스트가 단 1바이트도 기기 밖으로 나가지 않습니다.
 3. **투명한 엔지니어링 상태:**
    - 모델 로딩 중에는 가짜 답변 대신 정직한 상태 라벨을 표시하고 원문을 100% 보존합니다.
+
+---
+
+## 📁 저장소 디렉토리 구조
+
+```text
+deartalk-ai/
+├── deartalk-android/           # Android IME 모듈 (Jetpack Compose UI)
+│   ├── src/main/java/ai/deartalk/android/
+│   │   ├── agent/              # 온디바이스 Gemma LiteRT 엔진 및 프롬프트 템플릿
+│   │   ├── ime/                # InputMethodService, 컨트롤러 및 한글 오토마타
+│   │   ├── data/               # SQLite 저장소, 설정 및 다국어 리소스
+│   │   ├── ui/                 # 모듈식 Compose 컴포넌트, 설정 및 샌드박스
+│   │   └── stt/                # 오프라인 음성인식(SpeechRecognizer) 매니저
+│   └── src/test/               # JVM 단위 테스트 (오토마타, 프롬프트 빌더, diff)
+│
+├── docs/                       # 아키텍처, 테스트 및 배포 가이드 문서
+│   ├── ARCHITECTURE.md         # 시스템 아키텍처 및 데이터 흐름 명세서
+│   ├── TESTING.md              # 자동화 테스트 및 실기기 검증 가이드
+│   ├── MODELS.md               # 온디바이스 LiteRT SLM 명세서
+│   ├── ROADMAP.md              # 장기 릴리즈 마일스톤 및 로드맵
+│   └── ANDROID_DEPLOYMENT_GUIDE.md # 구글 플레이 PAD 및 배포 가이드
+│
+├── scripts/                    # 자동화 테스트 및 디바이스 검증 스크립트
+│   └── verify_device_stability.py # ADB Monkey 스트레스 및 메모리 누수 감사기
+│
+├── Makefile                    # 표준 개발자 타겟 (make verify, make test)
+└── verify.sh                   # 대화형 무결점 검증 실행기
+```
 
 ---
 

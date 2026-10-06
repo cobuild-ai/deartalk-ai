@@ -21,5 +21,7 @@ data class MainUiState(
     val silenceTimeoutMs: Float = 1500f,
     val isAutoLanguage: Boolean = true,
     val selectedLanguageCode: String = "ko",
-    val selectedKoreanKeyboardType: KoreanKeyboardType = KoreanKeyboardType.DUBEOLSIK
+    val selectedKoreanKeyboardType: KoreanKeyboardType = KoreanKeyboardType.DUBEOLSIK,
+    val hasMicPermission: Boolean = false,
+    val isOnboardingDismissed: Boolean = false
 )

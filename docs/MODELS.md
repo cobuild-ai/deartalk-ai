@@ -8,12 +8,12 @@ DearTalkAI runs **100% on-device neural language models** without sending any da
 
 | Component | Specification |
 | :--- | :--- |
-| **Model Architecture** | Google Gemma 2 2B Instruct |
+| **Model Architecture** | Google Gemma 4 E2B Instruct |
 | **Execution Engine** | Google LiteRT (`ai.deartalk.android.agent.LiteRtEngine`) |
 | **Hardware Acceleration** | Qualcomm Adreno / ARM Mali / Google Tensor GPU Delegate |
 | **File Format** | `.litertlm` / `.tflite` |
 | **Recommended Quantization** | Int4 (Dynamic range weights) |
-| **Model Size on Storage** | ~1.3 GB |
+| **Model Size on Storage** | ~1.5 GB |
 | **Runtime Resident RAM** | ~1.0 GB Native PSS |
 
 ---
@@ -25,7 +25,7 @@ DearTalkAI runs **100% on-device neural language models** without sending any da
 - **Security:** Fully signed, verified, and managed by the Google Play Core framework.
 
 ### 2. Local ADB / Sideload Path (For Testing & Contributors)
-- **Local Path 1:** `/data/local/tmp/llm/gemma-2-2b-it-int4.litertlm`
+- **Local Path 1:** `/data/local/tmp/llm/gemma-4-E2B-it.litertlm`
 - **Local Path 2:** `/data/data/ai.deartalk.android/files/models/model.litertlm`
 - **Zero In-App Downloads:** 0% external HTTP network downloader dependencies.
 

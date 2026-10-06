@@ -37,7 +37,9 @@ class MainActivity : ComponentActivity() {
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { _: Boolean -> }
+    ) { _: Boolean ->
+        viewModel.onEvent(MainUiEvent.RefreshImeStatus)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,10 +49,6 @@ class MainActivity : ComponentActivity() {
             UiStrings.setLocale(Locale.forLanguageTag(testLocale))
         } else {
             UiStrings.setLocale(DearTalkSettings.getEffectiveLocale(this))
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
 
         handleTestIntent(intent)
@@ -71,6 +69,9 @@ class MainActivity : ComponentActivity() {
                     onSelectIme = {
                         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                         imm.showInputMethodPicker()
+                    },
+                    onRequestMicPermission = {
+                        requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     },
                     onOpenLive = {
                         val launchIntent = packageManager.getLaunchIntentForPackage("ai.deartalk.translator")
@@ -95,6 +96,10 @@ class MainActivity : ComponentActivity() {
         val testLocale = intent.getStringExtra("test_locale")
         if (!testLocale.isNullOrBlank()) {
             UiStrings.setLocale(Locale.forLanguageTag(testLocale))
+        }
+        if (intent.getBooleanExtra("request_mic_permission", false) ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
         handleTestIntent(intent)
     }

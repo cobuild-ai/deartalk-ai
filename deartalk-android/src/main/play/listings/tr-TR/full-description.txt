@@ -1,48 +1,40 @@
-✨ DearTalk AI: %100 Cihaz İçi Yapay Zekalı Sesli Klavye ve 59 Dilde Canlı Çevirmen
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-Buluta Sıfır Veri Gönderimi. Kusursuz Air-Gapped Gizlilik.
-DearTalk AI, harici sunuculara tek bir bayt ses veya metin göndermeden tamamen akıllı telefonunuzun NPU'sunda çalışır.
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ BÖLÜM 1. Akıllı Cihaz İçi Yapay Zekalı Sesli Klavye (Voice IME)
-Mesajlaşma, e-posta veya not uygulamalarında doğal konuşun; yapay zeka cümlelerinizi anında kusursuzlaştırsın.
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ Gerçek Zamanlı Dilbilgisi ve İmla Düzeltme
-- Cihaz içi üretici yapay zeka, bağlamı analiz ederek hatalı kelimeleri ve noktalama işaretlerini anında düzeltir.
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 Tek Dokunuşla Üslup ve Tarz Değiştirme
-- Mesajınızın tonunu duruma göre kolayca uyarlayın:
-  - 😼 Kendinden Emin (Cheeky): Esprili, cesur ve etkileyici
-  - 👔 Resmi (Formal): İş ve kurumsal yazışmalara uygun
-  - 🤝 Kibar (Polite): Saygılı ve nazik
-  - 💖 Empatik: Samimi, sıcak ve anlayışlı
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ BÖLÜM 2. DearTalk Live: 59 Dilde Yüz Yüze Canlı Çeviri
-Yurt dışı seyahatlerinde, uçakta veya internetin olmadığı yerlerde kesintisiz iletişim kurun.
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 Ultra Düşük Gecikmeli 2-Track Hibrit Motor
-- Track 1 (~50ms): Google ML Kit On-Device NMT ile 59 dilde anında taslak çeviri.
-- Track 2 (~2s): Yerel yapay zeka modeliyle deyim ve bağlam zenginleştirmesi.
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 180° Simetrik Çift Yönlü Ekran (Flip View)
-- Telefonu masaya koyun: Karşı tarafın ekranı 180 derece döner, göz teması kurarak rahatça konuşun.
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 Tek Dokunuşla Sesli Okuma (Auto-Speak TTS)
-- Üst çubuktan çevirilerin sesli okunmasını tek dokunuşla açıp kapatın.
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 200 Mesajlık FIFO Halka Tamponu
-- O(1) bellek verimliliğiyle telefonunuz her zaman hafif ve hızlı kalır.
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 BÖLÜM 3. Sonsuza Kadar 100% Ücretsiz ve Sıfır AI Ücreti
-- Ücretli bulut API çağrıları yapmadan doğrudan telefonunuzun NPU biriminde çalışır.
-- Sınırsız konuşun ve çeviri yapın: veri ücreti veya AI token masrafı yok.
-- Aylık abonelik veya gizli ücret yok. Tüm özelliklerin keyfini ücretsiz çıkarın.
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ BÖLÜM 4. 100% Çevrimdışı: Uçakta, Yurtdışında ve İnternet Olmayan Her Yerde
-- Uçak modunda, yurtdışı seyahatlerinde dolaşım olmadan ve sinyal olmayan alanlarda sorunsuz çalışır.
-- Wi-Fi veya mobil veri olmadan 59 dilde canlı yüz yüze çeviri ve AI sesli klavye kullanın.
-- Tam Air-Gapped güvenliği ile konuşmalarınız ve gizliliğiniz tamamen korunur. %100 Air-Gap Güvenliği ve Uçak Modu
-- İnternet bağlantısı olmadan tam işlevsellik. Gizli toplantılarınız için mutlak güvenlik.
-
-🌐 Desteklenen Diller:
-- Cihaz İçi Çevrimdışı Çeviri: Türkçe, İngilizce, Korece, Japonca, İspanyolca, Almanca dahil 59 dil.
-- Arayüz ve Yapay Zeka Tonları: Türkçe, İngilizce, Korece, Endonezce.
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

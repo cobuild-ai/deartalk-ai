@@ -408,20 +408,20 @@ fun StandardKeyboardView(
                         }
                     )
 
-                    // Enter 키
+                    // Enter 키 (프리미엄 인디고 액센트)
                     Box(
                         modifier = Modifier
                             .weight(1.3f)
                             .height(42.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(DearTalkSecondary)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DearTalkPrimary)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onEnterClick()
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.Black, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.White, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -483,13 +483,13 @@ private fun CheonjiinKeyboardLayout(
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(DearTalkSecondary)
-                    .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(DearTalkPrimary)
+                    .border(0.75.dp, DearTalkAccentGlow, RoundedCornerShape(8.dp))
                     .clickable { onEnterClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.Black, modifier = Modifier.size(20.dp))
+                Icon(Icons.AutoMirrored.Filled.KeyboardReturn, contentDescription = "Enter", tint = Color.White, modifier = Modifier.size(20.dp))
             }
         }
 
@@ -618,9 +618,9 @@ private fun CheonjiinKey(
     Box(
         modifier = modifier
             .height(52.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(DearTalkKey)
-            .border(0.5.dp, DearTalkBorder, RoundedCornerShape(6.dp))
+            .border(0.75.dp, DearTalkBorder, RoundedCornerShape(8.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -632,7 +632,7 @@ private fun CheonjiinKey(
                 fontWeight = FontWeight.Normal,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 2.dp, end = 5.dp)
+                    .padding(top = 3.dp, end = 6.dp)
             )
         }
         Text(

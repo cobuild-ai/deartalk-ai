@@ -1,48 +1,40 @@
-✨ DearTalk AI: Papan Kekunci Suara AI 100% On-Device & Penterjemah Langsung 59 Bahasa
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-Sifar Penghantaran Data ke Awan. Privasi Air-Gapped 100% Terjamin.
-DearTalk AI beroperasi sepenuhnya di dalam NPU telefon pintar anda tanpa memindahkan sebarang data suara atau teks ke pelayan luaran.
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ BAHAGIAN 1. Papan Kekunci Suara AI On-Device Pintar (Voice IME)
-Bercakap secara semula jadi dalam mana-mana aplikasi mesej, e-mel atau nota. AI memperkemas ayat anda secara langsung.
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ Pembetulan Tatabahasa & Ejaan Masa Nyata
-- Dikuasakan oleh AI generatif on-device, kesilapan ejaan dan struktur ayat dibetulkan serta-merta menjadi ayat yang kemas.
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 Transformasi Nada Bicara 1-Sentuhan
-- Sesuaikan gaya perbualan mengikut keadaan:
-  - 😼 Yakin (Cheeky): Tegas, bijak dan berkarisma
-  - 👔 Rasmi (Formal): Bahasa baku profesional untuk kerja
-  - 🤝 Sopan (Polite): Berhemah dan menghormati
-  - 💖 Mesra (Empathetic): Hangat dan penuh empati
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ BAHAGIAN 2. DearTalk Live: Terjemahan Bersemuka 59 Bahasa
-Berkomunikasi lancar semasa melancong ke luar negara, dalam penerbangan atau tanpa internet.
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 Enjin Hibrid 2-Track Kependaman Ultra-Rendah
-- Track 1 (~50ms): Draf terjemahan pantas untuk 59 bahasa melalui Google ML Kit On-Device NMT.
-- Track 2 (~2s): Penghalusan nuansa kontekstual oleh model AI tempatan.
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 Paparan Balik Skrin 180° (Flip View)
-- Letakkan telefon di atas meja: skrin rakan perbualan berpusing 180 darjah untuk saling bertatap mata dengan selesa.
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 Suis 1-Sentuhan Auto-Speak (Suara TTS)
-- Hidupkan atau matikan suara terjemahan secara terus dari bar aplikasi atas.
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 Penimbal 200 Mesej O(1)
-- Had 200 mesej FIFO mengekalkan prestasi peranti sentiasa pantas dan lancar.
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 BAHAGIAN 3. 100% Percuma Selamanya & Tiada Kos AI
-- Dijalankan sepenuhnya pada NPU telefon pintar anda tanpa memanggil API awan berbayar.
-- Berbual dan menterjemah tanpa had tanpa kos data atau bayaran token AI.
-- Tiada langganan bulanan dan tiada bayaran tersembunyi. Semua ciri adalah percuma.
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ BAHAGIAN 4. 100% Luar Talian: Dalam Penerbangan, Luar Negara & Tanpa Rangkaian
-- Berfungsi lancar dalam Mod Pesawat, perjalanan ke luar negara tanpa perayauan, atau kawasan tiada liputan.
-- Terjemahan langsung 59 bahasa dan penaipan suara AI tanpa Wi-Fi atau data mudah alih.
-- Privasi Air-Gapped mutlak melindungi perbualan peribadi dan sulit anda. 100% Privasi Air-Gap & Mod Pesawat
-- Berfungsi sepenuhnya tanpa sambungan internet. Sulit untuk mesyuarat perniagaan dan perbualan peribadi.
-
-🌐 Sokongan Bahasa:
-- Terjemahan On-Device Luar Talian: 59 bahasa global (Bahasa Melayu, Inggeris, Korea, Jepun, Cina, dll.)
-- Antara Muka & Penalaan Nada AI: Bahasa Melayu, Inggeris, Korea, Indonesia.
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

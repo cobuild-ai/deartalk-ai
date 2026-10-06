@@ -1,48 +1,40 @@
-✨ DearTalk AI: Bàn phím giọng nói AI 100% On-Device & Phiên dịch trực tiếp 59 ngôn ngữ
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-Không gửi dữ liệu lên đám mây. Bảo mật tuyệt đối chuẩn Air-Gap.
-DearTalk AI hoạt động hoàn toàn trên chip NPU của điện thoại, không truyền bất kỳ byte dữ liệu giọng nói hay văn bản nào ra máy chủ bên ngoài.
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ PHẦN 1. Bàn phím giọng nói AI On-Device thông minh (Voice IME)
-Nói tự nhiên trong bất kỳ ứng dụng nhắn tin, email hay ghi chú nào để AI tự động trau chuốt câu từ.
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ Sửa lỗi ngữ pháp và chính tả theo thời gian thực
-- Mô hình AI tạo sinh on-device lập tức phân tích ngữ cảnh, tự động chỉnh sửa lỗi chính tả và ngắt câu mượt mà.
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 Chuyển đổi giọng điệu (Tone) chỉ với 1 chạm
-- Tùy biến phong cách nói chuyện phù hợp với từng tình huống:
-  - 😼 Tự tin (Cheeky): Sắc sảo, lôi cuốn và quyết đoán
-  - 👔 Trang trọng (Formal): Chuẩn mực cho công việc và kinh doanh
-  - 🤝 Lịch sự (Polite): Nhã nhặn, tôn trọng và chu đáo
-  - 💖 Thấu cảm (Empathetic): Ấm áp, chân thành và thấu hiểu
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ PHẦN 2. DearTalk Live: Phiên dịch đối mặt trực tiếp 59 ngôn ngữ
-Giao tiếp thuận tiện khi du lịch nước ngoài, trên máy bay hoặc khi không có mạng.
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 Động cơ lai 2-Track độ trễ siêu thấp
-- Track 1 (~50ms): Bản dịch sơ bộ tức thì cho 59 ngôn ngữ toàn cầu bằng Google ML Kit On-Device NMT.
-- Track 2 (~2s): AI cục bộ hoàn thiện ngữ nghĩa và câu từ tự nhiên nhất.
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 Chế độ xoay ngược màn hình 180° (Flip View)
-- Đặt điện thoại lên bàn: nửa màn hình đối diện tự động xoay 180° để hai người vừa nhìn vào mắt nhau vừa trò chuyện tự nhiên.
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 Bật/Tắt phát âm tức thì (Auto-Speak TTS)
-- Bật hoặc tắt giọng đọc bản dịch nhanh chóng ngay trên thanh công cụ phía trên.
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 Bộ đệm xoay vòng 200 tin nhắn
-- Cơ chế FIFO giới hạn 200 tin nhắn giúp máy luôn nhẹ, mượt và không tốn bộ nhớ.
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 PHẦN 3. Miễn Phí 100% Mãi Mãi & Không Tốn Phí AI
-- Chạy trực tiếp trên NPU của điện thoại mà không gọi API đám mây trả phí.
-- Thoải mái nói và dịch không giới hạn: không phí dữ liệu mạng, không phí token AI.
-- Không đăng ký hàng tháng, không phí ẩn. Sử dụng toàn bộ tính năng hoàn toàn miễn phí.
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ PHẦN 4. Hoạt Động Ngoại Tuyến 100%: Trên Máy Bay, Đi Nước Ngoài & Không Cần Mạng
-- Hoạt động 100% ở chế độ máy bay, du lịch nước ngoài không cần chuyển vùng hay nơi không có sóng.
-- Dịch trực tiếp 59 ngôn ngữ và nhập giọng nói AI mà không cần Wi-Fi hay dữ liệu di động.
-- Bảo mật Air-Gapped tuyệt đối giúp bảo vệ cuộc trò chuyện riêng tư của bạn. Bảo mật 100% Air-Gap & Hỗ trợ Chế độ máy bay
-- Hoạt động trơn tru không cần internet. Bảo mật tuyệt đối cho các cuộc họp kinh doanh quan trọng.
-
-🌐 Hỗ trợ ngôn ngữ:
-- Dịch ngoại tuyến On-Device: 59 ngôn ngữ toàn cầu (Tiếng Việt, Anh, Hàn, Nhật, Trung, Pháp, Đức, v.v.)
-- Giao diện và phong cách giọng điệu: Tiếng Việt, Tiếng Anh, Tiếng Hàn, Tiếng Indonesia.
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

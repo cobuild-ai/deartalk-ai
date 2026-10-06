@@ -93,9 +93,9 @@ fun ImeSetupGuideCard(
                     )
                     Text(
                         text = if (isImeEnabled) {
-                            if (isKorean) "✅ DearTalk AI 키보드가 켜져 있습니다" else if (isIndonesian) "✅ Papan ketik DearTalk AI telah aktif" else "✅ DearTalk AI keyboard is on"
+                            if (isKorean) "✅ 디어톡(DearTalk) AI 음성키보드가 켜져 있습니다" else if (isIndonesian) "✅ Papan ketik DearTalk AI telah aktif" else "✅ DearTalk AI keyboard is on"
                         } else {
-                            if (isKorean) "설정에서 DearTalk AI 스위치를 켜주세요" else if (isIndonesian) "Aktifkan tombol DearTalk AI" else "Turn on DearTalk AI in settings"
+                            if (isKorean) "설정에서 디어톡(DearTalk) AI 음성키보드 스위치를 켜주세요" else if (isIndonesian) "Aktifkan tombol DearTalk AI" else "Turn on DearTalk AI in settings"
                         },
                         fontSize = 11.sp,
                         color = DearTalkTextDim,
@@ -141,7 +141,7 @@ fun ImeSetupGuideCard(
                         text = if (isImeSelected) {
                             if (isKorean) "✅ 기본 키보드로 설정됨" else if (isIndonesian) "✅ Papan ketik utama aktif" else "✅ Set as default keyboard"
                         } else {
-                            if (isKorean) "팝업에서 DearTalk AI를 선택하세요" else if (isIndonesian) "Pilih DearTalk AI di popup" else "Select DearTalk AI from popup"
+                            if (isKorean) "팝업에서 디어톡(DearTalk) AI 음성키보드를 선택하세요" else if (isIndonesian) "Pilih DearTalk AI di popup" else "Select DearTalk AI from popup"
                         },
                         fontSize = 11.sp,
                         color = DearTalkTextDim,

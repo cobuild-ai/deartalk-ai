@@ -1,4 +1,4 @@
-# 📱 DearTalk AI: Google Play Store 메타데이터 가이드 (Store Listing)
+# 📱 디어톡(DearTalk) AI 음성키보드: Google Play Store 메타데이터 가이드 (Store Listing)
 
 본 문서는 Google Play Console의 **스토어 등록정보(Main Store Listing)** 및 **데이터 보안(Data Safety)** 섹션에 그대로 복사하여 사용할 수 있는 공식 등록 자료입니다.
 
@@ -8,15 +8,15 @@
 
 ### 1. 앱 기본 정보
 - **앱 이름 (App Name, 최대 30자)**:  
-  `DearTalk AI - 온디바이스 AI 키보드`
+  `디어톡(DearTalk) AI 음성키보드`
 - **간단한 설명 (Short Description, 최대 80자)**:  
   `100% 오프라인 온디바이스 AI 키보드! 음성과 텍스트를 실시간으로 맞춤 변환합니다.`
 
 ### 2. 자세한 설명 (Full Description, 최대 4000자)
 ```markdown
-✨ DearTalk AI: 서버 전송 0%! 100% 온디바이스 AI 음성 & 텍스트 키보드
+✨ 디어톡(DearTalk) AI 음성키보드: 서버 전송 0%! 100% 온디바이스 AI 음성 & 텍스트 키보드
 
-DearTalk AI는 사용자의 소중한 대화와 음성 데이터를 외부 서버로 단 1바이트도 전송하지 않는 100% 온디바이스(On-Device) AI 커스텀 키보드입니다.
+디어톡(DearTalk) AI 음성키보드는 사용자의 소중한 대화와 음성 데이터를 외부 서버로 단 1바이트도 전송하지 않는 100% 온디바이스(On-Device) AI 커스텀 키보드입니다.
 
 최신 Google LiteRT 온디바이스 신경망 엔진을 탑재하여, 입력 중인 텍스트와 말로 하는 음성을 기기 내부에서 실시간으로 정밀 분석하고 원하는 어조(Tone)로 매끄럽게 다듬어 드립니다.
 
@@ -53,7 +53,7 @@ DearTalk AI는 사용자의 소중한 대화와 음성 데이터를 외부 서�
 - 이동 중에 음성으로 빠르게 말하고 비즈니스 톤으로 다듬어 전송하고 싶을 때
 - 내 사생활과 대화 내용이 AI 서버로 유출될까 봐 걱정될 때
 
-지금 바로 세상에서 가장 안전한 나만의 AI 비서 키보드, DearTalk AI를 경험해 보세요!
+지금 바로 세상에서 가장 안전한 나만의 AI 비서 키보드, 디어톡(DearTalk) AI 음성키보드를 경험해 보세요!
 ```
 
 ---
@@ -112,3 +112,14 @@ Google Play Console의 **데이터 보안(Data Safety)** 질문에 다음과 같
 | **오디오 파일 (Audio files)** | **수집 안 함 (Not collected)** | STT 변환은 기기 내부에서 실시간 처리되며 저장되지 않음 |
 | **메시지/텍스트 (Messages)** | **수집 안 함 (Not collected)** | 키보드 텍스트는 OS InputConnection을 통해 대상 앱으로만 전달됨 |
 | **데이터 암호화 전송** | **해당 없음 (N/A)** | 외부 네트워크 전송 자체가 없음 |
+
+---
+
+## 🔒 공식 개인정보 처리방침 (Privacy Policy) 제출 URL
+
+Play Console **앱 콘텐츠 ➔ 개인정보 처리방침**에 아래 URL을 그대로 입력하세요:
+
+- **제출 URL**: `https://deartalk-ai.pages.dev/`
+- **호스팅 인프라**: Cloudflare Pages 글로벌 엣지 (무료 SSL, 무제한 대역폭, HTTP/2 200 OK)
+- **지원 언어**: 한국어, English, Bahasa Indonesia (브라우저 자동 감지 및 탭 전환)
+- **빌드 전 검증 명령어**: `make verify-policy` (또는 `make release`)

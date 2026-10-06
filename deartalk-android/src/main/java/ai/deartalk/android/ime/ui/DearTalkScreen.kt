@@ -157,7 +157,7 @@ fun DearTalkScreen(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 🎙️ 대형 AI 음성 입력 마이크 버튼
+                // 🎙️ 대형 AI 음성 입력 마이크 캡슐 버튼 (Pill Voice Capsule)
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -167,16 +167,21 @@ fun DearTalkScreen(
                         .weight(1f)
                         .height(44.dp)
                         .scale(if (isListening) pulseScale else 1f),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    border = when (micUiState) {
+                        MicUiState.LISTENING -> androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFFDA4AF).copy(alpha = 0.85f))
+                        MicUiState.PROCESSING_AI -> androidx.compose.foundation.BorderStroke(1.5.dp, DearTalkSecondary.copy(alpha = 0.8f))
+                        else -> androidx.compose.foundation.BorderStroke(1.dp, DearTalkAccentGlow.copy(alpha = 0.35f))
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = when (micUiState) {
-                            MicUiState.PREPARING -> Color(0xFFD97706)      // ⏳ 마이크 준비 중 (오렌지)
-                            MicUiState.LISTENING -> Color(0xFFDC2626)      // 🔴 지금 말씀하세요 (레드 펄스)
-                            MicUiState.PROCESSING_AI -> Color(0xFF6366F1)  // 🔒 AI 변환 중 (인디고)
-                            MicUiState.IDLE -> DearTalkPrimary             // 🎙️ 평상시 대기 (블루)
+                            MicUiState.PREPARING -> Color(0xFFD97706)      // ⏳ 마이크 준비 중 (앰버)
+                            MicUiState.LISTENING -> Color(0xFFE11D48)      // 🔴 지금 말씀하세요 (로즈 레드 펄스)
+                            MicUiState.PROCESSING_AI -> DearTalkPrimary   // 🔒 AI 변환 중 (인디고)
+                            MicUiState.IDLE -> DearTalkPrimary             // 🎙️ 평상시 대기 (루미너스 인디고)
                         }
                     ),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp)
                 ) {
                     Icon(
                         imageVector = when (micUiState) {
@@ -187,7 +192,7 @@ fun DearTalkScreen(
                         },
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(19.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
@@ -204,7 +209,7 @@ fun DearTalkScreen(
                     )
                 }
 
-                // ⌨️ 키보드 바로가기 자판 버튼
+                // ⌨️ 키보드 바로가기 자판 버튼 (모던 라운딩 캡슐)
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -212,19 +217,20 @@ fun DearTalkScreen(
                     },
                     modifier = Modifier
                         .height(44.dp)
-                        .width(58.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DearTalkKeyActive),
+                        .width(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DearTalkBorder.copy(alpha = 0.6f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = DearTalkKey),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Keyboard, contentDescription = UiStrings.keyboardContentDesc, tint = Color.White, modifier = Modifier.size(17.dp))
+                        Icon(Icons.Default.Keyboard, contentDescription = UiStrings.keyboardContentDesc, tint = DearTalkText, modifier = Modifier.size(17.dp))
                         Spacer(modifier = Modifier.height(1.dp))
-                        Text(UiStrings.keyboard, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(UiStrings.keyboard, color = DearTalkText, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
 
-                // ⚙️ 설정 아이콘
+                // ⚙️ 설정 아이콘 (일관된 라운딩 및 테두리)
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -232,14 +238,15 @@ fun DearTalkScreen(
                     },
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(DearTalkKey)
+                        .border(1.dp, DearTalkBorder.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
                 ) {
                     Icon(
                         Icons.Default.Settings,
                         contentDescription = UiStrings.settingsContentDesc,
                         tint = DearTalkTextDim,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(19.dp)
                     )
                 }
             }
@@ -276,15 +283,18 @@ fun DearTalkScreen(
             }
 
             // ─────────────────────────────────────────────────────────────
-            // [2열] ✨ 스마트 DIFF 작업 캔버스 (헤더 스트립 + 마이크/로봇 아이콘화)
+            // [2열] ✨ 스마트 DIFF 작업 캔버스 (모던 글래스 카드 + 유선형 톤 칩)
             // ─────────────────────────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (hasContent) Color(0xFF1E293B) else DearTalkSurface
+                    containerColor = DearTalkSurface
                 ),
-                border = if (hasContent) androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF38BDF8).copy(alpha = 0.6f)) else null
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (hasContent) DearTalkAccentGlow.copy(alpha = 0.6f) else DearTalkBorder.copy(alpha = 0.6f)
+                )
             ) {
                 Column(
                     modifier = Modifier
@@ -304,29 +314,29 @@ fun DearTalkScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 좌측: 펼쳐진 톤앤매너 버튼들 (가로 스크롤, 원터치 선택)
+                        // 좌측: 펼쳐진 톤앤매너 버튼들 (유선형 모던 캡슐 칩)
                         LazyRow(
                             state = toneListState,
                             modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             items(tonesList, key = { it.id }) { tone ->
                                 val isSelected = selectedTone.id == tone.id
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(if (isSelected) Color(0xFF4338CA) else Color(0xFF1E293B))
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(if (isSelected) DearTalkPrimary else DearTalkKey)
                                         .border(
                                             width = if (isSelected) 1.5.dp else 1.dp,
-                                            color = if (isSelected) Color(0xFFA5B4FC) else Color(0xFF334155),
-                                            shape = RoundedCornerShape(6.dp)
+                                            color = if (isSelected) DearTalkAccentGlow else DearTalkBorder.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(14.dp)
                                         )
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onSelectTone(tone)
                                         }
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        .padding(horizontal = 9.dp, vertical = 4.5.dp)
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(tone.icon, fontSize = 11.5.sp)
@@ -335,7 +345,7 @@ fun DearTalkScreen(
                                             text = tone.name,
                                             fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else Color(0xFF94A3B8)
+                                            color = if (isSelected) Color.White else DearTalkTextDim
                                         )
                                     }
                                 }
@@ -462,18 +472,18 @@ fun DearTalkScreen(
                                                 .padding(top = 2.dp)
                                                 .size(20.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFF334155))
-                                                .border(1.dp, Color(0xFF475569), CircleShape),
+                                                .background(DearTalkKey)
+                                                .border(1.dp, DearTalkBorder, CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(Icons.Default.Mic, contentDescription = UiStrings.sttRaw, tint = Color(0xFF94A3B8), modifier = Modifier.size(11.dp))
+                                            Icon(Icons.Default.Mic, contentDescription = UiStrings.sttRaw, tint = DearTalkTextDim, modifier = Modifier.size(11.dp))
                                         }
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
                                             text = rawStt,
                                             modifier = Modifier.weight(1f),
                                             fontSize = 12.sp,
-                                            color = Color(0xFF94A3B8),
+                                            color = DearTalkTextDim,
                                             maxLines = 2
                                         )
                                     }
@@ -489,8 +499,8 @@ fun DearTalkScreen(
                                             .padding(top = 2.dp)
                                             .size(20.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFF0369A1))
-                                            .border(1.dp, Color(0xFF38BDF8), CircleShape),
+                                            .background(DearTalkPrimary)
+                                            .border(1.dp, DearTalkAccentGlow, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(Icons.Default.SmartToy, contentDescription = UiStrings.aiRefine, tint = Color.White, modifier = Modifier.size(12.dp))
@@ -499,19 +509,17 @@ fun DearTalkScreen(
                                     Text(
                                         text = if (isRetransforming) "✨ AI 문맥 재점검 중..." else refinedAi.ifBlank { rawStt },
                                         modifier = Modifier.weight(1f),
-                                        fontSize = 14.sp,
-                                        lineHeight = 19.sp,
+                                        fontSize = 15.sp,
+                                        lineHeight = 21.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isRetransforming) Color(0xFF38BDF8) else Color.White
+                                        color = if (isRetransforming) DearTalkSecondary else DearTalkText
                                     )
                                 }
-                            } else {
                                 Text(
                                     text = UiStrings.canvasPlaceholder,
-                                    fontSize = 12.5.sp,
+                                    fontSize = 12.sp,
                                     lineHeight = 17.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    color = DearTalkTextDim.copy(alpha = 0.6f)
+                                    color = DearTalkTextDim
                                 )
                             }
                         }
@@ -533,15 +541,15 @@ fun DearTalkScreen(
                 val isAutoSelected = selectedSpeechIntent == SpeechIntent.AUTO
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .size(34.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (isAutoSelected) Color(0xFF0C4A6E).copy(alpha = 0.7f) else DearTalkKey
+                            if (isAutoSelected) DearTalkPrimary.copy(alpha = 0.25f) else DearTalkKey
                         )
                         .border(
                             width = if (isAutoSelected) 1.5.dp else 1.dp,
-                            color = if (isAutoSelected) Color(0xFF38BDF8).copy(alpha = 0.8f) else Color(0xFF6366F1).copy(alpha = 0.25f),
-                            shape = RoundedCornerShape(8.dp)
+                            color = if (isAutoSelected) DearTalkPrimary else DearTalkBorder.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(10.dp)
                         )
                         .clickable {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -552,7 +560,7 @@ fun DearTalkScreen(
                     Icon(
                         imageVector = Icons.Default.SmartToy,
                         contentDescription = "AI 자동 감지 (기본)",
-                        tint = if (isAutoSelected) Color(0xFF38BDF8) else Color.Gray,
+                        tint = if (isAutoSelected) DearTalkPrimary else DearTalkTextDim,
                         modifier = Modifier.size(17.dp)
                     )
                 }
@@ -576,15 +584,15 @@ fun DearTalkScreen(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(34.dp)
+                            .clip(RoundedCornerShape(10.dp))
                             .background(
-                                if (isActive) Color(0xFF0369A1) else DearTalkKey
+                                if (isActive) DearTalkPrimary else DearTalkKey
                             )
                             .border(
                                 width = if (isActive) 1.5.dp else 1.dp,
-                                color = if (isActive) Color(0xFF7DD3FC) else Color(0xFF0284C7).copy(alpha = 0.25f),
-                                shape = RoundedCornerShape(8.dp)
+                                color = if (isActive) DearTalkAccentGlow else DearTalkBorder.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(10.dp)
                             )
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -595,7 +603,7 @@ fun DearTalkScreen(
                         Text(
                             text = intent.getLabel(),
                             color = if (isActive) Color.White else DearTalkText,
-                            fontSize = 10.sp,
+                            fontSize = 10.5.sp,
                             fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
                             maxLines = 1,
                             softWrap = false,
@@ -621,10 +629,11 @@ fun DearTalkScreen(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDeleteSentenceClick()
                     },
-                    modifier = Modifier.height(40.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155)),
-                    contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp)
+                    modifier = Modifier.height(42.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DearTalkBorder.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = DearTalkKey),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -644,7 +653,7 @@ fun DearTalkScreen(
                     }
                 }
 
-                // 📥 [✓ 메시지 입력] — 대형 메인 CTA 버튼
+                // 📥 [✓ 메시지 입력] — 대형 메인 CTA 버튼 (Luminous Indigo)
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -654,10 +663,11 @@ fun DearTalkScreen(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(8.dp),
+                        .height(42.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = if (hasContent) androidx.compose.foundation.BorderStroke(1.dp, DearTalkAccentGlow.copy(alpha = 0.8f)) else null,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (hasContent) Color(0xFF059669) else DearTalkKeyActive
+                        containerColor = if (hasContent) DearTalkPrimary else DearTalkKeyActive
                     ),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                 ) {
@@ -666,13 +676,13 @@ fun DearTalkScreen(
                             Icons.Default.Check,
                             contentDescription = UiStrings.applyContentDesc,
                             tint = Color.White,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = UiStrings.applyMessage,
                             color = Color.White,
-                            fontSize = 13.sp,
+                            fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
@@ -686,14 +696,15 @@ fun DearTalkScreen(
                         onEnterClick()
                     },
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(DearTalkSecondary)
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DearTalkKey)
+                        .border(1.dp, DearTalkBorder.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardReturn,
                         contentDescription = UiStrings.enterContentDesc,
-                        tint = Color.Black,
+                        tint = DearTalkText,
                         modifier = Modifier.size(18.dp)
                     )
                 }

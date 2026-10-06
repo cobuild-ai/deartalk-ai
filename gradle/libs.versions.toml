@@ -35,7 +35,7 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 # Google LiteRT-LM (On-device Gemma .litertlm Inference Engine)
 litertlm-android = { group = "com.google.ai.edge.litertlm", name = "litertlm-android", version = "0.17.1" }
 
-# Google MediaPipe GenAI (On-device Gemma 2B .bin Inference)
+# Google MediaPipe GenAI (On-device Gemma 4 E2B .litertlm Inference)
 mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipeGenai" }
 
 # Google Play Asset Delivery (PAD)

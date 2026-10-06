@@ -103,10 +103,32 @@ object DearTalkSettings {
     fun setKoreanKeyboardType(context: Context, type: KoreanKeyboardType) {
         getPrefs(context).edit().putString(KEY_KOREAN_KEYBOARD_TYPE, type.name).apply()
     }
+
+    private const val KEY_THEME_MODE = "key_keyboard_theme_mode"
+
+    fun getThemeMode(context: Context): KeyboardThemeMode {
+        val name = getPrefs(context).getString(KEY_THEME_MODE, KeyboardThemeMode.SYSTEM.name)
+        return try {
+            KeyboardThemeMode.valueOf(name ?: KeyboardThemeMode.SYSTEM.name)
+        } catch (e: Exception) {
+            KeyboardThemeMode.SYSTEM
+        }
+    }
+
+    fun setThemeMode(context: Context, mode: KeyboardThemeMode) {
+        getPrefs(context).edit().putString(KEY_THEME_MODE, mode.name).apply()
+    }
 }
 
 enum class KoreanKeyboardType {
     DUBEOLSIK,
     CHEONJIIN
 }
+
+enum class KeyboardThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK
+}
+
 
