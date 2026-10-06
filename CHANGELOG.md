@@ -5,6 +5,25 @@ All notable changes to **DearTalk AI (Android IME)** will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-10-04
+
+### Added & Improved
+- **🚀 3단계 온보딩 마법사(Onboarding Wizard) 도입**: 키보드 활성화, 기본 입력기 선택, 마이크 권한 허용을 한 화면에서 원터치로 안내하는 `OnboardingWizardScreen` 신설.
+- **🌐 Google Play 공개 테스트(Open Testing - Track: beta) 런칭**: 글로벌 사용자 및 오픈소스 테스터 커뮤니티 확장을 위해 내부 테스트에서 공개 테스트 트랙으로 전면 전환.
+- **🛡️ 릴리즈 노트 최적화 & 다국어 동기화**: Google Play 500자 제한을 완벽히 준수하도록 3개 국어(KO, EN, ID) 릴리즈 노트를 간결하게 최적화 및 동기화.
+- **📚 Google Play 배포 표준 워크플로우 문서화**: `docs/GOOGLE_PLAY_PUBLISH_WORKFLOW.md`를 신설하여 멀티 LLM 에이전트 간 배포 프로세스 표준화.
+
+---
+
+## [1.2.1] - 2026-10-04
+
+### Added & Improved
+- **🎨 Day & Night 프리미엄 듀얼 테마 체계 구축**: Midnight Obsidian(다크) 및 Slate Frost(라이트) 모드를 지원하여 안드로이드 OS 테마에 실시간 적응하는 인체공학적 키보드 룩앤필 제공.
+- **🎙️ 마이크 권한 자동 복구 및 실시간 체크 (Zero Silent Failure)**: 음성 입력 시 마이크 권한이 꺼져 있을 때 원터치 시스템 허용 다이얼로그로 유도하여 무반응 실패 현상을 원천 차단.
+- **📱 세로 모드(Portrait Only) 고정**: 키보드가 가로 전체 화면을 덮는 현상을 방지하고 하단 38% 콤팩트 키보드 뷰 유지.
+- **🏷️ 한국어 표준 명칭 '디어톡(DearTalk) AI 음성키보드' 전면 적용**: UI 라벨, 다국어 리소스, 스토어 리스팅에서 친절한 한글 병기 일원화.
+- **🌐 Google Play 13개 핵심 타겟 국가 전략 수립**: 고유 자판이 완비된 한국어권 및 표준 영문 QWERTY 12개국 집중 타겟팅 (`docs/GLOBAL_TARGETING_STRATEGY.md`).
+
 ---
 
 ## [1.2.0] - 2026-09-30

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 🔄 DearTalk 180도 대면 모드(Flip View) 3개 국어(KO, EN, ID) 실기기 캡처기
-- 대상: Samsung Galaxy S22 Ultra (192.168.1.136:39951)
+- 대상: Samsung Galaxy S22 Ultra (<DEVICE_IP>:<ADB_PORT>)
 - 180도 상하 대칭 회전 대화 화면 (showcase_live_180_ko.png, en.png, id.png)
 """
 
@@ -11,7 +11,7 @@ import sys
 import time
 import subprocess
 
-DEVICE = "192.168.1.136:39951"
+DEVICE = "<DEVICE_IP>:<ADB_PORT>"
 PKG = "ai.deartalk.android.debug"
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 OUT_DIR = os.path.join(ROOT_DIR, "Journal", "2026", "첨부파일")

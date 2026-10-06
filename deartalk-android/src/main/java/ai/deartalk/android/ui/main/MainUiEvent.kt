@@ -16,4 +16,6 @@ sealed interface MainUiEvent {
     data class SetAutoLanguage(val auto: Boolean) : MainUiEvent
     data class SelectLanguageCode(val code: String) : MainUiEvent
     data class ChangeKoreanKeyboardType(val type: KoreanKeyboardType) : MainUiEvent
+    object DismissOnboarding : MainUiEvent
+    object CompleteOnboarding : MainUiEvent
 }

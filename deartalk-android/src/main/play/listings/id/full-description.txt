@@ -1,8 +1,8 @@
-✨ DearTalk AI: Keyboard Suara AI On-Device 100% Privat & Penerjemah Langsung 59 Bahasa
+✨ DearTalk AI: Keyboard Suara AI On-Device 100% Privat & Tanpa Kuota (Voice IME)
 
 Berfungsi 100% Offline di Pesawat, Luar Negeri, & Area Tanpa Jaringan Internet!
 Tanpa Kirim Data ke Server. Privasi Air-Gap 100% & Gratis Selamanya.
-DearTalk AI bekerja sepenuhnya di dalam NPU smartphone dan jaringan saraf on-device Anda tanpa mengirimkan data ke cloud. Tanpa biaya langganan bulanan dan bebas biaya token AI tersembunyi.
+DearTalk AI bekerja sepenuhnya di dalam NPU smartphone dan jaringan saraf on-device Anda tanpa mengirimkan data suara atau teks ke cloud. Tanpa biaya langganan bulanan dan bebas biaya token AI tersembunyi.
 
 🎙️ BAGIAN 1. Keyboard Suara AI On-Device Cerdas (Voice IME)
 Bicara secara alami di aplikasi pesan, email, catatan, atau pencarian web mana pun.
@@ -17,32 +17,24 @@ Bicara secara alami di aplikasi pesan, email, catatan, atau pencarian web mana p
   - 🤝 Sopan (Polite): Penuh hormat dan ramah
   - 💖 Hangat (Empathetic): Hangat dan penuh empati
 
-⚡ BAGIAN 2. DearTalk Live: Terjemahan Langsung Tatap Muka 59 Bahasa
-Berkomunikasi lancar saat bepergian ke luar negeri, di pesawat, atau tanpa internet.
+⌨️ BAGIAN 2. Automata Pengetikan Pintar & Keyboard Nyaman
+Pengetikan cepat dan mulus melengkapi input suara cerdas Anda.
 
-1. 🚀 Mesin Hibrida 2-Track Latensi Ultra-Rendah
-- Track 1 (~50ms): Draf terjemahan instan 59 bahasa global via Google ML Kit On-Device NMT.
-- Track 2 (~2s): Pemurnian nuansa kontekstual via model bahasa AI on-device.
+1. ⚡ Mesin Automata Tingkat Lanjut
+- Mendukung pengetikan teks multi-tap dan tata letak yang responsif dengan presisi tinggi.
 
-2. 🔄 Tampilan Balik Layar 180° (Flip View)
-- Letakkan ponsel di meja. Layar lawan bicara berputar 180 derajat sehingga dapat saling bertatap mata dengan nyaman.
+2. 🎯 Stabilitas Kursor & Pencegahan Kesalahan
+- Pengalaman mengetik yang stabil dan bebas lag untuk percakapan sehari-hari.
 
-3. 🔊 Toggle 1-Ketuk Auto-Speak (TTS Suara)
-- Aktifkan atau matikan suara pembaca terjemahan secara instan dari bilah aplikasi atas.
+🔄 BAGIAN 3. P2P Mesh Model Vault (Berbagi Model Tanpa Duplikasi)
+Ekosistem AI on-device cerdas tanpa memboroskan ruang penyimpanan.
 
-4. 🧹 200 Ring Buffer Memori O(1)
-- Batas maksimal 200 pesan FIFO membuat ponsel tetap ringan dan bebas lag.
+1. 📦 Nol Unduhan Ganda (0MB Pemborosan)
+- Berbagi model AI lokal secara aman antar aplikasi keluarga menggunakan ContentProvider terverifikasi tanda tangan digital.
 
-💰 BAGIAN 3. 100% Gratis Selamanya & Bebas Biaya AI
-- Berjalan langsung di NPU smartphone Anda tanpa memanggil API cloud eksternal berbayar.
-- Nikmati percakapan dan terjemahan tanpa batas tanpa tagihan data atau biaya token AI.
-- Tanpa langganan bulanan, tanpa paywall, dan tanpa biaya tersembunyi.
+2. 🛡️ Privasi Air-Gap 100%
+- Kata sandi, data keuangan, dan obrolan pribadi yang diketik melalui keyboard tidak pernah dikirim ke server luar.
 
-✈️ BAGIAN 4. 100% Offline: Pesawat, Luar Negeri, & Tanpa Koneksi Internet
+✈️ BAGIAN 4. 100% Gratis Selamanya & Bekerja Penuh Tanpa Internet
 - Beroperasi sempurna di dalam pesawat (Mode Pesawat), saat traveling ke luar negeri tanpa roaming, atau di tempat tanpa sinyal.
-- Terjemahan tatap muka 59 bahasa dan pengetikan suara AI tetap aktif 100% tanpa Wi-Fi maupun data seluler.
-- Keamanan Air-Gapped mutlak menjaga privasi dan kerahasiaan percakapan Anda.
-
-🌐 Rincian Dukungan Bahasa:
-- Terjemahan On-Device Offline: 59 bahasa global termasuk Indonesia, Inggris, Korea, Jepang, Mandarin, Spanyol, Prancis, Jerman, Vietnam, Thai, dll.
-- Antarmuka (UI) Aplikasi & Penyesuaian Nada AI On-Device: Dioptimalkan penuh untuk Bahasa Indonesia, Inggris, dan Korea.
+- Tanpa panggilan API cloud eksternal, tanpa kuota internet, dan tanpa biaya langganan—perangkat lunak open source 100% gratis selamanya.

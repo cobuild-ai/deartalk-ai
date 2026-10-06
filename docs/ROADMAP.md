@@ -20,7 +20,7 @@ DearTalkAI exists to provide **100% on-device, zero-network, honest AI communica
 │ Milestone 1 (v1.0.3 Stable)│───►│  Milestone 2 (In Progress) │───►│   Milestone 3 (Next Gen)   │
 └────────────────────────────┘    └────────────────────────────┘    └────────────────────────────┘
   - Android 15 & Target SDK 35      - Voice-to-Action (Agents)        - Multi-modal Vision Input
-  - 100% On-Device Gemma 2B         - Dynamic Tool Calling            - Local Memory Graph
+  - 100% On-Device Gemma 4 E2B      - Dynamic Tool Calling            - Local Memory Graph
   - Offline Multilingual STT        - NPU Hardware Acceleration       - Zero-Latency Streaming
 ```
 

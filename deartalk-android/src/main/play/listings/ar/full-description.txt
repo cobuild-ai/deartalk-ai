@@ -1,48 +1,40 @@
-✨ DearTalk AI: لوحة مفاتيح صوتية بالذكاء الاصطناعي على الجهاز 100% ومترجم فوري لـ 59 لغة
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-بدون إرسال بيانات إلى السحابة. خصوصية كاملة ومعزولة تماماً (Air-Gapped).
-يعمل DearTalk AI بالكامل على معالج NPU في هاتفك الذكي دون إرسال أي بايت من الصوت أو النص إلى خوادم خارجية.
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ الجزء 1. لوحة مفاتيح صوتية ذكية على الجهاز (Voice IME)
-تحدث بطبيعية في أي تطبيق مراسلة أو بريد إلكتروني أو ملاحظات وسيقوم الذكاء الاصطناعي بتنقيح جملك فورياً.
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ تصحيح الإملاء والقواعد في الوقت الفعلي
-- يحلل الذكاء الاصطناعي المحلي السياق ويصحح الأخطاء المطبعية وعلامات الترقيم لتحويلها إلى جمل متناسقة.
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 تحويل النبرة والأسلوب بلمسة واحدة
-- اختر النبرة المناسبة لكل موقف:
-  - 😼 واثق (Cheeky): جريء، ذكي ومميز
-  - 👔 رسمي (Formal): مثالي للعمل والاجتماعات
-  - 🤝 مهذب (Polite): محترم ولبق
-  - 💖 متعاطف (Empathetic): دافئ، ودود ومراعي للمشاعر
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ الجزء 2. DearTalk Live: ترجمة فورية وجهاً لوجه لـ 59 لغة
-تواصل بسهولة أثناء السفر، على متن الطائرة، أو في الاجتماعات حتى بدون إنترنت.
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 محرك هجين 2-Track فائق السرعة
-- Track 1 (~50ms): مسودة ترجمة فورية لـ 59 لغة عبر Google ML Kit المحلي.
-- Track 2 (~2s): صياغة طبيعية وتعبيرية باستخدام نموذج الذكاء الاصطناعي على الجهاز.
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 شاشة منقسمة قابلة للتدوير 180 درجة (Flip View)
-- ضع الهاتف على الطاولة: تدور شاشة الطرف الآخر 180 درجة لقراءة مريحة مع الحفاظ على التواصل البصري.
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 تشغيل النطق الصوتي بلمسة واحدة (Auto-Speak TTS)
-- تفعيل أو كتم القراءة الصوتية للترجمة من الشريط العلوي للتطبيق.
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 ذاكرة دائرية تتسع لـ 200 رسالة O(1)
-- حد أقصى 200 رسالة بنظام FIFO للحفاظ على سرعة الهاتف وخفة المساحة.
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 الجزء 3. مجاني تمامًا بنسبة 100% وبدون أي تكاليف للذكاء الاصطناعي
-- يعمل محليًا على وحدة NPU بهاتفك الذكي دون استدعاء واجهات برمجة تطبيقات سحابية مدفوعة.
-- تحدث وترجم بلا حدود: بدون رسوم بيانات أو تكاليف استهلاك للرموز (Tokens).
-- لا توجد اشتراكات شهرية أو رسوم مخفية. استمتع بجميع الميزات مجانًا للأبد.
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ الجزء 4. يعمل دون اتصال 100%: في الطائرة، والسفر للخارج، وبدون شبكة إنترنت
-- يعمل بكفاءة في وضع الطيران، وأثناء السفر للخارج دون تجوال، وفي الأماكن الخالية من التغطية.
-- ترجمة فورية لـ 59 لغة وكتابة صوتية بالذكاء الاصطناعي دون الحاجة لشبكة Wi-Fi أو بيانات خلوية.
-- أمان Air-Gapped مطلق لحماية سرية محادثاتك الشخصية وأعمالك. أمان معزول 100% ودعم وضع الطيران
-- يعمل بدون اتصال بالإنترنت تماماً. سرية مطلقة للمحادثات الخاصة واجتماعات العمل.
-
-🌐 اللغات المدعومة:
-- ترجمة بدون إنترنت: 59 لغة تشمل العربية والإنجليزية والكورية واليابانية والفرنسية وغيرها.
-- الواجهة وأنماط الذكاء الاصطناعي: العربية، الإنجليزية، الكورية، الإندونيسية.
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

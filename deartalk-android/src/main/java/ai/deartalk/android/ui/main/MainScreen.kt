@@ -14,6 +14,8 @@ import ai.deartalk.android.ime.ui.theme.*
 import ai.deartalk.android.ui.main.components.*
 import ai.deartalk.android.ui.state.MainUiState
 
+import ai.deartalk.android.ui.onboarding.OnboardingWizardScreen
+
 /**
  * 📱 DearTalk AI 메인 설정 및 가이드 화면 (UDF / MVI Presentation)
  * - 불변 MainUiState를 구독하고 단일 MainUiEvent 채널로 사용자 동작을 위임
@@ -25,6 +27,7 @@ fun MainScreen(
     onEvent: (MainUiEvent) -> Unit,
     onEnableIme: () -> Unit,
     onSelectIme: () -> Unit,
+    onRequestMicPermission: () -> Unit,
     onOpenLive: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -32,12 +35,32 @@ fun MainScreen(
     val isKorean = UiStrings.isKo
     val isIndonesian = UiStrings.isId
 
+    // 🌟 온보딩 마법사 표시 여부 판별 (키보드 미활성화/미선택 또는 마이크 권한 미허용 상태이고, 아직 닫지 않았을 때)
+    val showOnboarding = (!uiState.isImeSelected || !uiState.isImeEnabled || !uiState.hasMicPermission) && !uiState.isOnboardingDismissed
+
+    if (showOnboarding) {
+        OnboardingWizardScreen(
+            isImeEnabled = uiState.isImeEnabled,
+            isImeSelected = uiState.isImeSelected,
+            hasMicPermission = uiState.hasMicPermission,
+            isKorean = isKorean,
+            isIndonesian = isIndonesian,
+            onEnableIme = onEnableIme,
+            onSelectIme = onSelectIme,
+            onRequestMicPermission = onRequestMicPermission,
+            onComplete = { onEvent(MainUiEvent.CompleteOnboarding) },
+            onDismiss = { onEvent(MainUiEvent.DismissOnboarding) },
+            modifier = modifier
+        )
+        return
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        if (isKorean) "DearTalk AI 설정 및 가이드"
+                        if (isKorean) "디어톡(DearTalk) AI 음성키보드 설정 및 가이드"
                         else if (isIndonesian) "Pengaturan DearTalk AI"
                         else "DearTalk AI Settings & Guide",
                         fontWeight = FontWeight.Bold,
@@ -101,9 +124,14 @@ fun MainScreen(
 
             // 5. Cobuild AI 패밀리 앱 안내 카드 (DearTalk Voice Translator 출시 예정)
             FamilyAppsSectionCard(
-                context = context,
                 isKorean = isKorean,
-                isIndonesian = isIndonesian
+                isIndonesian = isIndonesian,
+                onComingSoonClick = {
+                    val msg = if (isKorean) "🗣️ 디어톡(DearTalk) 음성 통역기는 곧 출시될 예정입니다!"
+                              else if (isIndonesian) "🗣️ DearTalk Penerjemah Suara akan segera hadir!"
+                              else "🗣️ DearTalk Voice Translator is coming soon!"
+                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                }
             )
 
             // 6. 사용 방법 안내
@@ -113,7 +141,22 @@ fun MainScreen(
             SwitchKeyboardCard(isKorean = isKorean, isIndonesian = isIndonesian, onSelectIme = onSelectIme)
 
             // 8. 앱 정보
-            AppAboutCard(context = context, isKorean = isKorean, isIndonesian = isIndonesian)
+            val packageInfo = try {
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            } catch (_: Exception) { null }
+
+            val versionName = "v${packageInfo?.versionName ?: "1.0.0"} (${if (isKorean) "빌드" else "Build"} ${packageInfo?.longVersionCode ?: 1})"
+            val buildTimestamp = packageInfo?.let {
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                sdf.format(java.util.Date(it.lastUpdateTime))
+            } ?: if (isKorean) "확인 불가" else if (isIndonesian) "Tidak diketahui" else "Unknown"
+
+            AppAboutCard(
+                versionName = versionName,
+                buildTimestamp = buildTimestamp,
+                isKorean = isKorean,
+                isIndonesian = isIndonesian
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }

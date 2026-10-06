@@ -43,7 +43,7 @@ make test              # or ./verify.sh unit
 make verify-device     # or ./verify.sh device
 
 # 📱 Run Real-Device Audit with custom parameters
-./verify.sh device --events 1000 --throttle 20 --device 192.168.1.136:35859
+./verify.sh device --events 1000 --throttle 20 --device <DEVICE_IP>:<ADB_PORT>
 
 # 🔨 Build & Install Debug APK on connected phone/emulator
 make build             # or ./verify.sh build

@@ -115,7 +115,7 @@ def main():
 
     device = args.device
     if not device:
-        # 192.168.1.136:39951 우선 선택
+        # Wi-Fi ADB 디바이스(사설 IP 엔드포인트) 우선 선택
         wifi_dev = [d for d in connected if "192.168." in d or "5555" in d or "tcp" in d]
         device = wifi_dev[0] if wifi_dev else connected[0]
 

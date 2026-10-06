@@ -22,7 +22,7 @@ graph TD
 
     subgraph Hardware Accelerated On-Device AI
         C --> F[Google LiteRT GPU Delegate]
-        F --> G[(Google Gemma 2B Quantized .litertlm)]
+        F --> G[(Google Gemma 4 E2B Quantized .litertlm)]
         H[Google Play Asset Delivery PAD / Local ADB] -.-> G
     end
 
@@ -45,7 +45,7 @@ sequenceDiagram
     participant IME as ⌨️ DearTalkIME (InputMethodService)
     participant Controller as 🎮 ImeActionController
     participant Engine as 🧠 DearTalkIntentEngine
-    participant LLM as ⚡ Google LiteRT GPU (Gemma 2B)
+    participant LLM as ⚡ Google LiteRT GPU (Gemma 4 E2B)
     participant Diff as 📊 DiffEngine (LCS)
 
     User->>HostApp: Focuses any text field

@@ -64,3 +64,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+# Internal-only journals: never leave Gate 1 (01-production)
+docs/journal/
+
+# Internal-only assets: never leave their allowed gate tier
+docs/AI_TRUTH_AND_INTEGRITY_POLICY.md
+docs/BRANCH_RULES.md
+docs/GIT_WORKFLOW_AND_CONFLICT_GUIDE.md
+docs/GLOBAL_TARGETING_STRATEGY.md
+docs/GOOGLE_PLAY_PUBLISH_WORKFLOW.md
+docs/LICENSE_AND_COMPLIANCE_GUIDE.md
+docs/PLAY_STORE_TESTING_AND_INVITE_GUIDE.md
+docs/UI_SCREEN_AUTOMATION_TEST_SPEC.md
+docs/README.md

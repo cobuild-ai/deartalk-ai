@@ -29,7 +29,7 @@ It refines typed text and spoken voice (STT) with real-time, context-aware tone 
 
 | Component | Version | Target SDK | Status | Primary Highlights |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Voice Keyboard** | `v1.1.5` | **Android 16 (API 36)** | **Production Stable** | Dedicated Voice Keyboard IME, 6 Tone Presets, Zero-Lock NPU Architecture, P2P Mesh Model Vault Integration |
+| 🤖 **DearTalk Voice Keyboard** | `v1.2.2` | **Android 16 (API 36)** | **Open Testing (Beta)** | 3-Step Onboarding Wizard, Day & Night Dual Theme, Zero-Silent-Failure Mic Recovery, 100% On-Device Zero-Network Gemma 4 E2B |
 
 ---
 
@@ -85,7 +85,7 @@ sequenceDiagram
     participant IME as ⌨️ DearTalkIME (Compose)
     participant Controller as 🎮 ImeActionController
     participant Engine as 🧠 DearTalkIntentEngine
-    participant LLM as ⚡ LiteRT GPU (Gemma 2B)
+    participant LLM as ⚡ LiteRT GPU (Gemma 4 E2B)
     participant Diff as 📊 DiffEngine (LCS)
 
     User->>HostApp: Focuses text field

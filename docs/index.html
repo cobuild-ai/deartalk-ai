@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - DearTalk AI</title>
+  <meta name="description" content="Official Privacy Policy and 100% On-Device Zero-Data Guarantee for DearTalk AI Android Keyboard. Zero internet permission, zero telemetry.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  
+  <!-- Open Graph / Facebook / Kakao -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://deartalk-ai.pages.dev/">
+  <meta property="og:title" content="Privacy Policy - DearTalk AI">
+  <meta property="og:description" content="100% On-Device AI Keyboard • Zero Network Transmission • Absolute Privacy Guarantee">
+  <meta property="og:site_name" content="DearTalk AI">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Privacy Policy - DearTalk AI">
+  <meta name="twitter:description" content="100% On-Device AI Keyboard • Zero Network Transmission • Absolute Privacy Guarantee">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --card-bg: rgba(22, 30, 46, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --success: #34d399;
+      --badge-bg: rgba(52, 211, 153, 0.12);
+      --badge-border: rgba(52, 211, 153, 0.3);
+      --tab-active-bg: #1e293b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glows */
+    body::before {
+      content: "";
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(11, 15, 23, 0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      color: var(--success);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .last-updated {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Language Switcher Tabs */
+    .lang-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 28px 0;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      max-width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .lang-btn:hover {
+      color: #fff;
+    }
+
+    .lang-btn.active {
+      background: var(--tab-active-bg);
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Content Card */
+    .content-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 640px) {
+      .content-card {
+        padding: 24px 20px;
+      }
+      h1 {
+        font-size: 1.7rem;
+      }
+    }
+
+    .lang-section {
+      display: none;
+    }
+
+    .lang-section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 32px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+    }
+
+    p {
+      color: #cbd5e1;
+      margin-bottom: 16px;
+      font-size: 0.98rem;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 20px;
+      color: #cbd5e1;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: #fff;
+    }
+
+    .highlight-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin: 20px 0;
+    }
+
+    .highlight-box strong {
+      color: var(--accent);
+    }
+
+    .permission-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.92rem;
+    }
+
+    .permission-table th, .permission-table td {
+      border: 1px solid var(--card-border);
+      padding: 12px 14px;
+      text-align: left;
+    }
+
+    .permission-table th {
+      background: rgba(30, 41, 59, 0.6);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .permission-table td code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px 6px;
+      border-radius: 4px;
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--text-muted);
+    }
+
+    footer a:hover {
+      color: var(--text-main);
+    }
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        padding: 0;
+      }
+      body::before {
+        display: none;
+      }
+      .lang-switcher, footer {
+        display: none !important;
+      }
+      .content-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      h1, h2, li strong, p, td, th {
+        color: #000 !important;
+      }
+      .highlight-box {
+        border: 1px solid #ccc !important;
+        background: #f8f9fa !important;
+      }
+      a {
+        color: #000 !important;
+        text-decoration: underline;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="logo-badge">
+        <span>🛡️</span>
+        <span>100% On-Device AI • Zero Cloud Storage</span>
+      </div>
+      <h1 id="page-title">Privacy Policy</h1>
+      <p class="last-updated" id="last-updated">Last Updated: September 24, 2026</p>
+
+      <!-- Language Selector -->
+      <nav class="lang-switcher" aria-label="Language selection">
+        <button class="lang-btn active" id="btn-ko" onclick="switchLang('ko', true)">🇰🇷 한국어</button>
+        <button class="lang-btn" id="btn-en" onclick="switchLang('en', true)">🇺🇸 English</button>
+        <button class="lang-btn" id="btn-id" onclick="switchLang('id', true)">🇮🇩 Indonesia</button>
+      </nav>
+    </header>
+
+    <main class="content-card">
+
+      <!-- ==================== KO (한국어) ==================== -->
+      <section id="lang-ko" class="lang-section active">
+        <div class="highlight-box">
+          <strong>🔒 100% 온디바이스 개인정보 보호 선언</strong><br>
+          디어톡(DearTalk) AI 음성키보드는 사용자의 타이핑 키 입력, 음성 녹음 내용, 변환된 텍스트를 외부 서버로 <strong>단 1바이트도 전송하지 않습니다.</strong> 인터넷 권한(INTERNET Permission)이 아예 없는 완전한 오프라인 독립 키보드입니다.
+        </div>
+
+        <h2>1. 오프라인 온디바이스 아키텍처 및 데이터 미수집</h2>
+        <p>디어톡(DearTalk) AI 음성키보드는 절대적인 프라이버시 보호(Privacy-First)를 위해 설계되었습니다:</p>
+        <ul>
+          <li><strong>물리적 네트워크 차단 (인터넷 권한 0개)</strong>: 안드로이드 매니페스트에 <code>android.permission.INTERNET</code> 권한 자체가 선언되어 있지 않으므로, 기기 외부나 제3자 서버로 데이터를 전송하는 것이 기술적으로 불가능합니다.</li>
+          <li><strong>기기 내부 로컬 신경망 추론</strong>: Google LiteRT 기반 온디바이스 모델이 스마트폰 내부 CPU/GPU/NPU에서만 실행됩니다.</li>
+          <li><strong>광고 및 추적 SDK 제로</strong>: 외부 광고 프레임워크, 사용자 행동 분석(Analytics), 진단 트래킹 SDK가 전혀 포함되어 있지 않습니다.</li>
+        </ul>
+
+        <h2>2. 요청 권한 및 이용 목적</h2>
+        <p>안드로이드 입력기(IME) 동작에 필수적인 최소한의 권한만 요청합니다:</p>
+        <table class="permission-table">
+          <thead>
+            <tr>
+              <th>권한명</th>
+              <th>요청 목적</th>
+              <th>데이터 처리 방식</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>RECORD_AUDIO</code><br>(마이크)</td>
+              <td>마이크 버튼 탭 시 실시간 온디바이스 음성 입력(STT)</td>
+              <td>안드로이드 기기 내장 음성인식기에서 휘발성 메모리로 처리 후 즉시 소멸. <strong>녹음 파일 저장 및 외부 전송 절대 없음.</strong></td>
+            </tr>
+            <tr>
+              <td><code>VIBRATE</code><br>(진동)</td>
+              <td>키보드 타이핑 시 촉각 피드백 제공</td>
+              <td>기기 햅틱 구동 전용 (데이터 수집 없음)</td>
+            </tr>
+            <tr>
+              <td><code>BIND_INPUT_METHOD</code></td>
+              <td>안드로이드 기본 키보드로 등록</td>
+              <td>시스템 필수 권한</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. 데이터 보관 및 파기 정책 (Google Play Data Safety)</h2>
+        <ul>
+          <li><strong>서버 보관 없음</strong>: 백엔드 서버 자체가 존재하지 않으므로 수집 또는 보관되는 개인 데이터가 없습니다.</li>
+          <li><strong>휘발성 메모리(RAM) 즉시 소멸</strong>: 음성 변환 중 발생한 텍스트 임시 버퍼는 메시지 입력 완료 즉시 메모리에서 파기됩니다.</li>
+          <li><strong>사용자 완전 통제</strong>: 앱을 삭제하거나 안드로이드 설정에서 데이터를 지우면 로컬 설정(키보드 높이 등)은 영구적으로 삭제됩니다.</li>
+        </ul>
+
+        <h2>4. 아동 프라이버시</h2>
+        <p>디어톡(DearTalk) AI 음성키보드는 만 14세 미만 아동을 포함하여 어떠한 사용자의 개인정보도 수집, 처리, 공유하지 않습니다.</p>
+
+        <h2>5. 오픈소스 투명성 (Open Source)</h2>
+        <p>디어톡(DearTalk) AI 음성키보드는 <strong>Apache License 2.0</strong> 오픈소스 표준을 준수하며, 외부 네트워크 통신이 없는 온디바이스 아키텍처를 바탕으로 투명하고 안전하게 운영됩니다.</p>
+
+        <h2>6. 문의 및 담당자 연락처</h2>
+        <p>개인정보 처리방침 또는 보안 관련 문의사항은 언제든지 아래 공식 창구로 연락 주시기 바랍니다:</p>
+        <ul>
+          <li><strong>공식 문의 이메일</strong>: <a href="mailto:onthelogic@gmail.com">onthelogic@gmail.com</a></li>
+          <li><strong>테스터 커뮤니티</strong>: <a href="mailto:aibuilder-testers@googlegroups.com">aibuilder-testers@googlegroups.com</a></li>
+        </ul>
+      </section>
+
+      <!-- ==================== EN (English) ==================== -->
+      <section id="lang-en" class="lang-section">
+        <div class="highlight-box">
+          <strong>🔒 100% On-Device Privacy Commitment</strong><br>
+          DearTalk AI never transmits keystrokes, voice recordings, or translated text to external cloud servers. The app contains <strong>zero INTERNET permission</strong>, guaranteeing 100% offline, air-gapped privacy.
+        </div>
+
+        <h2>1. 100% On-Device Processing & Zero Data Collection</h2>
+        <p>DearTalk AI is architected with a strict <strong>Zero-Data / Privacy-First Architecture</strong>:</p>
+        <ul>
+          <li><strong>Physical Network Isolation (Zero INTERNET Permission)</strong>: The Application does NOT declare or request the <code>android.permission.INTERNET</code> permission in its Android manifest. It is technically impossible to transmit typed keystrokes, audio, or generated text to any external server.</li>
+          <li><strong>Local Neural Inference</strong>: Google LiteRT models run 100% offline on your device using your phone's CPU, GPU, or Qualcomm NPU.</li>
+          <li><strong>No Telemetry or Tracking</strong>: Contains zero advertising SDKs, zero user tracking libraries, and zero cloud analytics.</li>
+        </ul>
+
+        <h2>2. Permissions Requested and Purpose</h2>
+        <table class="permission-table">
+          <thead>
+            <tr>
+              <th>Permission</th>
+              <th>Purpose</th>
+              <th>Data Handling</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>RECORD_AUDIO</code></td>
+              <td>On-device real-time Speech-to-Text when explicitly triggered</td>
+              <td>Processed in volatile RAM by local Android SpeechRecognizer API. Discarded immediately. <strong>Never saved as files, never transmitted.</strong></td>
+            </tr>
+            <tr>
+              <td><code>VIBRATE</code></td>
+              <td>Haptic vibration feedback on key presses</td>
+              <td>Hardware trigger only (no data collected)</td>
+            </tr>
+            <tr>
+              <td><code>BIND_INPUT_METHOD</code></td>
+              <td>Registers DearTalk AI as an active Android keyboard</td>
+              <td>Android OS required system permission</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. Data Retention and Deletion (Google Play Data Safety)</h2>
+        <ul>
+          <li><strong>No Cloud Backend</strong>: Because DearTalk AI operates with 0% network access, we do not store, sell, or retain any personal data.</li>
+          <li><strong>Ephemeral RAM Life Cycle</strong>: Speech drafts and suggestions are held in volatile RAM and cleared immediately after use.</li>
+          <li><strong>Complete User Control</strong>: Uninstalling the application or wiping app storage in Android Settings irreversibly erases all local settings.</li>
+        </ul>
+
+        <h2>4. Children's Privacy</h2>
+        <p>DearTalk AI does not collect, process, or share personal information from anyone, including children under 13.</p>
+
+        <h2>5. Open Source Transparency</h2>
+        <p>DearTalk AI strictly complies with the <strong>Apache License 2.0</strong> open source standard, providing transparent, secure, and purely on-device privacy with zero network dependencies.</p>
+
+        <h2>6. Contact Us</h2>
+        <p>For questions or security inquiries regarding this policy:</p>
+        <ul>
+          <li><strong>Official Support Email</strong>: <a href="mailto:onthelogic@gmail.com">onthelogic@gmail.com</a></li>
+          <li><strong>Tester Group</strong>: <a href="mailto:aibuilder-testers@googlegroups.com">aibuilder-testers@googlegroups.com</a></li>
+        </ul>
+      </section>
+
+      <!-- ==================== ID (Bahasa Indonesia) ==================== -->
+      <section id="lang-id" class="lang-section">
+        <div class="highlight-box">
+          <strong>🔒 Komitmen Privasi 100% On-Device</strong><br>
+          DearTalk AI tidak pernah mengirim ketikan, rekaman suara, atau teks ke server eksternal. Aplikasi ini <strong>tanpa izin INTERNET</strong>, menjamin privasi offline total 100%.
+        </div>
+
+        <h2>1. Pemrosesan Lokal 100% & Nol Pengumpulan Data</h2>
+        <ul>
+          <li><strong>Isolasi Jaringan Total (Tanpa Izin INTERNET)</strong>: Aplikasi tidak meminta izin <code>android.permission.INTERNET</code>. Tidak mungkin secara teknis untuk mengirim data ke luar.</li>
+          <li><strong>Kecerdasan Buatan On-Device</strong>: Model AI Google LiteRT berjalan sepenuhnya di dalam memori dan prosesor (NPU/CPU/GPU) perangkat Anda.</li>
+          <li><strong>Tanpa Pelacak atau Iklan</strong>: Nol SDK analitik pihak ketiga dan bebas dari iklan komersial.</li>
+        </ul>
+
+        <h2>2. Izin yang Diminta dan Tujuannya</h2>
+        <table class="permission-table">
+          <thead>
+            <tr>
+              <th>Nama Izin</th>
+              <th>Tujuan</th>
+              <th>Penanganan Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>RECORD_AUDIO</code></td>
+              <td>Pengenalan suara real-time (Speech-to-Text) saat tombol mikrofon ditekan</td>
+              <td>Diproses di memori RAM lokal dan langsung dihapus. <strong>Tidak pernah disimpan sebagai file audio dan tidak dikirim ke internet.</strong></td>
+            </tr>
+            <tr>
+              <td><code>VIBRATE</code></td>
+              <td>Umpan balik getar haptik saat mengetik</td>
+              <td>Fungsi perangkat keras saja</td>
+            </tr>
+            <tr>
+              <td><code>BIND_INPUT_METHOD</code></td>
+              <td>Pendaftaran sebagai papan ketik (IME) resmi Android</td>
+              <td>Izin sistem wajib</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. Penyimpanan dan Penghapusan Data (Google Play Data Safety)</h2>
+        <p>Karena DearTalk AI bekerja 100% tanpa internet, kami tidak menyimpan data pribadi pengguna. Menghapus aplikasi akan menghapus seluruh preferensi lokal seketika.</p>
+
+        <h2>4. Kode Sumber Terbuka (Open Source)</h2>
+        <p>DearTalk AI mematuhi standar sumber terbuka <strong>Apache License 2.0</strong>, memberikan privasi on-device yang aman, transparan, dan tanpa ketergantungan jaringan.</p>
+
+        <h2>5. Kontak Kami</h2>
+        <ul>
+          <li><strong>Email Resmi</strong>: <a href="mailto:onthelogic@gmail.com">onthelogic@gmail.com</a></li>
+        </ul>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>&copy; 2026 DearTalk AI. Released under the Apache 2.0 License.</p>
+      <p style="margin-top: 6px;">Hosted securely on Cloudflare Edge Network.</p>
+    </footer>
+  </div>
+
+  <script>
+    function switchLang(lang, updateUrl) {
+      if (!['ko', 'en', 'id'].includes(lang)) lang = 'ko';
+
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+      
+      const targetSection = document.getElementById('lang-' + lang);
+      const targetBtn = document.getElementById('btn-' + lang);
+      
+      if (targetSection) targetSection.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      const titleEl = document.getElementById('page-title');
+      const updatedEl = document.getElementById('last-updated');
+      if (lang === 'ko') {
+        titleEl.textContent = '개인정보 처리방침 (Privacy Policy)';
+        updatedEl.textContent = '최종 개정일: 2026년 9월 24일';
+        document.documentElement.lang = 'ko';
+      } else if (lang === 'id') {
+        titleEl.textContent = 'Kebijakan Privasi (Privacy Policy)';
+        updatedEl.textContent = 'Terakhir diperbarui: 24 September 2026';
+        document.documentElement.lang = 'id';
+      } else {
+        titleEl.textContent = 'Privacy Policy';
+        updatedEl.textContent = 'Last Updated: September 24, 2026';
+        document.documentElement.lang = 'en';
+      }
+
+      if (updateUrl && window.history && window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.set('lang', lang);
+        window.history.replaceState({}, '', url);
+      }
+    }
+
+    // Auto-detect language priority: 1) URL query (?lang=en) -> 2) Browser Language -> 3) Fallback 'ko'
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryLang = urlParams.get('lang');
+      
+      if (queryLang && ['ko', 'en', 'id'].includes(queryLang.toLowerCase())) {
+        switchLang(queryLang.toLowerCase(), false);
+        return;
+      }
+
+      const userLang = (navigator.language || navigator.userLanguage || 'ko').toLowerCase();
+      if (userLang.startsWith('en')) {
+        switchLang('en', false);
+      } else if (userLang.startsWith('id')) {
+        switchLang('id', false);
+      } else {
+        switchLang('ko', false);
+      }
+    });
+  </script>
+</body>
+</html>

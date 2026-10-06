@@ -1,8 +1,7 @@
 package ai.deartalk.android.ui.main.components
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,15 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.deartalk.android.data.pref.UiStrings
 import ai.deartalk.android.ime.ui.theme.*
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun FamilyAppsSectionCard(
-    context: Context,
     isKorean: Boolean,
     isIndonesian: Boolean,
+    onComingSoonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -57,66 +53,75 @@ fun FamilyAppsSectionCard(
             )
 
             // 1. DearTalk Voice Translator (출시 예정)
-            Row(
+            FamilyAppItemRow(
+                isKorean = isKorean,
+                isIndonesian = isIndonesian,
+                onClick = onComingSoonClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun FamilyAppItemRow(
+    isKorean: Boolean,
+    isIndonesian: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(12.dp))
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(DearTalkPrimary.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(DearTalkPrimary.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Translate,
-                            contentDescription = null,
-                            tint = DearTalkSecondary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (isKorean) "🗣️ DearTalk 음성 통역기" else if (isIndonesian) "🗣️ DearTalk Penerjemah Suara" else "🗣️ DearTalk Voice Translator",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DearTalkText
-                        )
-                        Text(
-                            text = if (isKorean) "1:1 실시간 대면 통역기" else if (isIndonesian) "Penerjemah tatap muka 1:1" else "1:1 live face-to-face translator",
-                            fontSize = 11.sp,
-                            color = DearTalkTextDim,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-                Surface(
-                    onClick = {
-                        val msg = if (isKorean) "🗣️ DearTalk 음성 통역기는 곧 출시될 예정입니다!"
-                                  else if (isIndonesian) "🗣️ DearTalk Penerjemah Suara akan segera hadir!"
-                                  else "🗣️ DearTalk Voice Translator is coming soon!"
-                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    color = DearTalkSecondary.copy(alpha = 0.15f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DearTalkSecondary.copy(alpha = 0.4f))
-                ) {
-                    Text(
-                        text = if (isKorean) "출시 예정" else if (isIndonesian) "Segera Hadir" else "Coming Soon",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = DearTalkSecondary,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Translate,
+                    contentDescription = null,
+                    tint = DearTalkSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (isKorean) "🗣️ 디어톡(DearTalk) 음성 통역기" else if (isIndonesian) "🗣️ DearTalk Penerjemah Suara" else "🗣️ DearTalk Voice Translator",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DearTalkText
+                )
+                Text(
+                    text = if (isKorean) "1:1 실시간 대면 통역기" else if (isIndonesian) "Penerjemah tatap muka 1:1" else "1:1 live face-to-face translator",
+                    fontSize = 11.sp,
+                    color = DearTalkTextDim,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(8.dp),
+            color = DearTalkSecondary.copy(alpha = 0.15f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, DearTalkSecondary.copy(alpha = 0.4f))
+        ) {
+            Text(
+                text = if (isKorean) "출시 예정" else if (isIndonesian) "Segera Hadir" else "Coming Soon",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = DearTalkSecondary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            )
         }
     }
 }
@@ -157,6 +162,8 @@ fun UserGuideCard(modifier: Modifier = Modifier) {
 fun ZeroPersistencePrivacyCard(
     isKorean: Boolean,
     isIndonesian: Boolean,
+    onOpenPrivacyPolicy: () -> Unit,
+    privacyUrl: String = "https://deartalk-ai.pages.dev/",
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -178,6 +185,25 @@ fun ZeroPersistencePrivacyCard(
                 color = DearTalkTextDim,
                 lineHeight = 16.sp
             )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onOpenPrivacyPolicy)
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = if (isKorean) "🌐 공식 개인정보 처리방침 전문 보기 ➔"
+                        else if (isIndonesian) "🌐 Lihat Kebijakan Privasi Lengkap ➔"
+                        else "🌐 View Full Privacy Policy ➔",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = DearTalkSecondary
+                )
+            }
         }
     }
 }
@@ -241,7 +267,8 @@ fun SwitchKeyboardCard(
 
 @Composable
 fun AppAboutCard(
-    context: Context,
+    versionName: String,
+    buildTimestamp: String,
     isKorean: Boolean,
     isIndonesian: Boolean,
     modifier: Modifier = Modifier
@@ -260,28 +287,19 @@ fun AppAboutCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            val packageInfo = try {
-                context.packageManager.getPackageInfo(context.packageName, 0)
-            } catch (_: Exception) { null }
-
-            val buildTimeStr = packageInfo?.let {
-                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                sdf.format(Date(it.lastUpdateTime))
-            } ?: "2026-08-23 21:45:00"
-
             DiagnosticRow(
                 label = if (isKorean) "앱 이름" else if (isIndonesian) "Nama Aplikasi" else "App Name",
-                value = "DearTalk AI",
+                value = if (isKorean) "디어톡(DearTalk) AI 음성키보드" else "DearTalk AI",
                 valueColor = DearTalkText
             )
             DiagnosticRow(
                 label = UiStrings.appVersionLabel,
-                value = "v${packageInfo?.versionName ?: "1.0.0"} (${if (isKorean) "빌드" else "Build"} ${packageInfo?.longVersionCode ?: 1})",
+                value = versionName,
                 valueColor = DearTalkText
             )
             DiagnosticRow(
                 label = UiStrings.buildTimestampLabel,
-                value = buildTimeStr,
+                value = buildTimestamp,
                 valueColor = DearTalkText
             )
             DiagnosticRow(

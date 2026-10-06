@@ -55,7 +55,7 @@ make test              # or ./verify.sh unit
 make verify-device     # or ./verify.sh device
 
 # 📱 4. Run Real-Device Audit with Custom Flags
-./verify.sh device --events 1000 --throttle 20 --device 192.168.1.136:35859
+./verify.sh device --events 1000 --throttle 20 --device <DEVICE_IP>:<ADB_PORT>
 ```
 
 ---
@@ -105,7 +105,7 @@ For an on-device AI custom keyboard (IME), crashes and memory leaks are unaccept
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  📋 STABILITY & PERFORMANCE VERIFICATION REPORT 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  • Device Under Test:   192.168.1.136:35859
+  • Device Under Test:   <DEVICE_IP>:<ADB_PORT>
   • Events Injected:      500 actions
   • App Crashes (0%):     0 (Clean)
   • ANRs / Hangs (0%):    0 (Smooth)

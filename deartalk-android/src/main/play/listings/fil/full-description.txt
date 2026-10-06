@@ -1,48 +1,40 @@
-✨ DearTalk AI: 100% On-Device AI Voice Keyboard at Live Interpreter para sa 59 Wika
+✨ DearTalk AI: 100% On-Device Private AI Voice Keyboard (Voice IME)
 
-Walang Cloud Transmission. Ganap na Air-Gapped Privacy.
-Tumatakbo ang DearTalk AI nang buo sa NPU ng iyong smartphone nang hindi nagpapadala ng boses o teksto sa mga panlabas na server.
+Works 100% Offline in Flights, Overseas Travel, and Areas with No Network!
+Zero Cloud Transmission. Absolute Air-Gapped Privacy. 100% Free Forever.
+DearTalk AI runs entirely on your smartphone's NPU and on-device neural network—without sending a single byte of voice or text data to external servers. No cloud subscriptions and zero hidden AI token fees.
 
-🎙️ BAHAGI 1. Matalinong On-Device AI Voice Keyboard (Voice IME)
-Magsalita nang natural sa anumang chat, email, o notes. Aayusin ng on-device AI ang iyong mga pangungusap.
+🎙️ PART 1. Intelligent On-Device Voice Keyboard (Voice IME)
+Speak naturally in any app—messaging, email, notes, or search—and let on-device AI refine your thoughts.
 
-1. ⚡ Real-Time AI Grammar at Pagwawasto
-- Agad na sinusuri ng on-device AI ang konteksto upang ituwid ang maling baybay at bantas sa maayos na pangungusap.
+1. ⚡ Real-Time AI Grammar & Context Refinement
+- Speak fast without worry. Powered by 100% on-device generative AI language models, typos, misrecognitions, and awkward phrasing are instantly corrected into polished sentences.
 
-2. 🎭 Pagbabago ng Tono sa 1 Tap
-- Ibagay ang iyong pananalita sa bawat sitwasyon:
-  - 😼 May Kumpyansa (Cheeky): Matalas, tapat at kapansin-pansin
-  - 👔 Pormal (Formal): Angkop para sa trabaho at negosyo
-  - 🤝 Magalang (Polite): May paggalang at maingat
-  - 💖 May Malasakit (Empathetic): Mainit at maunawain
+2. 🎭 1-Tap Tone & Manner Transformation
+- Adapt your voice to every context with a single tap:
+  - 😼 Cheeky: Confident, bold, and charismatic
+  - 👔 Formal: Business-ready, professional phrasing
+  - 🤝 Polite: Courteous and respectful tone
+  - 💖 Empathetic: Warm, considerate, and friendly
 
-⚡ BAHAGI 2. DearTalk Live: Harapang Pagsasalin sa 59 Wika
-Makipag-usap nang walang sagabal sa biyahe, eroplano, o kahit walang internet connection.
+⌨️ PART 2. Smart Korean & Latin Input Automata
+Fast and intuitive typing alongside seamless voice dictation.
 
-1. 🚀 2-Track Ultra-Low Latency Hybrid Engine
-- Track 1 (~50ms): Mabilis na draft na salin para sa 59 wika gamit ang Google ML Kit On-Device NMT.
-- Track 2 (~2s): Pinapakinis ang mga idyoma gamit ang lokal na neural AI model.
+1. ⚡ Advanced Cheonjiin & Multi-Tap Support
+- Precision automata engine supporting compound consonants (ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, etc.) with smart multi-tap combinations.
 
-2. 🔄 180° Symmetric Split-Screen Flip View
-- Ilagay ang telepono sa mesa: iikot ng 180 degrees ang screen ng kausap upang makapag-usap nang may eye contact.
+2. 🎯 Cursor Position Preservation & Seamless Rollback
+- Typing stability with intelligent rollback timers ensuring no character glitches during fast inputs.
 
-3. 🔊 1-Tap Auto-Speak (Boses na Pagbasa)
-- Madaling buksan o patayin ang boses ng salin sa itaas na bar ng app.
+🔄 PART 3. P2P Mesh Model Vault (Zero-Copy Sharing)
+Smart on-device AI ecosystem with zero storage waste.
 
-4. 🧹 200-Message FIFO Ring Buffer
-- O(1) memory efficiency para manatiling mabilis at magaan ang iyong smartphone.
+1. 📦 Zero Duplicate Downloads (0MB Redundancy)
+- Secure signature-verified ContentProvider sharing enables family apps to share local AI models with zero disk duplication.
 
-💰 BAHAGI 3. 100% Libreng Gamitin at Walang Bayad sa AI
-- Tumatakbo sa NPU ng iyong smartphone nang hindi tumatawag sa mga bayarang cloud API.
-- Walang limitasyong pag-uusap at pagsasalin nang walang singil sa data o bayad sa token ng AI.
-- Walang buwanang subscription at walang nakatagong bayarin. Libre ang lahat ng feature.
+2. 🛡️ 100% Air-Gapped Local Privacy
+- Passwords, financial details, and private chats entered via keyboard are strictly kept on your device and never sent to the cloud.
 
-✈️ BAHAGI 4. 100% Offline: Sa Eroplano, Ibang Bansa, at Walang Internet
-- Gumagana nang buo sa Airplane Mode, sa paglalakbay sa ibang bansa nang walang roaming, o sa walang signal.
-- Live interpreter sa 59 wika at AI voice typing nang walang Wi-Fi o mobile data.
-- Ganap na Air-Gapped privacy para sa iyong mga kumpidensyal na pag-uusap. 100% Air-Gap Security at Airplane Mode
-- Gumagana kahit walang internet. Ligtas para sa kumpidensyal na usapan.
-
-🌐 Mga Sinusuportahang Wika:
-- Offline On-Device Translation: 59 wika kabilang ang Filipino, Ingles, Koreano, Hapon, Tsino, Espanyol, atbp.
-- UI at Pag-aangkop ng Tono: Filipino, Ingles, Koreano, Indonesian.
+✈️ PART 4. 100% Free Forever & Complete Offline Operation
+- Functions flawlessly on airplanes (Airplane Mode), during overseas travel without roaming, and in offline underground areas.
+- Zero external cloud API calls, zero data costs, and no subscriptions—100% free open-source software forever.

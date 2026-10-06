@@ -38,6 +38,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         MainUiState(
             isImeEnabled = checkIsImeEnabled(context),
             isImeSelected = checkIsImeSelected(context),
+            hasMicPermission = checkHasMicPermission(context),
             isModelLoaded = intentEngine.isModelLoaded,
             loadedModelName = "온디바이스 음성 AI 키보드",
             languageDisplayTitle = DearTalkSettings.getLanguageDisplayTitle(context),
@@ -146,9 +147,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update {
                     it.copy(
                         isImeEnabled = checkIsImeEnabled(context),
-                        isImeSelected = checkIsImeSelected(context)
+                        isImeSelected = checkIsImeSelected(context),
+                        hasMicPermission = checkHasMicPermission(context)
                     )
                 }
+            }
+            is MainUiEvent.DismissOnboarding, is MainUiEvent.CompleteOnboarding -> {
+                _uiState.update { it.copy(isOnboardingDismissed = true) }
             }
             is MainUiEvent.ToggleMic -> {
                 if (_uiState.value.isListening) {
@@ -259,6 +264,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 defaultMethod.contains(context.packageName)
             } catch (_: Exception) {
                 checkIsImeEnabled(context)
+            }
+        }
+
+        fun checkHasMicPermission(context: Context): Boolean {
+            return try {
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.RECORD_AUDIO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            } catch (_: Exception) {
+                false
             }
         }
     }

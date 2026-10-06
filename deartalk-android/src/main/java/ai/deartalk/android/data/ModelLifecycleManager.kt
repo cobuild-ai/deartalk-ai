@@ -24,7 +24,7 @@ sealed class ModelPackState {
  */
 enum class ActiveAiTier {
     GEMMA_4,     // 🌟 Gemma 4 E2B LiteRT (PAD 고성능 온디바이스 엔진)
-    BASE_GEMMA,  // 🟢 Gemma 2B LiteRT (기본 내장 경량 엔진)
+    BASE_GEMMA,  // 🟢 Gemma 4 E2B LiteRT (로컬 검증 표준 엔진)
     STT_ONLY     // ⚡ 순수 음성인식 (LLM 미탑재 기기: STT 정상 동작 + 1-Tap PAD 다운로드 대기)
 }
 
@@ -88,11 +88,10 @@ class ModelLifecycleManager(private val context: Context) {
 
     private fun hasGemmaBaseModel(): Boolean {
         val gemmaCandidates = listOf(
+            "/data/local/tmp/llm/${ai.deartalk.android.agent.engine.ModelPaths.STANDARD_MODEL_FILENAME}",
             "/data/local/tmp/llm/model.litertlm",
-            "/data/local/tmp/llm/gemma-2b-it.litertlm",
-            "/data/local/tmp/llm/gemma-4-E2B-it.litertlm",
-            "/data/local/tmp/llm/gemma-2b-it-gpu-int4.bin",
-            "/data/local/tmp/llm/gemma-2b-it-cpu-int4.bin",
+            "/data/local/tmp/llm/model.bin",
+            File(context.filesDir, "models/${ai.deartalk.android.agent.engine.ModelPaths.STANDARD_MODEL_FILENAME}").absolutePath,
             File(context.filesDir, "models/model.litertlm").absolutePath,
             File(context.filesDir, "models/model.bin").absolutePath
         )

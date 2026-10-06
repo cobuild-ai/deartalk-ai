@@ -1,4 +1,4 @@
-# 📱 DearTalk AI Android: Google Play Store 상용 배포 및 운영 가이드라인
+# 📱 디어톡(DearTalk) AI 음성키보드 Android: Google Play Store 상용 배포 및 운영 가이드라인
 
 이 문서는 `deartalk-ai`의 Android 모듈(`deartalk-android`)을 **Google Play Store에 안정적으로 출시하고 업데이트하기 위한 시니어 앱 개발자 표준 배포 가이드**입니다.
 
@@ -83,7 +83,7 @@ Gemma 기반 온디바이스 모델(`.litertlm`, 약 1.0GB ~ 1.5GB)은 Google Pl
 1. **Play Asset Delivery (PAD) 표준 (권장)**:
    - `install-time` 또는 `fast-follow` 에셋 팩을 통해 Google Play 인프라에서 공식 분할 번들링 제공.
 2. **로컬 개발자 / 테스터 ADB 전송**:
-   - `adb push gemma-2b-it-cpu-int4.litertlm /data/local/tmp/llm/`
+   - `adb push gemma-4-E2B-it.litertlm /data/local/tmp/llm/`
    - 앱이 내부적으로 공용 및 앱 전용 `models/` 디렉토리를 자동 감지하여 연결.
 3. **인앱 외부 HTTP 다운로드 금지**:
    - 보안 및 스토어 정책 준수를 위해 앱 내부에서 외부 HTTP 서버에 접속하여 대용량 파일을 내려받는 행위를 일체 배제합니다.
@@ -92,7 +92,7 @@ Gemma 기반 온디바이스 모델(`.litertlm`, 약 1.0GB ~ 1.5GB)은 Google Pl
 
 ## 🔒 5. Play Console Data Safety & 권한 정책 작성 가이드
 
-DearTalk AI는 **100% On-Device AI**이므로 구글 심사 시 매우 강력한 개인정보 보호 이점을 가집니다.
+디어톡(DearTalk) AI 음성키보드는 **100% On-Device AI**이므로 구글 심사 시 매우 강력한 개인정보 보호 이점을 가집니다.
 
 ### A. 사용 권한 및 목적
 - `android.permission.RECORD_AUDIO`: 키보드 내 음성 인식(STT) 마이크 입력용
@@ -106,6 +106,12 @@ DearTalk AI는 **100% On-Device AI**이므로 구글 심사 시 매우 강력한
   - *“사용자의 음성 데이터는 기기 내부(On-device)에서 실시간으로 텍스트로 변환된 후 즉시 메모리에서 소멸되며, 외부 서버로 전송되거나 저장되지 않습니다.”*
 - **키스트로크 데이터(Keystrokes)**:
   - *“사용자가 입력하는 모든 텍스트는 로컬 온디바이스 신경망에서만 처리되며 어떠한 원격 서버로도 전송되지 않습니다.”*
+
+### C. 공식 개인정보 처리방침 (Privacy Policy) 제출 URL
+- **Google Play Console 입력 주소**:  
+  `https://deartalk-ai.pages.dev/`
+- **호스팅 인프라**: Cloudflare Pages 글로벌 엣지 (HTTP/2 200 OK, 무제한 대역폭, 3개 국어 실시간 대응)
+- **배포 전 필수 점검**: `make verify-policy` (또는 `make release` 시 자동 검증)
 
 ---
 
@@ -122,8 +128,12 @@ make release          # 또는 ./verify.sh release
 # 3. 생성된 배포 번들 확인
 # -> deartalk-android/build/outputs/bundle/release/deartalk-android-release.aab
 
-# 4. Play Console 내부 테스트(Internal Test) / 비공개 테스트 트랙에 업로드 및 14일 검증
+# 4. Google Play Developer API 자동 업로드 (상세 가이드: docs/GOOGLE_PLAY_PUBLISH_WORKFLOW.md 참조)
+./gradlew :deartalk-android:publishReleaseBundle
 ```
+
+> 📖 **AI 모델 및 자동 배포 상세 가이드**: [Google Play Publish Workflow](GOOGLE_PLAY_PUBLISH_WORKFLOW.md)
+
 
 ---
 
@@ -136,3 +146,13 @@ make release          # 또는 ./verify.sh release
   git tag -a v1.0.1 -m "Release v1.0.1: Target SDK 35, 16KB page alignment, LiteRT GPU on-device Gemma"
   git push origin v1.0.1
   ```
+
+---
+
+## 🌐 8. Google Play 국가/지역 타겟팅 공식 가이드
+
+키보드 앱의 특성상 지원하지 않는 자판(예: 아랍어, 키릴어, 독일어 QWERTZ, 프랑스어 AZERTY)을 쓰는 국가에 출시하면 치명적인 1점 평점 테러가 발생합니다.  
+반드시 사전 검증된 **13개 확실한 국가(대한민국, 미국, 영국, 캐나다, 호주, 뉴질랜드, 아일랜드, 싱가포르, 남아공, 지브롤터, 버진아일랜드, 인도네시아, 필리핀)**에만 출시해야 합니다.
+
+👉 상세 국가별 분석 및 근거: [docs/GLOBAL_TARGETING_STRATEGY.md](GLOBAL_TARGETING_STRATEGY.md) 참조
+

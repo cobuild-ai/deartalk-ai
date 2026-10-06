@@ -28,7 +28,7 @@ Mengoptimalkan teks ketikan dan input suara luring (offline STT) dengan penyesua
 
 | Komponen | Versi | Target SDK | Status | Fitur Utama |
 | :--- | :---: | :---: | :---: | :--- |
-| 🤖 **DearTalk Voice Keyboard** | `v1.1.5` | **Android 16 (API 36)** | **Produksi Stabil (Production Stable)** | Fokus Papan Ketik IME, 6 Pilihan Nada Bicara, Arsitektur NPU Zero-Lock, P2P Mesh Model Vault (0MB Duplikasi) |
+| 🤖 **DearTalk Voice Keyboard** | `v1.2.2` | **Android 16 (API 36)** | **Pengujian Terbuka (Open Testing - Beta)** | Panduan Onboarding 3-Langkah, Tema Ganda Day & Night, Pemulihan Otomatis Izin Mikrofon, 100% On-Device Zero-Network Gemma 4 E2B |
 
 ---
 
@@ -84,7 +84,7 @@ sequenceDiagram
     participant IME as ⌨️ DearTalkIME (Compose)
     participant Controller as 🎮 ImeActionController
     participant Engine as 🧠 DearTalkIntentEngine
-    participant LLM as ⚡ LiteRT GPU (Gemma 2B)
+    participant LLM as ⚡ LiteRT GPU (Gemma 4 E2B)
     participant Diff as 📊 DiffEngine (LCS)
 
     User->>HostApp: Memfokuskan kolom input teks
@@ -110,6 +110,35 @@ sequenceDiagram
    - Nol lalu lintas internet. Ketikan keyboard, rekaman suara, dan teks tidak pernah meninggalkan perangkat Anda.
 3. **Transparansi Rekayasa:**
    - Status yang jujur saat model sedang dimuat tanpa balasan tiruan palsu.
+
+---
+
+## 📁 Struktur Direktori Repositori
+
+```text
+deartalk-ai/
+├── deartalk-android/           # Modul IME Android (Antarmuka Jetpack Compose)
+│   ├── src/main/java/ai/deartalk/android/
+│   │   ├── agent/              # Mesin on-device Gemma LiteRT & templat prompt
+│   │   ├── ime/                # InputMethodService, Pengontrol & Hangul composer
+│   │   ├── data/               # Repositori SQLite, preferensi & teks multibahasa
+│   │   ├── ui/                 # Komponen modular Compose, pengaturan & sandbox
+│   │   └── stt/                # Manajer SpeechRecognizer offline
+│   └── src/test/               # Pengujian unit JVM (otomata, pembuat prompt, diff)
+│
+├── docs/                       # Dokumentasi arsitektur, pengujian, dan penerapan
+│   ├── ARCHITECTURE.md         # Spesifikasi arsitektur sistem dan aliran data
+│   ├── TESTING.md              # Panduan pengujian otomatis & verifikasi perangkat nyata
+│   ├── MODELS.md               # Spesifikasi SLM LiteRT on-device
+│   ├── ROADMAP.md              # Rencana pengembangan dan tonggak rilis
+│   └── ANDROID_DEPLOYMENT_GUIDE.md # Panduan Google Play PAD dan rilis
+│
+├── scripts/                    # Skrip pengujian otomatis & verifikasi perangkat
+│   └── verify_device_stability.py # Penguji stres ADB Monkey & kebocoran memori
+│
+├── Makefile                    # Target pengembang standar (make verify, make test)
+└── verify.sh                   # Peluncur verifikasi interaktif tanpa friksi
+```
 
 ---
 

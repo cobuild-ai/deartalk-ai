@@ -42,7 +42,7 @@ object UiStrings {
     // ═══════════════════════════════════════════════════
     val keyboard get() = if (isKo) "자판" else if (isId) "Ketik" else "Keys"
     val keyboardContentDesc get() = if (isKo) "일반 자판으로 전환" else if (isId) "Beralih ke papan ketik biasa" else "Switch to standard keyboard"
-    val settingsContentDesc get() = if (isKo) "DearTalk AI 설정 및 가이드" else if (isId) "Pengaturan & Panduan DearTalk AI" else "DearTalk AI Settings & Guide"
+    val settingsContentDesc get() = if (isKo) "디어톡(DearTalk) AI 음성키보드 설정 및 가이드" else if (isId) "Pengaturan & Panduan DearTalk AI" else "DearTalk AI Settings & Guide"
 
     // ═══════════════════════════════════════════════════
     // DearTalkScreen.kt — 스마트 DIFF 캔버스
@@ -169,7 +169,7 @@ object UiStrings {
     val settingsTabAbout get() = if (isKo) "ℹ️ 앱 정보 및 도움말" else if (isId) "ℹ️ Informasi & Bantuan" else "ℹ️ About & Help"
     val appVersionLabel get() = if (isKo) "앱 버전" else if (isId) "Versi" else "App Version"
     val buildTimestampLabel get() = if (isKo) "업데이트 일시" else if (isId) "Pembaruan" else "Last Updated"
-    val userGuideTitle get() = if (isKo) "📖 DearTalk AI 쉽게 쓰는 법" else if (isId) "📖 Panduan Cepat DearTalk AI" else "📖 DearTalk AI Quick Guide"
+    val userGuideTitle get() = if (isKo) "📖 디어톡(DearTalk) AI 음성키보드 쉽게 쓰는 법" else if (isId) "📖 Panduan Cepat DearTalk AI" else "📖 DearTalk AI Quick Guide"
     val userGuideHowToUseTitle get() = if (isKo) "💡 이렇게 사용해 보세요" else if (isId) "💡 Cara Penggunaan" else "💡 How to Use"
     val userGuideHowToUseContent get() = if (isKo) {
         "1. 상단 안내에 따라 키보드를 활성화합니다.\n" +
@@ -193,7 +193,7 @@ object UiStrings {
     // ═══════════════════════════════════════════════════
     // DearTalkLiveActivity.kt — 1:1 실시간 대면 대화 & 지능형 보이스 레코더
     // ═══════════════════════════════════════════════════
-    val dearTalkLiveTitle get() = if (isKo) "🎙️ DearTalk Live" else if (isId) "🎙️ DearTalk Live" else "🎙️ DearTalk Live"
+    val dearTalkLiveTitle get() = if (isKo) "🎙️ 디어톡(DearTalk) Live" else if (isId) "🎙️ DearTalk Live" else "🎙️ DearTalk Live"
     val dearTalkLiveSubtitle get() = if (isKo) "1:1 실시간 대면 대화 & 보이스 레코더" else if (isId) "Percakapan Tatap Muka 1:1 & Perekam Suara" else "1:1 Face-to-Face Live Voice & Recorder"
     val backButtonContentDesc get() = if (isKo) "뒤로가기" else if (isId) "Kembali" else "Back"
 
@@ -384,7 +384,7 @@ object UiStrings {
     val officialLangSection get() = if (isKo) "공식 지원 언어" else if (isId) "Bahasa Resmi" else "Official Languages"
     val crossLangSection get() = if (isKo) "교차 통역 언어" else if (isId) "Bahasa Terjemahan Silang" else "Cross-Translation"
 
-    val liveSettingsTitle get() = if (isKo) "DearTalk Live 설정" else if (isId) "Pengaturan DearTalk Live" else "DearTalk Live Settings"
+    val liveSettingsTitle get() = if (isKo) "디어톡(DearTalk) Live 설정" else if (isId) "Pengaturan DearTalk Live" else "DearTalk Live Settings"
     val liveAutoDeleteTitle get() = if (isKo) "대화 기록 자동 삭제 주기" else if (isId) "Periode Hapus Otomatis" else "Auto-Delete Retention"
     val liveAutoDeleteDesc get() = if (isKo) "설정된 기간이 지난 대화 기록은 로컬 DB에서 자동으로 정리됩니다." else if (isId) "Riwayat percakapan yang melewati batas akan dibersihkan otomatis dari DB lokal." else "Conversations older than the retention period will be automatically deleted from local storage."
     val liveDays get() = if (isKo) "일" else if (isId) "hari" else "days"
